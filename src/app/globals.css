@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+.font-nocturne-serif-regular {
+  @apply font-[family-name:var(--font-nocturne-serif-regular)]
+}
+
+.font-nocturne-serif-bold {
+  @apply font-[family-name:var(--font-nocturne-serif-bold)]
+}
+
+.form-input {
+  @apply text-black block w-full rounded-md border-0 py-1.5 px-2 ring-1 ring-inset ring-gray-300 placeholder:text-gray-500 focus:ring-1 focus:ring-inset focus:ring-black sm:text-sm sm:leading-6;
+}
+
+.form-textarea {
+  @apply text-black block w-full rounded-md border-0 py-1.5 px-2 ring-1 ring-inset ring-gray-300 placeholder:text-gray-500 focus:ring-1 focus:ring-inset focus:ring-black sm:text-sm sm:leading-6;
+}
+
+.form-button {
+  @apply inline-flex items-center rounded-md bg-black px-3 py-1.5 text-base font-semibold leading-7 text-white hover:bg-black/80;
+}
