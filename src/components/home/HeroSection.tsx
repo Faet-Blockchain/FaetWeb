@@ -11,7 +11,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-5xl md:text-7xl font-nocturne-serif-bold"
 			>
-				FAET WORDMARK
+				GET THE FOUNDERS NFT SET
 			</motion.h1>
 			<motion.p
 				initial={{ opacity: 0, y: 20 }}
@@ -19,10 +19,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Inspired by gothic imagry and fantasy influences, FAETS&apos;s
-				work mark is imapactful, detailed and modern. It strikes a good
-				balance that should remain readable as most sizes and stand out
-				from other similar titles.
+				Limited edition founders NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and play our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
 			</motion.p>
 			<div className="flex justify-center mt-10">
 				<motion.button
@@ -41,11 +38,11 @@ const HeroSection = () => {
 				transition={{ type: "spring", stiffness: 100 }}
 			>
 				<img
-					src="/images/hero-image.png"
-					alt="hero-img"
-					width={1134}
-					height={428}
-					className="mx-auto md:h-96 md:w-auto my-10 md:mb-20 md:mt-10"
+						src="/images/faet-end.png"
+						alt=""
+						width={848}
+						height={321}
+						className="mx-auto md:w-auto my-10 md:mb-20 md:mt-10"
 				/>
 			</motion.div>
 		</div>

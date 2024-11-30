@@ -11,7 +11,7 @@ const FaetIconSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-5xl md:text-7xl font-nocturne-serif-bold"
 			>
-				FAET ICON
+				MAKE YOUR METAVERSE
 			</motion.h1>
 			<motion.p
 				initial={{ opacity: 0, y: 20 }}
@@ -19,11 +19,7 @@ const FaetIconSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Due to the unique field FAET is setup to inhabit in gaming, I
-				felt an icon was needed to represent the brand. This may be used
-				as a favicon for website usage, an app icon for desktop and
-				mobile, or even as a symbol in-game that could hold
-				significance.
+				Where Web2 gaming ends and web3 begins. Make your own web3 games, without knowing how to code. Launch them, and get paid. Web3 game development has never been easier.
 			</motion.p>
 			<motion.div
 				initial={{ opacity: 0, y: 20, scale: 0.8, rotate: 10 }}

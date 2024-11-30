@@ -12,7 +12,7 @@ const SizingAndVarientsSection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-black text-5xl md:text-7xl font-nocturne-serif-bold"
 				>
-					WORDMARK SIZING & VARIENTS
+					NFTS WITH REAL UTILITY
 				</motion.h1>
 				<motion.p
 					initial={{ opacity: 0, y: 20 }}
@@ -20,11 +20,7 @@ const SizingAndVarientsSection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-lg my-5 text-black"
 				>
-					The FAET wordmark is designed to work in all possible
-					applications. We&apos;ve created multiple varients of the
-					logo with different levels of texture to be used in
-					different situations. Some more detailed, some less,
-					FAET&apos;s brand will be consistent yet flexible.
+					Unleash your creativity with FAET and show the world your vision. FAET enables creators to generate their own NFT sets and use them in their own web3 games. Connect with others and use their NFTs in your game, and add to the ecosystem by allowing others to use yours.  
 				</motion.p>
 				<div className="grid md:grid-cols-2 gap-10 my-10">
 					<motion.div

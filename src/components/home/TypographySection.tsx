@@ -12,7 +12,7 @@ const TypographySection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-black text-5xl md:text-7xl font-nocturne-serif-bold"
 				>
-					TYPOGRAPHY
+					ROADMAP
 				</motion.h1>
 				<motion.p
 					initial={{ opacity: 0, y: 20 }}
@@ -20,12 +20,7 @@ const TypographySection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-lg my-5 text-black"
 				>
-					FAET will include A LOT of dialogue and unique type
-					oportunities. While using a large variety of fonts is
-					tempting, keeping the type options simple is the way to go
-					for this project. Nocturne Serif is a bold, flexible
-					typeface that merges classic serifs with an edgy, modern
-					style.
+					FAET will expand its functionalities and grow into a dominant force in the web3 gaming space. Here's a peek at our roadmap, and what to expect from us coming soon.
 				</motion.p>
 				<div className="px-5">
 					<motion.div
@@ -34,10 +29,10 @@ const TypographySection = () => {
 						transition={{ duration: 0.5, ease: "easeInOut" }}
 					>
 						<h2 className="text-black text-7xl md:text-9xl font-nocturne-serif-bold">
-							BOLD CAPS
+							1st Set Launch
 						</h2>
 						<p className="text-lg my-5 text-black mt-0">
-							Used for large titles
+							Quest 1
 						</p>
 					</motion.div>
 					<div className="flex justify-end">
@@ -47,10 +42,10 @@ const TypographySection = () => {
 							transition={{ duration: 0.5, ease: "easeInOut" }}
 						>
 							<h2 className="text-black text-7xl md:text-9xl italic text-end md:text-start">
-								Italics Regular
+								ERC-20 Airdrop
 							</h2>
 							<p className="text-lg my-5 text-black mt-0 text-end md:text-start">
-								Used for smaller titles and accents
+								Quest 2
 							</p>
 						</motion.div>
 					</div>
@@ -60,10 +55,10 @@ const TypographySection = () => {
 						transition={{ duration: 0.5, ease: "easeInOut" }}
 					>
 						<h2 className="text-black text-7xl md:text-9xl">
-							Serif Regular
+							Plugin Upgrade
 						</h2>
 						<p className="text-lg my-5 text-black mt-0">
-							Used for body copy
+							Quest 3
 						</p>
 					</motion.div>
 				</div>

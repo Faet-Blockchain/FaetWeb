@@ -56,8 +56,6 @@ export default function Home() {
 			<TypographySection />
 			<MagicSection />
 			<ManualSection />
-			<InGameMockupsSection />
-			<TShirtMockupSection />
 			<TeamsSection />
 			<CommunitySection />
 
@@ -68,11 +66,11 @@ export default function Home() {
 					transition={{ type: "spring", stiffness: 100 }}
 				>
 					<img
-						src="/images/faet-end.png"
-						alt=""
-						width={848}
-						height={321}
-						className="mx-auto"
+					src="/images/hero-image.png"
+					alt="hero-img"
+					width={1134}
+					height={428}
+					className="mx-auto md:h-96 md:w-auto my-10 md:mb-20 md:mt-10"
 					/>
 				</motion.div>
 			</section>

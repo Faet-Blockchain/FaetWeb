@@ -11,7 +11,7 @@ const BrandColorsSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-5xl md:text-7xl font-nocturne-serif-bold"
 			>
-				BRAND COLORS
+				FAET GATEWAY
 			</motion.h1>
 			<motion.p
 				initial={{ opacity: 0, y: 20 }}
@@ -19,11 +19,7 @@ const BrandColorsSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				While trying to keep the core brand monochromatic, we felt a bit
-				of variation was needed. The colors choosen represent one of the
-				geners core standards. HP, MP, SP. These work to add a unique
-				flavor to other aspects of the brand, while also harkening back
-				to the roots of the genre as a whole.
+				Our upcoming web3 indie gaming platform will enable small developers to create immersive web3 worlds and metaverses. Once their game is built using our low-code frameworks and game engines, they can immediately submit it for release. The FAET Gateway will empower creators to be able to sell, market, and release their games, something traditional indie game platforms (like Steam) don't allow you to do. 
 			</motion.p>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-10">
 				<motion.div

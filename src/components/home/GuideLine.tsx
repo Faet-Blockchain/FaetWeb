@@ -7,7 +7,7 @@ const GuideLine = () => {
 			<img src="/images/line.png" alt="line" className="w-full" />
 			<div className="flex justify-between">
 				<p className="italic text-3xl">FAET</p>
-				<p className="italic text-3xl">Design Guidelines</p>
+				<p className="italic text-3xl">The Metaverse Engine</p>
 			</div>
 		</div>
 	);

@@ -11,7 +11,7 @@ const UserInterfaceSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-5xl md:text-7xl font-nocturne-serif-bold"
 			>
-				USER INTERFACE
+				FAET: THE GAME
 			</motion.h1>
 			<motion.p
 				initial={{ opacity: 0, y: 20 }}
@@ -19,14 +19,7 @@ const UserInterfaceSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				When building an expansive RPG consistency is an important
-				factor. Keeping dialogue legible and interesting relies not only
-				on the writing, but the way it presents to the player. This
-				extends into all aspects of the game. Menus, Dialague, Combat,
-				Inventory, all of these aspects need to be considered. To
-				address this, we created the frame. With a unique magical yet
-				hand-drawn feel, this speaks towards FAET&apos;s core philosophy
-				of player expression through the variety of magic.
+				FAET Studios is not just creating a platform, but taking part in the creativity as well. The official game, playable only by the holders of FAET NFTs is being launched alongside their original Limited Edition Founders NFT Set mint. Explore the world of FAET and discover the mysteries of The Last Gate in this epic turn-based roleplaying adventure. 
 			</motion.p>
 			<motion.div
 				initial={{ opacity: 0, y: 20, scale: 0.8, rotate: 10 }}
