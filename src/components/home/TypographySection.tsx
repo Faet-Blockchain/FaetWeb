@@ -20,7 +20,7 @@ const TypographySection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-lg my-5 text-black"
 				>
-					FAET will expand its functionalities and grow into a dominant force in the web3 gaming space. Here's a peek at our roadmap, and what to expect from us coming soon.
+					FAET will expand its functionalities and grow into a dominant force in the web3 gaming space. Here&#39;s a peek at our roadmap, and what to expect from us coming soon.
 				</motion.p>
 				<div className="px-5">
 					<motion.div

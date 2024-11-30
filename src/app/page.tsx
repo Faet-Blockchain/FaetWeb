@@ -5,12 +5,10 @@ import CommunitySection from "@/components/home/CommunitySection";
 import FaetIconSection from "@/components/home/FaetIconSection";
 import GuideLine from "@/components/home/GuideLine";
 import HeroSection from "@/components/home/HeroSection";
-import InGameMockupsSection from "@/components/home/InGameMockupsSection";
 import MagicSection from "@/components/home/MagicSection";
 import ManualSection from "@/components/home/ManualSection";
 import SizingAndVarientsSection from "@/components/home/SizingAndVarientsSection";
 import TeamsSection from "@/components/home/TeamsSection";
-import TShirtMockupSection from "@/components/home/TShirtMockupSection";
 import TypographySection from "@/components/home/TypographySection";
 import UserInterfaceSection from "@/components/home/UserInterfaceSection";
 import { motion, useScroll, useTransform } from "framer-motion"

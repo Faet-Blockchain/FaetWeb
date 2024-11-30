@@ -19,7 +19,7 @@ const BrandColorsSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Our upcoming web3 indie gaming platform will enable small developers to create immersive web3 worlds and metaverses. Once their game is built using our low-code frameworks and game engines, they can immediately submit it for release. The FAET Gateway will empower creators to be able to sell, market, and release their games, something traditional indie game platforms (like Steam) don't allow you to do. 
+				Our upcoming web3 indie gaming platform will enable small developers to create immersive web3 worlds and metaverses. Once their game is built using our low-code frameworks and game engines, they can immediately submit it for release. The FAET Gateway will empower creators to be able to sell, market, and release their games, something traditional indie game platforms (like Steam) don&#39;t allow you to do. 
 			</motion.p>
 			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-10">
 				<motion.div
