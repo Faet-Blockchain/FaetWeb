@@ -26,7 +26,7 @@ export default function Home() {
 		<div ref={ref} className="relative font-nocturne-serif-regular">
 			<motion.div
 				style={{
-					backgroundImage: "url('/images/bg.jpg')",
+					backgroundImage: "url('/images/bg.png')",
 					backgroundPosition: "bottom",
 					backgroundSize: "cover",
 					backgroundRepeat: "no-repeat",
