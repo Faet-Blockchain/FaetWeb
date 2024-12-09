@@ -19,6 +19,7 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4">
             <NavLink href="/#home">Home</NavLink>
+            <NavLink href="/roadmap">Roadmap</NavLink>
             <NavLink href="/#icon">Icon</NavLink>
             <NavLink href="/#colors">Colors</NavLink>
             <NavLink href="/#user-interface">User Interface</NavLink>

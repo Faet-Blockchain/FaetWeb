@@ -10,12 +10,12 @@ interface TeamMember {
 }
 
 const teamMembers: TeamMember[] = [
-  { id: 1, name: 'John Doe', role: 'CEO', imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' },
-  { id: 2, name: 'Jane Smith', role: 'CTO', imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' },
-  { id: 3, name: 'Mike Johnson', role: 'Designer', imageUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' },
-  { id: 4, name: 'Emily Brown', role: 'Developer', imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' },
-  { id: 5, name: 'Chris Lee', role: 'Marketing', imageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' },
-  { id: 6, name: 'Sarah Wilson', role: 'Product Manager', imageUrl: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80' },
+  { id: 1, name: 'Ultrafresh', role: 'CEO', imageUrl: 'https://pbs.twimg.com/profile_images/1294319297519550465/HFhUHBc4_400x400.jpg' },
+  { id: 2, name: 'Suepaphly', role: 'CTO', imageUrl: 'https://pbs.twimg.com/profile_images/1359977556909424645/bel2KDgi_400x400.jpg' },
+  { id: 3, name: 'TacoSupreme', role: 'Lead Game Developer', imageUrl: 'https://pbs.twimg.com/profile_images/1863785886501965824/0GZ2poqA_400x400.jpg' },
+  { id: 4, name: 'Coffee_Chan', role: 'Plugin Developer', imageUrl: 'https://pbs.twimg.com/profile_images/1573155475793022976/c_XzW-OC_400x400.jpg' },
+  { id: 5, name: 'Alessandro', role: 'Pixel Artist', imageUrl: 'https://pbs.twimg.com/profile_images/1698563225179004928/RQGSi8yK_400x400.jpg' },
+  { id: 6, name: 'StudioQuiet', role: 'Artist', imageUrl: 'https://pbs.twimg.com/profile_images/1823846485487747073/KpUv8Vni_400x400.jpg' },
 ];
 
 const TeamsSection = () => {
