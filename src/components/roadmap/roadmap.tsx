@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
+"use client";
 import React from "react";
-import { Timeline } from "./timeline";
+import { Timeline } from "@/components/roadmap/timeline";
 import QuestCard from "./QuestCard";
 import { motion } from "framer-motion";
 
-export function RoadMap() {
+export default function RoadMap() {
   const data = [
     {
       title: "1. Initial Set Launch",
@@ -21,16 +22,6 @@ export function RoadMap() {
             <QuestCard title="NFT Minting" color="bg-blue-600" description="Release the initial set, allowing users to mint exclusive digital assets that form the foundation of the Faet metaverse."/>
             <QuestCard title="Developer & Community Onboarding" color="bg-purple-600" description="Begin community-building activities, including AMAs and workshops, to introduce users and developers to Faet’s features and ecosystem."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/01.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -49,16 +40,6 @@ export function RoadMap() {
             <QuestCard title="Token Airdrop" color="bg-orange-600" description="Distribute Faet ERC-20 tokens to all holders of the initial NFT set."/>
             <QuestCard title="Token Usage" color="bg-red-600" description="Enable basic utility for the token, allowing it to be used for in-game purchases, rewards, and future staking options. This token will not have a cash value and will be used for use within the Faet metaverse and potential future governance."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/02.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -79,16 +60,6 @@ export function RoadMap() {
             <QuestCard title="In-Game Player-to-Player NFT Trading/Offer System" color="bg-purple-600" description="Launch a trading system that allows users to create and accept offers for NFTs directly within the game, facilitating secure and seamless exchanges."/>
             <QuestCard title="Developer Access to Token Tools" color="bg-red-600" description="Provide tools and resources for developers to integrate tokens and NFTs into their games seamlessly."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/03.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -108,16 +79,6 @@ export function RoadMap() {
             <QuestCard title="Multiplayer Integration" color="bg-orange-600" description="Enable multiplayer interactions for the Faet platform, allowing players to interact, trade, and play within shared digital environments."/>
             <QuestCard title="Community Multiplayer Events" color="bg-red-600" description="Host events to showcase multiplayer capabilities, fostering engagement and community bonding in the Faet ecosystem."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/04.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -137,16 +98,6 @@ export function RoadMap() {
             <QuestCard title="Platform Rollout" color="bg-blue-600" description="Launch Faet’s game marketplace, allowing creators to publish games built on popular low-code design tools like RPGMaker, without the limitations on NFTs and Web3 functionality."/>
             <QuestCard title="Game Sales & Promotions" color="bg-purple-600" description="Enable developers to monetize their games through Web3 integrations, positioning Faet as the 'Steam of Crypto' and opening new opportunities for creators in the decentralized gaming ecosystem."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/05.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -167,16 +118,6 @@ export function RoadMap() {
             <QuestCard title="Staking Rewards" color="bg-red-600" description="Implement staking rewards in ERC-20 tokens for locked NFTs, incentivizing users to participate actively."/>
             <QuestCard title="Advanced Token Utilities" color="bg-amber-600" description="Allow staked tokens to unlock special in-game items, exclusive content, and early access to future NFT drops."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/06.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -197,16 +138,6 @@ export function RoadMap() {
             <QuestCard title="Cross-Chain NFT and Token Transfers" color="bg-purple-600" description="Allow users to transfer assets seamlessly across supported chains, enhancing Faet’s utility and appeal in the decentralized gaming space."/>
             <QuestCard title="Developer Tools for Cross-Chain Games" color="bg-red-600" description="Equip developers with tools to create cross-chain-compatible games, fostering more expansive and interconnected digital experiences."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/07.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -228,16 +159,6 @@ export function RoadMap() {
             <QuestCard title="Governance Opportunities" color="bg-amber-600" description="Provide tournament winners and top players with governance privileges, allowing them to participate in decision-making processes that impact the Faet platform."/>
             <QuestCard title="Community Engagement" color="bg-lime-600" description="Build community-focused events around tournaments, fostering camaraderie, competitive spirit, and long-term loyalty within the Faet user base."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/08.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },
@@ -258,16 +179,6 @@ export function RoadMap() {
             <QuestCard title="NFT Set Generation" color="bg-purple-600" description="Provide AI capabilities to design NFT collections, making it easy to launch in-game assets and collectibles that align with a game’s aesthetic and lore."/>
             <QuestCard title="Dialogue and Story Generation" color="bg-red-600" description="Integrate AI tools to help generate engaging dialogue, plot lines, and character backstories, facilitating immersive storytelling with minimal manual input."/>
           </div>
-          <motion.img
-            initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 140 }}
-            src="/images/roadmap/09.png"
-            alt="hero-img"
-            width={733}
-            height={706}
-            className="mx-auto h-64 md:h-80 w-auto my-10 md:my-20 animate-spin-slow"
-          />
         </div>
       ),
     },

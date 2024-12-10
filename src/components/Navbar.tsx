@@ -20,15 +20,8 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
           <nav className="hidden md:flex items-center space-x-4">
             <NavLink href="/#home">Home</NavLink>
             <NavLink href="/roadmap">Roadmap</NavLink>
-            <NavLink href="/#icon">Icon</NavLink>
-            <NavLink href="/#colors">Colors</NavLink>
-            <NavLink href="/#user-interface">User Interface</NavLink>
-            <NavLink href="/#typography">Typography</NavLink>
-            <NavLink href="/#manual">Manual</NavLink>
-            <NavLink href="/#mockups">Mock-ups</NavLink>
-            <NavLink href="/#team">Team</NavLink>
             <NavLink href="/#contact">Contact</NavLink>
-            <NavLink href="#">
+            <NavLink href="https://discord.gg/t88HmN52Nd">
               <img
                 src="/images/discord.png"
                 alt="discord"
@@ -37,7 +30,7 @@ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
                 className=""
               />
             </NavLink>
-            <NavLink href="#">
+            <NavLink href="https://x.com/FaetStudio">
               <img
                 src="/images/X.png"
                 alt="X"

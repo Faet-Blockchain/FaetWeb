@@ -1,13 +1,19 @@
-import React from "react";
-import { RoadMap } from "./roadmap";
+import RoadMap from "@/components/roadmap/roadmap";
+import Image from "next/image";
+import RoadmapAnimation from "@/components/roadmap/RoadmapAnimation";
 
-function RoadmapPage() {
-  return (
-    <main className="min-h-screen bg-gray-100">
-      <h1 className="text-center text-3xl font-bold my-10">Roadmap</h1>
-      <RoadMap />
-    </main>
-  );
+export default function Home() {
+    return (
+        <RoadmapAnimation>
+            <RoadMap />
+            <Image
+                src="/images/magic.png"
+                alt="hero-img"
+                width={733}
+                height={706}  
+                className="mx-auto h-64 md:h-[32rem] w-auto my-10 md:my-20 animate-[spin_20s_linear_infinite]"
+
+            />
+        </RoadmapAnimation>
+    );
 }
-
-export default RoadmapPage;

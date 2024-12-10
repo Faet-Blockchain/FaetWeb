@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
+"use client";
 import React from "react";
 import { motion } from "framer-motion";
 
@@ -35,7 +36,7 @@ const MagicSection = () => {
 					alt="hero-img"
 					width={733}
 					height={706}
-					className="mx-auto h-64 md:h-[32rem] w-auto my-10 md:my-20 animate-spin-slow"
+					className="mx-auto h-64 md:h-[32rem] w-auto my-10 md:my-20 animate-[spin_20s_linear_infinite]"
 				/>
 			</motion.div>
 		</section>

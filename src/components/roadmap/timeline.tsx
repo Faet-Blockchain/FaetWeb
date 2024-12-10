@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import {
   useScroll,
@@ -57,9 +58,18 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
             key={index}
             className="flex justify-start pt-10 md:pt-40 md:gap-10"
           >
-            <div className="sticky flex flex-col md:flex-row z-40 items-center top-40 self-start max-w-xs lg:max-w-sm md:w-full">
-              <div className="h-10 absolute left-3 md:left-3 w-10 rounded-full bg-white dark:bg-black flex items-center justify-center">
-                <div className="h-4 w-4 rounded-full bg-gradient-to-br from-orange-500 to-red-500 border border-neutral-300 dark:border-neutral-700 p-2" />
+            <div className="sticky flex flex-col md:flex-row items-center top-40 self-start max-w-xs lg:max-w-sm md:w-full">
+              <div className="h-64 absolute -left-24 md:-left-24 w-64 rounded-full flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-white dark:bg-black flex items-center justify-center">
+                  <div className="h-4 w-4 rounded-full bg-gradient-to-br from-orange-500 to-red-500 border border-neutral-300 dark:border-neutral-700 p-2" />
+                </div>
+                <img
+                  src={`/images/roadmap/0${index + 1}.png`}
+                  alt="hero-img"
+                  width={733}
+                  height={706}
+                  className="absolute -z-20 h-auto w-auto animate-[spin_20s_linear_infinite]"
+                />
               </div>
               <motion.h3
               initial={{ opacity: 0, y: 30 }}
@@ -86,7 +96,7 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
           style={{
             height: height + "px",
           }}
-          className="absolute md:left-8 left-8 top-0 overflow-hidden w-[2px] bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-neutral-200 dark:via-neutral-700 to-transparent to-[99%]  [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)] "
+          className="absolute -z-30 md:left-8 left-8 top-0 overflow-hidden w-[2px] bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-neutral-200 dark:via-neutral-700 to-transparent to-[99%]  [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)] "
         >
           <motion.div
             style={{
