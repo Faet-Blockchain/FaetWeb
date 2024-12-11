@@ -11,15 +11,9 @@ const Footer = () => {
             <div className="mb-4 md:mb-0">
               <p className="">&copy; 2024 FAET. All rights reserved.</p>
             </div>
-            <div className="flex flex-wrap justify-center md:justify-end gap-4">
+            <div className="flex flex-wrap justify-center md:justify-end gap-4">              
               <NavLink href="/#home">Home</NavLink>
-              <NavLink href="/#icon">Icon</NavLink>
-              <NavLink href="/#colors">Colors</NavLink>
-              <NavLink href="/#user-interface">User Interface</NavLink>
-              <NavLink href="/#typography">Typography</NavLink>
-              <NavLink href="/#manual">Manual</NavLink>
-              <NavLink href="/#mockups">Mock-ups</NavLink>
-              <NavLink href="/#team">Team</NavLink>
+              <NavLink href="/roadmap">Roadmap</NavLink>
               <NavLink href="/#contact">Contact</NavLink>
             </div>
             <div className="flex space-x-4 mt-4 md:mt-0">

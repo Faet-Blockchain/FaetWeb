@@ -17,7 +17,6 @@ import AnimatedImageSection from "@/components/home/AnimatedImageSection";
 export default function Home() {
 	return (
 		<HeroAnimation>
-			<GuideLine />
 			<HeroSection />
 			<Partners />
 			<FaetIconSection />

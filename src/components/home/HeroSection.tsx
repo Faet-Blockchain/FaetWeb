@@ -6,6 +6,30 @@ import { motion } from "framer-motion";
 const HeroSection = () => {
 	return (
 		<div className="px-3 mt-10 pb-32 max-w-6xl mx-auto">
+
+			<br />
+			<br />
+			<br />
+			<br />
+			<br />
+			<motion.div
+				initial={{ opacity: 0, y: 50, scale: 8 }}
+				whileInView={{ opacity: 1, y: 0, scale: 1 }}
+				transition={{ type: "spring", stiffness: 100 }}
+			>
+				<img
+						src="/images/faet-end.png"
+						alt=""
+						width={848}
+						height={321}
+						className="mx-auto md:w-full my-10 md:mb-20 md:mt-10"
+				/>
+			</motion.div>
+			<br />
+			<br />
+			<br />
+			<br />
+			<br />
 			<motion.h1
 				initial={{ opacity: 0, y: 20 }}
 				whileInView={{ opacity: 1, y: 0 }}
@@ -21,7 +45,8 @@ const HeroSection = () => {
 				className="text-lg my-5 max-w-5xl"
 			>
 				Limited edition founders NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and play our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
-			</motion.p>
+			</motion.p>			
+			<br />
 			<div className="flex justify-center mt-10">
 				<motion.button
 					initial={{ opacity: 0, y: 20, scale: 0.5 }}
@@ -33,19 +58,6 @@ const HeroSection = () => {
 					}}
 					className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Get Started</motion.button>
 			</div>
-			<motion.div
-				initial={{ opacity: 0, y: 50, scale: 0.8 }}
-				whileInView={{ opacity: 1, y: 0, scale: 1 }}
-				transition={{ type: "spring", stiffness: 100 }}
-			>
-				<img
-						src="/images/faet-end.png"
-						alt=""
-						width={848}
-						height={321}
-						className="mx-auto md:w-auto my-10 md:mb-20 md:mt-10"
-				/>
-			</motion.div>
 		</div>
 	);
 };
