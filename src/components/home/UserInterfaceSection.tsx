@@ -28,24 +28,11 @@ const UserInterfaceSection = () => {
 				transition={{ type: "spring", stiffness: 140 }}
 			>
 				<img
-					src="/images/ui1.png"
+					src="/images/mockup1.png"
 					alt="user-interface"
 					width={1239}
 					height={315}
-					className="ml-auto my-10 md:my-20 md:max-w-4xl md:h-auto"
-				/>
-			</motion.div>
-			<motion.div
-				initial={{ opacity: 0, y: 30, scale: 0.8, rotate: -10 }}
-				whileInView={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
-				transition={{ type: "spring", stiffness: 140 }}
-			>
-				<img
-					src="/images/ui2.png"
-					alt="user-interface"
-					width={997}
-					height={326}
-					className="my-10 md:my-20 md:max-w-3xl md:h-auto"
+					className="ml-auto mr-auto my-10 md:my-20 md:max-w-xl md:h-auto"
 				/>
 			</motion.div>
 		</section>

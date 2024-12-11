@@ -20,11 +20,7 @@ const MagicSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Due to the significance of the magic system in the game. You
-				needed a design that arranged and gave prominence to each
-				magical type. This array beautifuly displays each magic type
-				while also allowing the player to recognize the differences by
-				there unique colors.
+				Dummy text.
 			</motion.p>
 			<motion.div
 				initial={{ opacity: 0, y: 20, scale: 0.3, rotate: 10 }}

@@ -40,17 +40,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
         </svg>
       </button>
       <nav className="mt-8 space-y-4 flex flex-col h-full">
-        <NavLink href="/#home">Home</NavLink>
-        <NavLink href="/#icon">Icon</NavLink>
-        <NavLink href="/#colors">Colors</NavLink>
-        <NavLink href="/#user-interface">User Interface</NavLink>
-        <NavLink href="/#typography">Typography</NavLink>
-        <NavLink href="/#manual">Manual</NavLink>
-        <NavLink href="/#mockups">Mock-ups</NavLink>
-        <NavLink href="/#team">Team</NavLink>
-        <NavLink href="/#contact">Contact</NavLink>
+            <NavLink href="/#home">Home</NavLink>
+            <NavLink href="/roadmap">Roadmap</NavLink>
+            <NavLink href="/#contact">Contact</NavLink>
         <div className='flex gap-3'>
-          <NavLink href="#">
+          <NavLink href="https://discord.gg/t88HmN52Nd">
               <img
                 src="/images/discord.png"
                 alt="discord"
@@ -59,7 +53,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                 className=""
               />
             </NavLink>
-            <NavLink href="#">
+            <NavLink href="https://x.com/FaetStudio">
               <img
                 src="/images/X.png"
                 alt="X"

@@ -22,13 +22,7 @@ const ManualSection = () => {
 						transition={{ duration: 0.75, ease: "easeInOut" }}
 						className="text-lg my-5 max-w-5xl"
 					>
-						Levreging my unique style, the potential physical media
-						surrounding FAET would lean fully into a textured, worn
-						asthetic. The manual would remain minimalist in type,
-						and encourage the reader to enhabit the world in which
-						they are about to start playing in. Giving the player
-						that sense of emersion through all aspects of the visual
-						presentation.
+						Dummy Text
 					</motion.p>
 				</div>
 				<motion.div

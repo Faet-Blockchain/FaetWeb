@@ -1,11 +1,23 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 const FaetIconSection = () => {
+	const [showLightbox, setShowLightbox] = useState(false);
+	const toggleLightbox = () => setShowLightbox(!showLightbox);
+
+	// Prevent body from scrolling when lightbox is open
+	useEffect(() => {
+		if (showLightbox) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+	}, [showLightbox]);
+
 	return (
-		<section id="icon" className="px-3 my-32 max-w-6xl mx-auto">
+		<section id="icon" className="px-3 my-32 max-w-6xl mx-auto relative">
 			<motion.h1
 				initial={{ opacity: 0, y: -20 }}
 				whileInView={{ opacity: 1, y: 0 }}
@@ -28,13 +40,31 @@ const FaetIconSection = () => {
 				transition={{ type: "spring", stiffness: 100 }}
 			>
 				<img
-					src="/images/faet-icon.png"
+					onClick={toggleLightbox}
+					src="/images/poster.png"
 					alt="hero-img"
 					width={1134}
 					height={428}
-					className="mx-auto md:h-96 md:w-auto my-10 md:my-20"
+					className="mx-auto md:h-96 md:w-auto my-10 md:my-20 cursor-pointer"
 				/>
 			</motion.div>
+			{showLightbox && (
+				<div className="fixed inset-0 z-50 bg-black bg-opacity-80 flex flex-col overflow-hidden">
+					<button
+						onClick={toggleLightbox}
+						className="text-white text-3xl self-end m-5"
+					>
+						×
+					</button>
+					<div className="flex-1 overflow-auto p-5">
+						<img
+							src="/images/poster.png"
+							alt="hero-img-large"
+							className="w-[90vw] md:w-[60vw] h-auto mx-auto block"
+						/>
+					</div>
+				</div>
+			)}
 		</section>
 	);
 };

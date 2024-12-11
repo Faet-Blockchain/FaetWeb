@@ -1,8 +1,9 @@
 // page.tsx (No "use client" at the top)
 import GuideLine from "@/components/home/GuideLine";
 import HeroSection from "@/components/home/HeroSection";
-import SizingAndVarientsSection from "@/components/home/SizingAndVarientsSection";
+//import SizingAndVarientsSection from "@/components/home/SizingAndVarientsSection";
 import FaetIconSection from "@/components/home/FaetIconSection";
+import Partners from "@/components/home/Partners";
 import BrandColorsSection from "@/components/home/BrandColorsSection";
 import UserInterfaceSection from "@/components/home/UserInterfaceSection";
 import TypographySection from "@/components/home/TypographySection";
@@ -18,7 +19,7 @@ export default function Home() {
 		<HeroAnimation>
 			<GuideLine />
 			<HeroSection />
-			<SizingAndVarientsSection />
+			<Partners />
 			<FaetIconSection />
 			<BrandColorsSection />
 			<UserInterfaceSection />
