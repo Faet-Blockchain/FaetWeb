@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <p className="">&copy; 2024 FAET. All rights reserved.</p>
+            <p className="">&copy; {new Date().getFullYear()} FAET. All rights reserved.</p>
             </div>
             <div className="flex flex-wrap justify-center md:justify-end gap-4">              
               <NavLink href="/#home">Home</NavLink>

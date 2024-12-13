@@ -12,6 +12,7 @@ const Partners = () => {
         "rpgmaker.png",
         "groupfi.png",
         "rarible.png",
+        "sq.png"
     ]
 	return (
 		<section id="typography" className="py-32 bg-[#CED6AE]/90 w-full">

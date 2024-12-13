@@ -10,6 +10,7 @@ export default function HeroAnimation({ children }: { children: React.ReactNode 
     offset: ["start start", "end start"],
   });
 
+  // Keep the same transform logic
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   return (
@@ -17,17 +18,29 @@ export default function HeroAnimation({ children }: { children: React.ReactNode 
       <motion.div
         style={{
           backgroundImage: "url('/images/bg.png')",
-          backgroundPosition: "bottom",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-          y: backgroundY
+          backgroundRepeat: "repeat",
+          y: backgroundY,
         }}
-        className="fixed top-[-200%] left-0 h-[350%] inset-0 -z-20 pt-14"
+        className="
+          fixed inset-0 -z-20 pt-14
+          bg-center bg-no-repeat 
+          bg-[length:100%_auto]  /* On mobile: no cover, prevent resizing 'zoom' */
+          top-[-100%] h-[200%]    /* Smaller parallax area on mobile = slower scroll */
+          md:top-[-200%] md:h-[350%]  /* Desktop original setup */
+          md:bg-bottom md:bg-cover    /* Desktop: revert to cover */
+        "
         id="home"
       />
       <motion.div
         style={{ y: backgroundY }}
-        className="fixed top-[-200%] left-0 h-[350%] inset-0 -z-10 pt-14 bg-black/50"
+        className="
+          fixed inset-0 -z-10 pt-14 bg-black/50 
+          bg-center bg-no-repeat 
+          bg-[length:100%_auto]
+          top-[-100%] h-[200%]
+          md:top-[-200%] md:h-[350%]
+          md:bg-bottom md:bg-cover
+        "
         id="home"
       />
       {children}
