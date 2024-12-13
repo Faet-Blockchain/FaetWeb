@@ -1,4 +1,3 @@
-// HeroAnimation.tsx
 "use client";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
@@ -10,37 +9,30 @@ export default function HeroAnimation({ children }: { children: React.ReactNode 
     offset: ["start start", "end start"],
   });
 
-  // Keep the same transform logic
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
   return (
-    <div ref={ref} className="relative font-nocturne-serif-regular">
+    <div ref={ref} className="relative font-nocturne-serif-regular overflow-x-hidden">
       <motion.div
         style={{
           backgroundImage: "url('/images/bg.png')",
-          backgroundRepeat: "repeat",
+          backgroundPosition: "bottom",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
           y: backgroundY,
+          width: '100vw',
+          transform: 'translateX(-50%)'
         }}
-        className="
-          fixed inset-0 -z-20 pt-14
-          bg-center bg-no-repeat 
-          bg-[length:100%_auto]  /* On mobile: no cover, prevent resizing 'zoom' */
-          top-[-100%] h-[200%]    /* Smaller parallax area on mobile = slower scroll */
-          md:top-[-200%] md:h-[350%]  /* Desktop original setup */
-          md:bg-bottom md:bg-cover    /* Desktop: revert to cover */
-        "
+        className="fixed top-[-200%] h-[350%] -z-20 pt-14"
         id="home"
       />
       <motion.div
-        style={{ y: backgroundY }}
-        className="
-          fixed inset-0 -z-10 pt-14 bg-black/50 
-          bg-center bg-no-repeat 
-          bg-[length:100%_auto]
-          top-[-100%] h-[200%]
-          md:top-[-200%] md:h-[350%]
-          md:bg-bottom md:bg-cover
-        "
+        style={{ 
+          y: backgroundY,
+          width: '100vw',
+          transform: 'translateX(-50%)'
+        }}
+        className="fixed top-[-200%] h-[350%] -z-10 pt-14 bg-black/50"
         id="home"
       />
       {children}

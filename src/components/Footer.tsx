@@ -17,12 +17,33 @@ const Footer = () => {
               <NavLink href="/#contact">Contact</NavLink>
             </div>
             <div className="flex space-x-4 mt-4 md:mt-0">
-              <a href="https://discord.gg/t88HmN52Nd" className=" hover:text-white">
-                <img src="/images/discord.png" alt="discord" />
-              </a>
-              <a href="https://x.com/FaetStudio" className=" hover:text-white">
-                <img src="/images/X.png" alt="X" />
-              </a>
+            <NavLink href="https://discord.gg/t88HmN52Nd">
+              <img
+                src="/images/discord.png"
+                alt="discord"
+                width={48}
+                height={48}
+                className=""
+              />
+            </NavLink>
+            <NavLink href="https://x.com/FaetStudio">
+              <img
+                src="/images/X.png"
+                alt="X"
+                width={48}
+                height={48}
+                className=""
+              />
+            </NavLink>
+            <NavLink href="https://github.com/FaetStudio">
+              <img
+                src="/images/github.png"
+                alt="GitHub"
+                width={38}
+                height={38}
+                className="mt-1"
+              />
+            </NavLink>
             </div>
           </div>
         </div>
