@@ -13,18 +13,27 @@ import TeamsSection from "@/components/home/TeamsSection";
 import CommunitySection from "@/components/home/CommunitySection";
 import HeroAnimation from "@/components/home/HeroAnimation";
 import AnimatedImageSection from "@/components/home/AnimatedImageSection";
+import SectionWrapper from "@/components/SectionWrapper";
 
 export default function Home() {
 	return (
 		<HeroAnimation>
 			<HeroSection />
 			<Partners />
+
+			<SectionWrapper>
 			<FaetIconSection />
 			<BrandColorsSection />
 			<UserInterfaceSection />
+			</SectionWrapper>
+
 			<TypographySection />
+
+			<SectionWrapper>
 			<MagicSection />
 			<ManualSection />
+			</SectionWrapper>
+			
 			<TeamsSection />
 			<CommunitySection />
 			
