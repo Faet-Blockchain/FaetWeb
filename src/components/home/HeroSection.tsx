@@ -57,7 +57,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Limited edition Founders Pass NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and play our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
+				Limited edition Founders Pass NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and grants access to our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
 			</motion.p>	
 			<br />
 			<br />
