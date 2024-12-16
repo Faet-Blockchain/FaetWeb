@@ -17,8 +17,8 @@ const nocturneSerifBold = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "FAET Brand Website",
-  description: "FAET Brand Website",
+  title: "FAET",
+  description: "The Metaverse Engine",
 };
 
 export default function RootLayout({
