@@ -20,7 +20,10 @@ const Navbar = () => {
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4">
             <NavLink href="/#home">Home</NavLink>
-            <NavLink href="/roadmap">Roadmap</NavLink>
+            <NavLink href="/roadmap" target="_blank">Roadmap</NavLink>
+            <NavLink href="/whitepaper.pdf" target="_blank" rel="noopener noreferrer">
+              Whitepaper
+            </NavLink>
             <NavLink href="/#contact">Contact</NavLink>
             <NavLink href="https://discord.gg/t88HmN52Nd">
               <img
@@ -40,7 +43,7 @@ const Navbar = () => {
                 className=""
               />
             </NavLink>
-            <NavLink href="https://github.com/FaetStudio">
+            <NavLink href="https://github.com/Faet-Blockchain">
               <img
                 src="/images/github.png"
                 alt="GitHub"

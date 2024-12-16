@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 const HeroSection = () => {
 	return (
@@ -26,6 +27,8 @@ const HeroSection = () => {
 				/>
 			</motion.div>
 			<div className="flex justify-center mt-10">
+
+			<Link href="https://www.subber.xyz/faet/allowlist/faet-founders-pass-allowlist" target="_blank">
 				<motion.button
 					initial={{ opacity: 0, y: 20, scale: 0.5 }}
 					whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -34,7 +37,8 @@ const HeroSection = () => {
 						scale: 1.1,
 						transition: { duration: 0.3 },
 					}}
-					className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Get Started</motion.button>
+					className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Whitelist Now</motion.button>
+			</Link>
 			</div>
 			<br />
 			<br />		
@@ -45,7 +49,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-5xl md:text-7xl font-nocturne-serif-bold"
 			>
-				GET THE FOUNDERS NFT SET
+				GET THE FOUNDERS PASS NFT
 			</motion.h1>
 			<motion.p
 				initial={{ opacity: 0, y: 20 }}
@@ -53,7 +57,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Limited edition founders NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and play our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
+				Limited edition Founders Pass NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and play our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
 			</motion.p>	
 			<br />
 			<br />

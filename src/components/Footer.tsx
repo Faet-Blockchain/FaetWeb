@@ -14,10 +14,16 @@ const Footer = () => {
             <div className="flex flex-wrap justify-center md:justify-end gap-4">              
               <NavLink href="/#home">Home</NavLink>
               <NavLink href="/roadmap">Roadmap</NavLink>
+              <NavLink href="/whitepaper.pdf" target="_blank" rel="noopener noreferrer">
+                Whitepaper
+              </NavLink>
               <NavLink href="/#contact">Contact</NavLink>
+              <NavLink href="/privacy">Privacy Policy</NavLink>
+              <NavLink href="/eula">EULA</NavLink>
+              <NavLink href="/terms">Terms of Service</NavLink>
             </div>
             <div className="flex space-x-4 mt-4 md:mt-0">
-            <NavLink href="https://discord.gg/t88HmN52Nd">
+            <NavLink href="https://discord.gg/t88HmN52Nd" target="_blank" rel="noopener noreferrer">
               <img
                 src="/images/discord.png"
                 alt="discord"
@@ -26,7 +32,7 @@ const Footer = () => {
                 className=""
               />
             </NavLink>
-            <NavLink href="https://x.com/FaetStudio">
+            <NavLink href="https://x.com/FaetStudio" target="_blank" rel="noopener noreferrer">
               <img
                 src="/images/X.png"
                 alt="X"
@@ -35,7 +41,7 @@ const Footer = () => {
                 className=""
               />
             </NavLink>
-            <NavLink href="https://github.com/FaetStudio">
+            <NavLink href="https://github.com/Faet-Blockchain" target="_blank" rel="noopener noreferrer">
               <img
                 src="/images/github.png"
                 alt="GitHub"

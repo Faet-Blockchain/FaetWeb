@@ -30,7 +30,7 @@ const Partners = () => {
                     transition={{ duration: 0.75, ease: "easeInOut" }}
                     className="text-neutral-800 mb-8"
                 >
-                    Dummy text.
+                    Lisk enables seamless Layer-2 scaling through its integration with the Optimism Stack, ensuring fast and affordable blockchain interactions. RPG Maker provides a robust foundation for game creation, empowering developers with intuitive tools. GroupFi enhances community engagement with decentralized finance features, while Rarible facilitates NFT integration and trading. Ethereum serves as the core blockchain, delivering unparalleled security and interoperability, with Optimism optimizing scalability for a smooth, low-cost user experience. Together, these partners drive Faet&apos;s mission to redefine Web3 gaming.
                 </motion.p>
                 <InfiniteMovingCards
                     items={partners1}

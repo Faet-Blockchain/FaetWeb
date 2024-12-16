@@ -2,6 +2,7 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
+import NavLink from '../NavLink';
 
 const ManualSection = () => {
 	return (
@@ -22,7 +23,13 @@ const ManualSection = () => {
 						transition={{ duration: 0.75, ease: "easeInOut" }}
 						className="text-lg my-5 max-w-5xl"
 					>
-						Dummy Text
+						The &quot;Faet Manual&quot; is a comprehensive, user-friendly guide designed to empower creators to develop their own Web3 games without any coding knowledge. It walks users through every step of the process, from setting up game assets and integrating blockchain features like NFTs and tokens, to deploying and managing their games on the Faet platform. With clear instructions, pre-built modules, and practical examples, the manual simplifies the complexities of Web3 development, making it accessible to anyone with a creative vision.
+
+						<br /><br />
+						
+						<NavLink href="https://github.com/Faet-Blockchain/FaetAlphaDemo" target="_blank" rel="noopener noreferrer">
+						Find out more by checking out our Alpha Test Demo (Click Here).
+						</NavLink>
 					</motion.p>
 				</div>
 				<motion.div
