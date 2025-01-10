@@ -28,7 +28,7 @@ const HeroSection = () => {
 			</motion.div>
 			<div className="flex justify-center mt-10">
 
-			<Link href="https://www.subber.xyz/faet/allowlist/faet-founders-pass-allowlist" target="_blank">
+			<Link href="https://www.subber.xyz/faet/wallet-collection/preferred-whitelist-for-faet-founders-pass" target="_blank">
 				<motion.button
 					initial={{ opacity: 0, y: 20, scale: 0.5 }}
 					whileInView={{ opacity: 1, y: 0, scale: 1 }}
