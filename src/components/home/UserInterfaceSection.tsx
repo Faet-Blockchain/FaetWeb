@@ -21,6 +21,8 @@ const UserInterfaceSection = () => {
 				className="text-lg my-5 max-w-5xl"
 			>
 				FAET Studios is not just creating a platform, but taking part in the creativity as well. The official game, playable only by the holders of FAET NFTs is being launched alongside their original Limited Edition Founders NFT Set mint. Explore the world of FAET and discover the mysteries of The Last Gate in this epic turn-based roleplaying adventure.
+				<br /><br />
+				Without the barriers of gas, bridging, and swapping the mobile app will offer seamless onboarding to new users. Access to blockchain gaming effortless with in-app Gaming, Minting, Staking, and Trading all just a few clicks away.
 			</motion.p>
 			<motion.div
 				initial={{ opacity: 0, y: 20, scale: 0.8, rotate: 10 }}
@@ -36,7 +38,7 @@ const UserInterfaceSection = () => {
 					className="max-w-xs h-auto"
 				/>
 				<img
-					src="/images/mockup1.png"
+					src="/images/phonescreen.png"
 					alt="user-interface"
 					width={1239}
 					height={315}

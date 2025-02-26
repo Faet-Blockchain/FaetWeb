@@ -13,7 +13,7 @@ const SizingAndVarientsSection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-black text-5xl md:text-7xl font-nocturne-serif-bold"
 				>
-					NFTS WITH REAL UTILITY
+					NFTS WITH REAL UTILITY AND TECH ADVANTAGE
 				</motion.h1>
 				<motion.p
 					initial={{ opacity: 0, y: 20 }}
@@ -21,7 +21,7 @@ const SizingAndVarientsSection = () => {
 					transition={{ duration: 0.75, ease: "easeInOut" }}
 					className="text-lg my-5 text-black"
 				>
-					Unleash your creativity with FAET and show the world your vision. FAET enables creators to generate their own NFT sets and use them in their own web3 games. Connect with others and use their NFTs in your game, and add to the ecosystem by allowing others to use yours.  
+					Unleash your creativity with FAET and show the world your vision. FAET enables creators to generate their own NFT sets and use them in their own web3 games. Connect with others and use their NFTs in your game. Unlike standard NFTs, Faet NFTs contain entire sprite sheets and game metadata, making them game-ready for the Faet ecosystem and partner games.    
 				</motion.p>
 				<div className="grid md:grid-cols-2 gap-10 my-10">
 					<motion.div

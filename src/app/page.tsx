@@ -19,7 +19,6 @@ export default function Home() {
 	return (
 		<HeroAnimation>
 			<HeroSection />
-			<Partners />
 
 			<SectionWrapper>
 			<FaetIconSection />
@@ -34,6 +33,7 @@ export default function Home() {
 			<ManualSection />
 			</SectionWrapper>
 			
+			<Partners />
 			<TeamsSection />
 			<CommunitySection />
 			

@@ -12,7 +12,7 @@ const BrandColorsSection = () => {
         transition={{ duration: 0.75, ease: "easeInOut" }}
         className="text-5xl md:text-7xl font-nocturne-serif-bold"
       >
-        FAET GATEWAY
+        FAET PLATFORM
       </motion.h1>
       <motion.p
         initial={{ opacity: 0, y: 20 }}

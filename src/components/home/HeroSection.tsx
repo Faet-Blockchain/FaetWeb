@@ -28,7 +28,7 @@ const HeroSection = () => {
 			</motion.div>
 			<div className="flex justify-center mt-10">
 
-			<Link href="https://www.subber.xyz/faet/wallet-collection/preferred-whitelist-for-faet-founders-pass" target="_blank">
+			<Link href="https://discord.gg/t88HmN52Nd" target="_blank">
 				<motion.button
 					initial={{ opacity: 0, y: 20, scale: 0.5 }}
 					whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -37,7 +37,7 @@ const HeroSection = () => {
 						scale: 1.1,
 						transition: { duration: 0.3 },
 					}}
-					className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Whitelist Now</motion.button>
+					className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Join the Community</motion.button>
 			</Link>
 			</div>
 			<br />
@@ -49,7 +49,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-5xl md:text-7xl font-nocturne-serif-bold"
 			>
-				GET THE FOUNDERS PASS NFT
+				Where Web2 gaming ends and Web3 Gaming begins.
 			</motion.h1>
 			<motion.p
 				initial={{ opacity: 0, y: 20 }}
@@ -57,7 +57,7 @@ const HeroSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Limited edition Founders Pass NFTs for the FAET platform. Holding these will guarantee entry into our ERC-20 airdrop, and grants access to our exclusive founders-only game. Supplies are extremely limited. Sign up for the whitelist today.
+				FAET makes blockchain gaming accessible to everyone. With our game-ready NFT characters, seamless onboarding, and creator-friendly tools, we eliminate the complexity of Web3, making it easy for players, developers, and creators to engage in blockchain-powered gaming.
 			</motion.p>	
 			<br />
 			<br />

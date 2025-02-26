@@ -19,7 +19,7 @@ export default function AnimatedImageSection() {
       />
       <div className="flex justify-center mt-10">
 
-        <Link href="https://www.subber.xyz/faet/allowlist/faet-founders-pass-allowlist" target="_blank">
+        <Link href="https://discord.gg/t88HmN52Nd" target="_blank">
           <motion.button
             initial={{ opacity: 0, y: 20, scale: 0.5 }}
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -28,7 +28,7 @@ export default function AnimatedImageSection() {
               scale: 1.1,
               transition: { duration: 0.3 },
             }}
-            className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Whitelist Now</motion.button>
+            className="bg-gradient-to-r from-[#E6C245] to-[#B1302C] rounded-lg px-4 py-3 text-2xl font-nocturne-serif-bold text-black">Join the Community</motion.button>
         </Link>
       </div>
     </motion.div>
