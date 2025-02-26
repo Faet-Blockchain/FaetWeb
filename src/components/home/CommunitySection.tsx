@@ -35,7 +35,7 @@ const CommunitySection: React.FC = () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              to: "1ultrafresh@gmail.com", // Replace with actual recipient email
+              to: "faetstudio@faet.io", // Replace with actual recipient email
               subject: `FAET WEBSITE INQUIRY: ${formData.name}; (${formData.email})`,
               text: formData.message,
               recaptchaToken, // Pass the token to the server
