@@ -20,20 +20,20 @@ export default function Home() {
 		<HeroAnimation>
 			<HeroSection />
 
+			<TypographySection />
 			<SectionWrapper>
 			<FaetIconSection />
 			<BrandColorsSection />
 			<UserInterfaceSection />
 			</SectionWrapper>
 
-			<TypographySection />
+			<Partners />
 
 			<SectionWrapper>
 			<MagicSection />
 			<ManualSection />
 			</SectionWrapper>
 			
-			<Partners />
 			<TeamsSection />
 			<CommunitySection />
 			
