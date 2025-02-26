@@ -85,9 +85,10 @@ const CommunitySection: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0, scale: 1 }}
                             transition={{ duration: 0.5, ease: "easeInOut" }}
                             className="flex space-x-4"
+                            style={{ height: "40px", width: "auto" }}
                         >
                             <a href="https://discord.gg/t88HmN52Nd" target="_blank">
-                                <img src="/images/discord2.png" alt="discord" style="height: 40px; width: auto;" />
+                                <img src="/images/discord2.png" alt="discord" />
                             </a>
                             <a href="https://x.com/FaetStudio" target="_blank">
                                 <img src="/images/X.png" alt="X" />
