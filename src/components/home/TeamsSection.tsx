@@ -13,12 +13,12 @@ interface TeamMember {
 
 const teamMembers: TeamMember[] = [
   { id: 1, name: 'Ultrafresh', role: 'CEO', imageUrl: 'https://pbs.twimg.com/profile_images/1294319297519550465/HFhUHBc4_400x400.jpg', xUrl:'https://x.com/1ultrafresh' },
-  { id: 2, name: 'Suepaphly', role: 'CTO', imageUrl: 'https://pbs.twimg.com/profile_images/1359977556909424645/bel2KDgi_400x400.jpg', xUrl:'https://x.com/suepaphly'  },
+  { id: 2, name: 'Suepaphly', role: 'CTO', imageUrl: 'https://pbs.twimg.com/profile_images/1892735466845171712/B2NCDpDr_400x400.jpg', xUrl:'https://x.com/suepaphly'  },
   { id: 3, name: 'TacoSupreme', role: 'Lead Game Developer', imageUrl: 'https://pbs.twimg.com/profile_images/1863785886501965824/0GZ2poqA_400x400.jpg', xUrl:'https://x.com/TacauxSupreme'  }
 ];
 
 const collaborators: TeamMember[] = [
-  { id: 1, name: 'Coffee_Chan', role: 'Plugin Developer', imageUrl: 'https://pbs.twimg.com/profile_images/1573155475793022976/c_XzW-OC_400x400.jpg', xUrl:'https://x.com/coffeenahc'  },
+  { id: 1, name: 'Coffee_Chan', role: 'Plugin Developer', imageUrl: 'https://pbs.twimg.com/profile_images/1886781933730033664/TCGcLPZ2_400x400.jpg', xUrl:'https://x.com/coffeenahc'  },
   { id: 2, name: 'Alessandro', role: 'Pixel Artist', imageUrl: 'https://pbs.twimg.com/profile_images/1698563225179004928/RQGSi8yK_400x400.jpg', xUrl:'https://x.com/The_Power_Green'  },
   { id: 3, name: 'StudioQuiet', role: 'Artist', imageUrl: 'https://pbs.twimg.com/profile_images/1823846485487747073/KpUv8Vni_400x400.jpg', xUrl:'https://x.com/CRTOGRPHR'  },
 ];
