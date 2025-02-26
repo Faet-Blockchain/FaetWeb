@@ -87,7 +87,7 @@ const CommunitySection: React.FC = () => {
                             className="flex space-x-4"
                         >
                             <a href="https://discord.gg/t88HmN52Nd" target="_blank">
-                                <img src="/images/discord.png" alt="discord" />
+                                <img src="/images/discord2.png" alt="discord" />
                             </a>
                             <a href="https://x.com/FaetStudio" target="_blank">
                                 <img src="/images/X.png" alt="X" />
