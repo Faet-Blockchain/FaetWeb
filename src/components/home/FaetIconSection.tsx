@@ -32,7 +32,7 @@ const FaetIconSection = () => {
 				transition={{ duration: 0.75, ease: "easeInOut" }}
 				className="text-lg my-5 max-w-5xl"
 			>
-				Web3 game development has never been easier. The RPGMaker series has 25 years of tutorials, assets, plugins, guides both written and video, forum posts troubleshooting, and of course great updates from a reputable game engine company. It is one of the first game engines many people who learn to code start on, and we're bridging the gap for new web3 developers to make NFT games easily. 
+				Web3 game development has never been easier. The RPGMaker series has 25 years of tutorials, assets, plugins, guides both written and video, forum posts troubleshooting, and of course great updates from a reputable game engine company. It is one of the first game engines many people who learn to code start on, and we are bridging the gap for new web3 developers to make NFT games easily. 
 			</motion.p>
 			<motion.div
 				initial={{ opacity: 0, y: 20, scale: 0.8, rotate: 10 }}
