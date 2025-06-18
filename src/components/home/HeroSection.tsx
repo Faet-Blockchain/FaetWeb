@@ -57,7 +57,7 @@ const HeroSection = () => {
 							Play the Game
 						</motion.button>
 					</Link>
-					<p className="text-sm mt-2 text-center">If you already have a founder's pass <br /> Requires Chrome with Metamask, or Metamask Browser for Mobile.</p>
+					<p className="text-sm mt-2 text-center">If you already have a founders pass <br /> Requires Chrome with Metamask, or Metamask Browser for Mobile.</p>
 				</div>
 			</div>
 
