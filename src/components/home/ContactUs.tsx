@@ -97,11 +97,12 @@ const CommunitySection: React.FC = () => {
             transition={{ duration: 0.75, ease: "easeInOut" }}
             className="w-full md:w-1/2"
           >
+            {/*
             <h3 className="text-2xl font-semibold mb-6 font-nocturne-serif-bold text-black">
               Contact Us
             </h3>
 
-            {/*
+            
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <input
