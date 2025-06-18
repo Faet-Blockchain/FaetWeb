@@ -44,7 +44,10 @@ export default function RootLayout({
         </Script>
         
         {/* reCAPTCHA Script */}
-        <script src="https://www.google.com/recaptcha/enterprise.js?render=6LfUn2IrAAAAAOe0xfIsiXgdnQ3FaApkJORBh68E"></script>
+        <Script
+          src="https://www.google.com/recaptcha/enterprise.js?render=6LfUn2IrAAAAAOe0xfIsiXgdnQ3FaApkJORBh68E"
+          strategy="afterInteractive"
+        />
       </head>
       <body
         className={`${nocturneSerifRegular.variable} ${nocturneSerifBold.variable} relative antialiased bg-black text-[#CED6AE]`}
