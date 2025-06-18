@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import Script from "next/script"; // Import Script from Next.js
+import Script from "next/script";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -28,8 +28,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        {/* Google Analytics Script */}
+      <head />
+      <body
+        className={`${nocturneSerifRegular.variable} ${nocturneSerifBold.variable} relative antialiased bg-black text-[#CED6AE]`}
+      >
+        {/* Scripts must go in <body> with App Router */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-5RH1TK4158"
           strategy="afterInteractive"
@@ -42,16 +45,11 @@ export default function RootLayout({
             gtag('config', 'G-5RH1TK4158');
           `}
         </Script>
-        
-        {/* reCAPTCHA Script */}
         <Script
           src="https://www.google.com/recaptcha/enterprise.js?render=6LfUn2IrAAAAAOe0xfIsiXgdnQ3FaApkJORBh68E"
           strategy="afterInteractive"
         />
-      </head>
-      <body
-        className={`${nocturneSerifRegular.variable} ${nocturneSerifBold.variable} relative antialiased bg-black text-[#CED6AE]`}
-      >
+
         <Navbar />
         {children}
         <Footer />
