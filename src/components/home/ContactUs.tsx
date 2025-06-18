@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState } from "react";
@@ -20,43 +21,40 @@ const CommunitySection: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-      
+
         try {
-          // Access grecaptcha from the global window object
-          const recaptchaToken = await window.grecaptcha.execute(
-            "6LfUn2IrAAAAAOe0xfIsiXgdnQ3FaApkJORBh68E",
-            { action: "submit_form" }
-          );
-      
-          // Send form data along with the reCAPTCHA token to your server
-          const response = await fetch("/api/send-email", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              to: "faetstudio@faet.io", // Replace with actual recipient email
-              subject: `FAET WEBSITE INQUIRY: ${formData.name}; (${formData.email})`,
-              text: formData.message,
-              recaptchaToken, // Pass the token to the server
-            }),
-          });
-      
-          if (response.ok) {
-            setSuccessMessage("Your message has been sent successfully!");
-            setFormData({ name: "", email: "", message: "" });
-          } else {
-            const data = await response.json();
-            alert("Failed to send the message: " + data.message);
-          }
+            const recaptchaToken = await window.grecaptcha.execute(
+                "6LfUn2IrAAAAAOe0xfIsiXgdnQ3FaApkJORBh68E",
+                { action: "submit_form" }
+            );
+
+            const response = await fetch("/api/send-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    to: "faetstudio@faet.io",
+                    subject: `FAET WEBSITE INQUIRY: ${formData.name}; (${formData.email})`,
+                    text: formData.message,
+                    recaptchaToken,
+                }),
+            });
+
+            if (response.ok) {
+                setSuccessMessage("Your message has been sent successfully!");
+                setFormData({ name: "", email: "", message: "" });
+            } else {
+                const data = await response.json();
+                alert("Failed to send the message: " + data.message);
+            }
         } catch (error) {
-          console.error("Error sending email:", error);
-          alert("Failed to send the message. Please try again later.");
+            console.error("Error sending email:", error);
+            alert("Failed to send the message. Please try again later.");
         } finally {
-          setIsSubmitting(false);
+            setIsSubmitting(false);
         }
     };
-      
 
     return (
         <section id="contact" className="py-20 md:py-32 bg-[#CED6AE]/80 w-full">
@@ -95,7 +93,6 @@ const CommunitySection: React.FC = () => {
                         </motion.div>
                     </div>
 
-
                     {/* Right Column */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -106,6 +103,8 @@ const CommunitySection: React.FC = () => {
                         <h3 className="text-2xl font-semibold mb-6 font-nocturne-serif-bold text-black">
                             Contact Us
                         </h3>
+
+                        {/*
                         <form className="space-y-4" onSubmit={handleSubmit}>
                             <div>
                                 <input
@@ -145,6 +144,8 @@ const CommunitySection: React.FC = () => {
                             </button>
                         </form>
                         {successMessage && <p className="text-green-600 mt-4">{successMessage}</p>}
+                        */}
+
                     </motion.div>
                 </div>
             </div>
