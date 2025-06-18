@@ -11,7 +11,7 @@ export default function AnimatedImageSection() {
       transition={{ type: "spring", stiffness: 100 }}
     >
       <Image
-        src="/images/hero-image.png"
+        src="/images/faet-end.png"
         alt="hero-img"
         width={1134}
         height={428}
