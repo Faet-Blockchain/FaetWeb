@@ -38,7 +38,7 @@ export default function RoadMap() {
           </motion.p>
           <div className="grid lg:grid-cols-2 gap-4">
             <QuestCard title="Token Airdrop" color="bg-orange-600" description="Distribute Faet ERC-20 tokens to all holders of the initial NFT set."/>
-            <QuestCard title="Token Usage" color="bg-red-600" description="Enable basic utility for the token, allowing it to be used for in-game purchases, rewards, and future staking options. This token will be used for use within the Faet metaverse and potential future governance."/>
+            <QuestCard title="Token Usage" color="bg-red-600" description="Enable basic utility for the token, rewards, and future staking. This token will be used for use within the Faet metaverse and potential future governance."/>
           </div>
         </div>
       ),
