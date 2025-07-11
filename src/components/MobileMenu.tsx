@@ -42,6 +42,10 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
       <nav className="mt-8 space-y-4 flex flex-col h-full">
             <NavLink href="/#home">Home</NavLink>
             <NavLink href="/roadmap">Roadmap</NavLink>
+            <NavLink href="/staking">Staking</NavLink>
+            <NavLink href="/whitepaper.pdf" target="_blank" rel="noopener noreferrer">
+              Whitepaper
+            </NavLink>
             <NavLink href="/#contact">Contact</NavLink>
         <div className='flex gap-3'>
           <NavLink href="https://discord.gg/t88HmN52Nd">
@@ -69,4 +73,3 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 }
 
 export default MobileMenu
-
