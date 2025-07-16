@@ -563,74 +563,13 @@ export default function StakingPage() {
   return (
     <div className="min-h-screen bg-black text-white pt-20">
       <div className="max-w-6xl mx-auto px-4 py-16">
-        {/* Debug Chain Display */}
-        <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-bold text-blue-300 mb-2">Debug: Chain Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
-            <div>
-              <p className="text-blue-400">Current Chain ID:</p>
-              <p className="text-white font-mono">{currentChainId || "Not detected"}</p>
-              <p className="text-gray-400 text-xs">({currentChainIdNumber || "N/A"})</p>
-            </div>
-            <div>
-              <p className="text-blue-400">Required Chain ID:</p>
-              <p className="text-white font-mono">{LISK_SEPOLIA_CHAIN_ID}</p>
-              <p className="text-gray-400 text-xs">({parseInt(LISK_SEPOLIA_CHAIN_ID, 16)})</p>
-            </div>
-            <div>
-              <p className="text-blue-400">Wrong Network Status:</p>
-              <p className={`font-bold ${wrongNetwork ? "text-red-400" : "text-green-400"}`}>
-                {wrongNetwork ? "TRUE (Wrong Network)" : "FALSE (Correct Network)"}
-              </p>
-            </div>
-          </div>
-          <div className="mb-4">
-            <p className="text-blue-400">Wallet Connected:</p>
-            <p className={`font-bold ${account ? "text-green-400" : "text-red-400"}`}>
-              {account ? `YES (${account.slice(0, 6)}...${account.slice(-4)})` : "NO"}
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={async () => {
-                console.log("Manual chain check triggered");
-                await checkNetwork();
-              }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors text-sm"
-            >
-              Manual Chain Check
-            </button>
-            <button
-              onClick={async () => {
-                console.log("Manual wallet reset triggered");
-                if (typeof window.ethereum !== "undefined") {
-                  try {
-                    // Request account access to trigger permission dialog again
-                    await window.ethereum.request({
-                      method: "wallet_requestPermissions",
-                      params: [{ eth_accounts: {} }]
-                    });
-                  } catch (error) {
-                    console.log("Permission request cancelled or failed:", error);
-                  }
-                }
-                // Always disconnect our local state
-                disconnectWallet();
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors text-sm"
-            >
-              Reset Wallet Permissions
-            </button>
-          </div>
-        </div>
-
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: "easeInOut" }}
           className="text-5xl md:text-7xl font-nocturne-serif-bold mb-8"
         >
-          STAKING {selectedNetwork === 'testnet' ? '(TESTNET)' : '(MAINNET)'}
+          STAKING
         </motion.h1>
 
         <motion.p
@@ -743,23 +682,7 @@ export default function StakingPage() {
                 )}
               </div>
 
-              {wrongNetwork && (
-                <div className="bg-red-900 border border-red-600 rounded-lg p-4 mb-6">
-                  <p className="text-red-300 mb-2">⚠️ Wrong Network</p>
-                  <p className="text-white mb-2">
-                    Please switch to Lisk Sepolia Testnet to access staking features.
-                  </p>
-                  <p className="text-gray-300 text-sm mb-4">
-                    Current: {currentChainId || 'Unknown'} | Required: {LISK_SEPOLIA_CHAIN_ID}
-                  </p>
-                  <button
-                    onClick={switchToLiskSepolia}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
-                  >
-                    Switch to Lisk Sepolia
-                  </button>
-                </div>
-              )}
+              
 
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-gray-800 p-6 rounded-lg">
@@ -769,7 +692,7 @@ export default function StakingPage() {
                   </p>
                   <button
                     onClick={wrongNetwork ? switchToLiskSepolia : handleGoToStaking}
-                    disabled={!account || (!canAccessStaking && !wrongNetwork)}
+                    disabled={!account}
                     className={`font-bold py-2 px-6 rounded-lg transition-colors ${
                       wrongNetwork
                         ? "bg-red-600 hover:bg-red-700 text-white"
