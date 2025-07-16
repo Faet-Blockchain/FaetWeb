@@ -1,6 +1,7 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ethers } from 'ethers';
 
 declare global {
   interface Window {
@@ -11,11 +12,58 @@ declare global {
   }
 }
 
+// Contract addresses on Lisk Sepolia
+const FAET_TOKEN_ADDRESS = '0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394';
+const FAET_STAKING_ADDRESS = '0x5189477536B1E476C4025c156526f7e37438BD90';
+
+// Lock duration options (in blocks)
+const LOCK_DURATIONS = {
+  NO_LOCK: { blocks: 0, multiplier: 1, label: 'No Lock' },
+  SIX_MONTHS: { blocks: 15768000, multiplier: 20, label: '6 Months' },
+  EIGHTEEN_MONTHS: { blocks: 47304000, multiplier: 30, label: '18 Months' },
+  THREE_YEARS: { blocks: 94608000, multiplier: 50, label: '3 Years' }
+};
+
+// Simplified ABI for the functions we need
+const FAET_TOKEN_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function decimals() view returns (uint8)'
+];
+
+const FAET_STAKING_ABI = [
+  'function stake(uint256 amount, uint256 lockDuration)',
+  'function withdraw(uint256 stakeIndex)',
+  'function getReward()',
+  'function earned(address account) view returns (uint256)',
+  'function getStakeCount(address user) view returns (uint256)',
+  'function getStakeDetails(address user, uint256 stakeIndex) view returns (uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock)',
+  'function weightedBalances(address account) view returns (uint256)',
+  'function rewards(address account) view returns (uint256)'
+];
+
 export default function StakingPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const [showTokenStaking, setShowTokenStaking] = useState(false);
+  
+  // Web3 state
+  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
+  const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(null);
+  const [stakingContract, setStakingContract] = useState<ethers.Contract | null>(null);
+  
+  // Token/Staking state
+  const [tokenBalance, setTokenBalance] = useState<string>('0');
+  const [stakedBalance, setStakedBalance] = useState<string>('0');
+  const [pendingRewards, setPendingRewards] = useState<string>('0');
+  const [stakeAmount, setStakeAmount] = useState<string>('');
+  const [selectedLockDuration, setSelectedLockDuration] = useState<number>(0);
+  const [userStakes, setUserStakes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [txHash, setTxHash] = useState<string>('');
 
   // Lisk Sepolia testnet configuration
   const LISK_SEPOLIA_CHAIN_ID = '0x106a'; // 4202 in decimal
@@ -80,6 +128,58 @@ export default function StakingPage() {
     }
   };
 
+  const initializeWeb3 = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+      setProvider(web3Provider);
+      
+      const web3Signer = web3Provider.getSigner();
+      setSigner(web3Signer);
+      
+      const token = new ethers.Contract(FAET_TOKEN_ADDRESS, FAET_TOKEN_ABI, web3Signer);
+      const staking = new ethers.Contract(FAET_STAKING_ADDRESS, FAET_STAKING_ABI, web3Signer);
+      
+      setTokenContract(token);
+      setStakingContract(staking);
+      
+      // Load user data
+      await loadUserData(token, staking, await web3Signer.getAddress());
+    }
+  };
+
+  const loadUserData = async (token: ethers.Contract, staking: ethers.Contract, userAddress: string) => {
+    try {
+      // Get token balance
+      const balance = await token.balanceOf(userAddress);
+      setTokenBalance(ethers.utils.formatEther(balance));
+      
+      // Get staked balance (weighted)
+      const weighted = await staking.weightedBalances(userAddress);
+      setStakedBalance(ethers.utils.formatEther(weighted));
+      
+      // Get pending rewards
+      const earned = await staking.earned(userAddress);
+      setPendingRewards(ethers.utils.formatEther(earned));
+      
+      // Get user stakes
+      const stakeCount = await staking.getStakeCount(userAddress);
+      const stakes = [];
+      for (let i = 0; i < stakeCount.toNumber(); i++) {
+        const stakeDetails = await staking.getStakeDetails(userAddress, i);
+        stakes.push({
+          index: i,
+          amount: ethers.utils.formatEther(stakeDetails.amount),
+          weightedAmount: ethers.utils.formatEther(stakeDetails.weightedAmount),
+          multiplier: stakeDetails.multiplier.toNumber(),
+          lockEndBlock: stakeDetails.lockEndBlock.toNumber()
+        });
+      }
+      setUserStakes(stakes);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== 'undefined') {
       setIsConnecting(true);
@@ -90,7 +190,10 @@ export default function StakingPage() {
         setAccount(accounts[0]);
         
         // Check network after connecting
-        await checkNetwork();
+        const networkOk = await checkNetwork();
+        if (networkOk) {
+          await initializeWeb3();
+        }
       } catch (error) {
         console.error('Error connecting to MetaMask:', error);
       } finally {
@@ -101,10 +204,103 @@ export default function StakingPage() {
     }
   };
 
+  const handleStake = async () => {
+    if (!tokenContract || !stakingContract || !stakeAmount) return;
+    
+    setIsLoading(true);
+    setTxHash('');
+    
+    try {
+      const amount = ethers.utils.parseEther(stakeAmount);
+      
+      // Check allowance
+      const allowance = await tokenContract.allowance(account, FAET_STAKING_ADDRESS);
+      if (allowance.lt(amount)) {
+        // Approve tokens
+        console.log('Approving tokens...');
+        const approveTx = await tokenContract.approve(FAET_STAKING_ADDRESS, amount);
+        await approveTx.wait();
+        console.log('Approval confirmed');
+      }
+      
+      // Stake tokens
+      console.log('Staking tokens...');
+      const stakeTx = await stakingContract.stake(amount, selectedLockDuration);
+      setTxHash(stakeTx.hash);
+      await stakeTx.wait();
+      
+      // Reload user data
+      if (account) {
+        await loadUserData(tokenContract, stakingContract, account);
+      }
+      setStakeAmount('');
+      console.log('Staking successful!');
+    } catch (error: any) {
+      console.error('Staking failed:', error);
+      alert(`Staking failed: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleWithdraw = async (stakeIndex: number) => {
+    if (!stakingContract) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const withdrawTx = await stakingContract.withdraw(stakeIndex);
+      setTxHash(withdrawTx.hash);
+      await withdrawTx.wait();
+      
+      // Reload user data
+      if (account) {
+        await loadUserData(tokenContract!, stakingContract, account);
+      }
+      console.log('Withdrawal successful!');
+    } catch (error: any) {
+      console.error('Withdrawal failed:', error);
+      alert(`Withdrawal failed: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClaimRewards = async () => {
+    if (!stakingContract) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const claimTx = await stakingContract.getReward();
+      setTxHash(claimTx.hash);
+      await claimTx.wait();
+      
+      // Reload user data
+      if (account) {
+        await loadUserData(tokenContract!, stakingContract, account);
+      }
+      console.log('Rewards claimed successfully!');
+    } catch (error: any) {
+      console.error('Claim failed:', error);
+      alert(`Claim failed: ${error.message || error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const disconnectWallet = () => {
     setAccount(null);
     setWrongNetwork(false);
     setShowTokenStaking(false);
+    setProvider(null);
+    setSigner(null);
+    setTokenContract(null);
+    setStakingContract(null);
+    setTokenBalance('0');
+    setStakedBalance('0');
+    setPendingRewards('0');
+    setUserStakes([]);
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -255,57 +451,121 @@ export default function StakingPage() {
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <div className="bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-4 text-purple-400">Available Balance</h3>
-                <p className="text-3xl font-bold mb-2">0 FAET</p>
-                <p className="text-gray-400 text-sm">Connect your wallet to see balance</p>
+                <p className="text-3xl font-bold mb-2">{parseFloat(tokenBalance).toFixed(2)} FAET</p>
+                <p className="text-gray-400 text-sm">Your wallet balance</p>
               </div>
               
               <div className="bg-gray-800 p-6 rounded-lg">
-                <h3 className="text-xl font-bold mb-4 text-green-400">Staked Amount</h3>
-                <p className="text-3xl font-bold mb-2">0 FAET</p>
-                <p className="text-gray-400 text-sm">No tokens currently staked</p>
+                <h3 className="text-xl font-bold mb-4 text-green-400">Weighted Staked</h3>
+                <p className="text-3xl font-bold mb-2">{parseFloat(stakedBalance).toFixed(2)} FAET</p>
+                <p className="text-gray-400 text-sm">{userStakes.length} active stakes</p>
               </div>
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
               <h3 className="text-xl font-bold mb-4">Stake FAET Tokens</h3>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Lock Duration</label>
+                <select
+                  value={selectedLockDuration}
+                  onChange={(e) => setSelectedLockDuration(parseInt(e.target.value))}
+                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
+                >
+                  {Object.entries(LOCK_DURATIONS).map(([key, duration]) => (
+                    <option key={key} value={duration.blocks}>
+                      {duration.label} - {duration.multiplier}x Multiplier
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-2">Amount to Stake</label>
                   <input
                     type="number"
                     placeholder="0.0"
+                    value={stakeAmount}
+                    onChange={(e) => setStakeAmount(e.target.value)}
                     className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
                 <button
-                  disabled
-                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg"
+                  onClick={handleStake}
+                  disabled={!stakeAmount || isLoading || wrongNetwork}
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                    !stakeAmount || isLoading || wrongNetwork
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
                 >
-                  Stake Tokens
+                  {isLoading ? 'Processing...' : 'Stake Tokens'}
                 </button>
               </div>
-              <p className="text-gray-400 text-sm mt-2">Minimum stake: 100 FAET</p>
+              <p className="text-gray-400 text-sm mt-2">
+                Reward rate: 1.0 FAET per block. Higher multipliers = more rewards!
+              </p>
+              
+              {txHash && (
+                <div className="mt-4 p-3 bg-blue-900 border border-blue-600 rounded-lg">
+                  <p className="text-blue-300 text-sm">Transaction Hash:</p>
+                  <a
+                    href={`https://sepolia-blockscout.lisk.com/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 text-sm font-mono break-all"
+                  >
+                    {txHash}
+                  </a>
+                </div>
+              )}
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-bold mb-4">Unstake FAET Tokens</h3>
-              <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-2">Amount to Unstake</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                  />
+              <h3 className="text-xl font-bold mb-4">Your Stakes</h3>
+              
+              {userStakes.length === 0 ? (
+                <p className="text-gray-400">No active stakes found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {userStakes.map((stake, index) => {
+                    const isUnlocked = provider ? stake.lockEndBlock <= 0 : false; // In a real app, compare with current block
+                    
+                    return (
+                      <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
+                          <div>
+                            <p className="text-sm text-gray-400">Amount</p>
+                            <p className="font-bold">{parseFloat(stake.amount).toFixed(2)} FAET</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-400">Multiplier</p>
+                            <p className="font-bold">{stake.multiplier}x</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-400">Lock End Block</p>
+                            <p className="font-bold text-xs">{stake.lockEndBlock === 0 ? 'No Lock' : stake.lockEndBlock}</p>
+                          </div>
+                          <div>
+                            <button
+                              onClick={() => handleWithdraw(stake.index)}
+                              disabled={!isUnlocked || isLoading}
+                              className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
+                                !isUnlocked || isLoading
+                                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                  : 'bg-red-600 hover:bg-red-700 text-white'
+                              }`}
+                            >
+                              {isLoading ? 'Processing...' : isUnlocked ? 'Withdraw' : 'Locked'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <button
-                  disabled
-                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg"
-                >
-                  Unstake Tokens
-                </button>
-              </div>
-              <p className="text-gray-400 text-sm mt-2">Unstaking period: 7 days</p>
+              )}
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg">
@@ -313,16 +573,46 @@ export default function StakingPage() {
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <p className="text-sm text-gray-400">Pending Rewards</p>
-                  <p className="text-2xl font-bold">0 FAET</p>
+                  <p className="text-2xl font-bold">{parseFloat(pendingRewards).toFixed(6)} FAET</p>
                 </div>
                 <button
-                  disabled
-                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg"
+                  onClick={handleClaimRewards}
+                  disabled={parseFloat(pendingRewards) === 0 || isLoading || wrongNetwork}
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                    parseFloat(pendingRewards) === 0 || isLoading || wrongNetwork
+                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                  }`}
                 >
-                  Claim Rewards
+                  {isLoading ? 'Processing...' : 'Claim Rewards'}
                 </button>
               </div>
-              <p className="text-gray-400 text-sm">APY: 12% (estimated)</p>
+              <p className="text-gray-400 text-sm">Rate: 1.0 FAET per block (varies with multipliers)</p>
+              
+              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                <div className="bg-gray-700 p-3 rounded">
+                  <p className="text-gray-400">Contract Address</p>
+                  <a
+                    href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 font-mono text-xs break-all"
+                  >
+                    {FAET_STAKING_ADDRESS}
+                  </a>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <p className="text-gray-400">Token Address</p>
+                  <a
+                    href={`https://sepolia-blockscout.lisk.com/address/${FAET_TOKEN_ADDRESS}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 font-mono text-xs break-all"
+                  >
+                    {FAET_TOKEN_ADDRESS}
+                  </a>
+                </div>
+              </div>
             </div>
 
             <div className="mt-6 text-center">

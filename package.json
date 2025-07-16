@@ -12,6 +12,7 @@
     "@tabler/icons-react": "^3.23.0",
     "clsx": "^2.1.1",
     "emailjs-com": "^3.2.0",
+    "ethers": "^6.15.0",
     "framer-motion": "^11.18.2",
     "next": "^15.3.3",
     "node-fetch": "^3.3.2",
