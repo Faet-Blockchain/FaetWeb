@@ -558,7 +558,7 @@ export default function StakingPage() {
         {/* Debug Chain Display */}
         <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-bold text-blue-300 mb-2">Debug: Chain Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
             <div>
               <p className="text-blue-400">Current Chain ID:</p>
               <p className="text-white font-mono">{currentChainId || "Not detected"}</p>
@@ -574,11 +574,43 @@ export default function StakingPage() {
               </p>
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mb-4">
             <p className="text-blue-400">Wallet Connected:</p>
             <p className={`font-bold ${account ? "text-green-400" : "text-red-400"}`}>
               {account ? `YES (${account.slice(0, 6)}...${account.slice(-4)})` : "NO"}
             </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={async () => {
+                console.log("Manual chain check triggered");
+                await checkNetwork();
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors text-sm"
+            >
+              Manual Chain Check
+            </button>
+            <button
+              onClick={async () => {
+                console.log("Manual wallet reset triggered");
+                if (typeof window.ethereum !== "undefined") {
+                  try {
+                    // Request account access to trigger permission dialog again
+                    await window.ethereum.request({
+                      method: "wallet_requestPermissions",
+                      params: [{ eth_accounts: {} }]
+                    });
+                  } catch (error) {
+                    console.log("Permission request cancelled or failed:", error);
+                  }
+                }
+                // Always disconnect our local state
+                disconnectWallet();
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors text-sm"
+            >
+              Reset Wallet Permissions
+            </button>
           </div>
         </div>
 
