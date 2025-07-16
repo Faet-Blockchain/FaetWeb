@@ -194,7 +194,6 @@ export default function StakingPage() {
       } catch (error) {
         console.error("Error initializing Web3:", error);
         clearWeb3State();
-        alert("Failed to initialize Web3 connection. Please try reconnecting your wallet.");
       }
     } else {
       console.log("Cannot initialize Web3: missing ethereum or account");
@@ -262,24 +261,17 @@ export default function StakingPage() {
             }, 500);
           } else {
             console.log("Connected to wrong network, will not initialize Web3");
-            alert("You are connected to the wrong network. Please switch to Lisk Sepolia testnet to access staking features.");
           }
         } else {
           console.error("No accounts returned from MetaMask");
-          alert("Failed to connect to MetaMask. Please try again.");
         }
       } catch (error) {
         console.error("Error connecting to MetaMask:", error);
-        if (error.code === 4001) {
-          alert("Connection rejected by user.");
-        } else {
-          alert("Failed to connect to MetaMask. Please try again.");
-        }
       } finally {
         setIsConnecting(false);
       }
     } else {
-      alert("MetaMask is not installed. Please install MetaMask to continue.");
+      console.error("MetaMask is not installed");
     }
   };
 
@@ -288,7 +280,7 @@ export default function StakingPage() {
 
     const networkOk = await checkNetwork();
     if (!networkOk) {
-      alert("Please switch to Lisk Sepolia testnet to stake tokens.");
+      console.error("Cannot stake: wrong network");
       return;
     }
 
@@ -300,7 +292,7 @@ export default function StakingPage() {
 
       const balance = await tokenContract.balanceOf(account);
       if (balance < amount) {
-        alert("Insufficient FAET token balance.");
+        console.error("Insufficient FAET token balance");
         setIsLoading(false);
         return;
       }
@@ -325,7 +317,6 @@ export default function StakingPage() {
       console.log("Staking successful!");
     } catch (error: any) {
       console.error("Staking failed:", error);
-      alert(`Staking failed: ${error.message || error}`);
     } finally {
       setIsLoading(false);
     }
@@ -336,7 +327,7 @@ export default function StakingPage() {
 
     const networkOk = await checkNetwork();
     if (!networkOk) {
-      alert("Please switch to Lisk Sepolia testnet to withdraw tokens.");
+      console.error("Cannot withdraw: wrong network");
       return;
     }
 
@@ -353,7 +344,6 @@ export default function StakingPage() {
       console.log("Withdrawal successful!");
     } catch (error: any) {
       console.error("Withdrawal failed:", error);
-      alert(`Withdrawal failed: ${error.message || error}`);
     } finally {
       setIsLoading(false);
     }
@@ -364,7 +354,7 @@ export default function StakingPage() {
 
     const networkOk = await checkNetwork();
     if (!networkOk) {
-      alert("Please switch to Lisk Sepolia testnet to claim rewards.");
+      console.error("Cannot claim rewards: wrong network");
       return;
     }
 
@@ -381,7 +371,6 @@ export default function StakingPage() {
       console.log("Rewards claimed successfully!");
     } catch (error: any) {
       console.error("Claim failed:", error);
-      alert(`Claim failed: ${error.message || error}`);
     } finally {
       setIsLoading(false);
     }
@@ -420,8 +409,9 @@ export default function StakingPage() {
         setWrongNetwork(!isCorrectNetwork);
         
         if (!isCorrectNetwork) {
-          console.log("Wrong network detected, clearing state");
+          console.log("Wrong network detected, clearing state and hiding staking interface");
           clearWeb3State();
+          setShowTokenStaking(false); // Hide staking interface when wrong network
         } else if (account) {
           console.log("Correct network detected, reinitializing Web3");
           setTimeout(async () => {
@@ -436,9 +426,11 @@ export default function StakingPage() {
           disconnectWallet();
         } else {
           setAccount(accounts[0]);
+          // Always check network when account changes
           const networkOk = await checkNetwork();
           if (!networkOk) {
             clearWeb3State();
+            setShowTokenStaking(false);
           }
         }
       };
@@ -455,20 +447,46 @@ export default function StakingPage() {
     }
   }, [account]);
 
+  // Continuous network monitoring when user is connected
+  useEffect(() => {
+    let networkCheckInterval: NodeJS.Timeout;
+
+    if (account && typeof window.ethereum !== "undefined") {
+      // Check network every 2 seconds when connected
+      networkCheckInterval = setInterval(async () => {
+        await checkNetwork();
+      }, 2000);
+    }
+
+    return () => {
+      if (networkCheckInterval) {
+        clearInterval(networkCheckInterval);
+      }
+    };
+  }, [account]);
+
   // Initialize on mount and when account changes
   useEffect(() => {
     const initialize = async () => {
-      await checkNetwork();
-      
       // Check if already connected
       if (typeof window.ethereum !== "undefined") {
         try {
           const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
           if (accounts.length > 0) {
             setAccount(accounts[0]);
+            // Check network immediately after setting account
+            const networkOk = await checkNetwork();
+            if (!networkOk) {
+              console.log("Auto-connected wallet is on wrong network");
+              setShowTokenStaking(false);
+            }
+          } else {
+            // No accounts connected, still check network for UI state
+            await checkNetwork();
           }
         } catch (error) {
           console.error("Error checking existing connection:", error);
+          await checkNetwork();
         }
       }
     };
