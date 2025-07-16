@@ -14,6 +14,70 @@ declare global {
 export default function StakingPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [wrongNetwork, setWrongNetwork] = useState(false);
+
+  // Lisk Sepolia testnet configuration
+  const LISK_SEPOLIA_CHAIN_ID = '0x106a'; // 4202 in decimal
+  const LISK_SEPOLIA_CONFIG = {
+    chainId: LISK_SEPOLIA_CHAIN_ID,
+    chainName: 'Lisk Sepolia Testnet',
+    nativeCurrency: {
+      name: 'Sepolia Ether',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    rpcUrls: ['https://rpc.sepolia-api.lisk.com'],
+    blockExplorerUrls: ['https://sepolia-blockscout.lisk.com'],
+  };
+
+  const checkNetwork = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const chainId = await window.ethereum.request({
+          method: 'eth_chainId',
+        }) as string;
+        
+        if (chainId !== LISK_SEPOLIA_CHAIN_ID) {
+          setWrongNetwork(true);
+          return false;
+        } else {
+          setWrongNetwork(false);
+          return true;
+        }
+      } catch (error) {
+        console.error('Error checking network:', error);
+        return false;
+      }
+    }
+    return false;
+  };
+
+  const switchToLiskSepolia = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: LISK_SEPOLIA_CHAIN_ID }],
+        });
+        setWrongNetwork(false);
+      } catch (switchError: any) {
+        // This error code indicates that the chain has not been added to MetaMask
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [LISK_SEPOLIA_CONFIG],
+            });
+            setWrongNetwork(false);
+          } catch (addError) {
+            console.error('Error adding network:', addError);
+          }
+        } else {
+          console.error('Error switching network:', switchError);
+        }
+      }
+    }
+  };
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -23,6 +87,9 @@ export default function StakingPage() {
           method: 'eth_requestAccounts',
         }) as string[];
         setAccount(accounts[0]);
+        
+        // Check network after connecting
+        await checkNetwork();
       } catch (error) {
         console.error('Error connecting to MetaMask:', error);
       } finally {
@@ -35,6 +102,7 @@ export default function StakingPage() {
 
   const disconnectWallet = () => {
     setAccount(null);
+    setWrongNetwork(false);
   };
 
   return (
@@ -101,11 +169,33 @@ export default function StakingPage() {
                 </p>
               </div>
 
+              {wrongNetwork && (
+                <div className="bg-red-900 border border-red-600 rounded-lg p-4 mb-6">
+                  <p className="text-red-300 mb-2">⚠️ Wrong Network</p>
+                  <p className="text-white mb-4">
+                    Please switch to Lisk Sepolia Testnet to access staking features.
+                  </p>
+                  <button
+                    onClick={switchToLiskSepolia}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                  >
+                    Switch to Lisk Sepolia
+                  </button>
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-gray-800 p-6 rounded-lg">
                   <h3 className="text-xl font-bold mb-4">Token Staking</h3>
                   <p className="text-gray-300 mb-4">Stake your FAET tokens to earn rewards</p>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                  <button 
+                    disabled={wrongNetwork}
+                    className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                      wrongNetwork 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
                     Coming Soon
                   </button>
                 </div>
@@ -113,7 +203,14 @@ export default function StakingPage() {
                 <div className="bg-gray-800 p-6 rounded-lg">
                   <h3 className="text-xl font-bold mb-4">NFT Staking</h3>
                   <p className="text-gray-300 mb-4">Lock your NFTs for exclusive benefits</p>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                  <button 
+                    disabled={wrongNetwork}
+                    className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                      wrongNetwork 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
+                  >
                     Coming Soon
                   </button>
                 </div>
