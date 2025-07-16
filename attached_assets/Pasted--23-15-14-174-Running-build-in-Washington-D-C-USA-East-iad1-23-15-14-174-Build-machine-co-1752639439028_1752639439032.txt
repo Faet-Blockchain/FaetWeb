@@ -1,0 +1,48 @@
+[23:15:14.174] Running build in Washington, D.C., USA (East) – iad1
+[23:15:14.174] Build machine configuration: 4 cores, 8 GB
+[23:15:14.196] Cloning github.com/Faet-Blockchain/FaetWeb (Branch: main, Commit: bdc3403)
+[23:15:15.322] Cloning completed: 1.126s
+[23:15:16.963] Restored build cache from previous deployment (DjwXkZbLSdPfRepz8axkHpkYRfEB)
+[23:15:19.378] Running "vercel build"
+[23:15:20.112] Vercel CLI 44.3.0
+[23:15:20.665] Installing dependencies...
+[23:15:23.107] 
+[23:15:23.108] changed 3 packages in 2s
+[23:15:23.108] 
+[23:15:23.108] 146 packages are looking for funding
+[23:15:23.108]   run `npm fund` for details
+[23:15:23.137] Detected Next.js version: 15.3.3
+[23:15:23.142] Running "npm run build"
+[23:15:23.276] 
+[23:15:23.276] > faet-brand-website@0.1.0 build
+[23:15:23.276] > next build
+[23:15:23.276] 
+[23:15:24.292]    ▲ Next.js 15.3.3
+[23:15:24.292] 
+[23:15:24.323]    Creating an optimized production build ...
+[23:15:35.557]  ✓ Compiled successfully in 7.0s
+[23:15:35.561]    Linting and checking validity of types ...
+[23:15:38.591] 
+[23:15:38.591] ./src/app/staking/page.tsx
+[23:15:38.591] 88:21  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+[23:15:38.592] 
+[23:15:38.592] ./src/components/home/infinite-moving-cards.tsx
+[23:15:38.592] 26:8  Warning: React Hook useEffect has a missing dependency: 'addAnimation'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+[23:15:38.592] 
+[23:15:38.592] info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[23:15:40.046] Failed to compile.
+[23:15:40.046] 
+[23:15:40.047] ./src/app/staking/page.tsx:26:20
+[23:15:40.047] Type error: 'accounts' is of type 'unknown'.
+[23:15:40.047] 
+[23:15:40.047] [0m [90m 24 |[39m           method[33m:[39m [32m'eth_requestAccounts'[39m[33m,[39m[0m
+[23:15:40.047] [0m [90m 25 |[39m         })[33m;[39m[0m
+[23:15:40.048] [0m[31m[1m>[22m[39m[90m 26 |[39m         setAccount(accounts[[35m0[39m])[33m;[39m[0m
+[23:15:40.048] [0m [90m    |[39m                    [31m[1m^[22m[39m[0m
+[23:15:40.048] [0m [90m 27 |[39m       } [36mcatch[39m (error) {[0m
+[23:15:40.048] [0m [90m 28 |[39m         console[33m.[39merror([32m'Error connecting to MetaMask:'[39m[33m,[39m error)[33m;[39m[0m
+[23:15:40.048] [0m [90m 29 |[39m       } [36mfinally[39m {[0m
+[23:15:40.064] Next.js build worker exited with code: 1 and signal: null
+[23:15:40.084] Error: Command "npm run build" exited with 1
+[23:15:41.294] 
+[23:15:44.703] Exiting build container
