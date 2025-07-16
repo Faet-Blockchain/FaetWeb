@@ -1,0 +1,303 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract FaetTestStaking is ReentrancyGuard, Pausable, AccessControl {
+    using SafeERC20 for IERC20;
+
+    bytes32 public constant EMERGENCY_ADMIN_ROLE =
+        keccak256("EMERGENCY_ADMIN_ROLE");
+
+    IERC20 public immutable stakingToken;
+    IERC20 public immutable rewardsToken;
+    uint256 public immutable rewardPerBlock;
+    uint256 public lastUpdateBlock;
+    uint256 public rewardPerTokenStored;
+    uint256 public totalWeightedSupply;
+    address private defaultAdmin;
+    address private emergencyAdmin;
+
+    mapping(address => uint256) public weightedBalances;
+    mapping(address => uint256) public userRewardPerTokenPaid;
+    mapping(address => uint256) public rewards;
+
+    uint256 private constant DURATION_0 = 0;
+    uint256 private constant DURATION_1 = 15_768_000;
+    uint256 private constant DURATION_3 = 47_304_000;
+    uint256 private constant DURATION_6 = 94_608_000;
+    mapping(uint256 => uint256) private lockMultipliers;
+
+    struct Stake {
+        uint256 amount;
+        uint256 weightedAmount;
+        uint256 multiplier;
+        uint256 lockEndBlock;
+    }
+
+    mapping(address => Stake[]) public userStakes;
+
+    event Staked(
+        address indexed user,
+        uint256 amount,
+        uint256 duration,
+        uint256 stakeIndex
+    );
+    event Withdrawn(address indexed user, uint256 amount, uint256 stakeIndex);
+    event RewardPaid(address indexed user, uint256 reward);
+    event RewardsFunded(address indexed admin, uint256 amount);
+
+    event EmergencyWithdrawn(
+        address indexed caller,
+        address indexed oldEmergencyAdmin,
+        address indexed oldDefaultAdmin,
+        address newEmergencyAdmin,
+        uint256 stakingTokenAmount,
+        uint256 rewardsTokenAmount
+    );
+
+    constructor(
+        address _stakingToken,
+        address _rewardsToken,
+        uint256 _rewardPerBlock,
+        address _emergencyAdmin
+    ) {
+        require(_stakingToken != address(0), "Invalid staking token");
+        require(_rewardsToken != address(0), "Invalid rewards token");
+        require(_emergencyAdmin != address(0), "Invalid emergency admin");
+
+        stakingToken = IERC20(_stakingToken);
+        rewardsToken = IERC20(_rewardsToken);
+        rewardPerBlock = _rewardPerBlock;
+        lastUpdateBlock = block.number;
+
+        lockMultipliers[DURATION_0] = 1;
+        lockMultipliers[DURATION_1] = 20;
+        lockMultipliers[DURATION_3] = 30;
+        lockMultipliers[DURATION_6] = 50;
+
+        _setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
+
+        _setRoleAdmin(EMERGENCY_ADMIN_ROLE, EMERGENCY_ADMIN_ROLE);
+        _grantRole(EMERGENCY_ADMIN_ROLE, _emergencyAdmin);
+        emergencyAdmin = _emergencyAdmin;
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        defaultAdmin = msg.sender;
+    }
+
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
+    }
+
+    modifier updateReward(address account) {
+        rewardPerTokenStored = _rewardPerToken();
+        lastUpdateBlock = block.number;
+        if (account != address(0)) {
+            rewards[account] = _earned(account);
+            userRewardPerTokenPaid[account] = rewardPerTokenStored;
+        }
+        _;
+    }
+
+    function _rewardPerToken() internal view returns (uint256) {
+        if (totalWeightedSupply == 0) {
+            return rewardPerTokenStored;
+        }
+        uint256 blocksElapsed = block.number - lastUpdateBlock;
+        return
+            rewardPerTokenStored +
+            (blocksElapsed * rewardPerBlock * 1e18) /
+            totalWeightedSupply;
+    }
+
+    function rewardPerToken() external view returns (uint256) {
+        return _rewardPerToken();
+    }
+
+    function _earned(address account) internal view returns (uint256) {
+        return
+            (weightedBalances[account] *
+                (_rewardPerToken() - userRewardPerTokenPaid[account])) /
+            1e18 +
+            rewards[account];
+    }
+
+    function earned(address account) external view returns (uint256) {
+        return _earned(account);
+    }
+
+    /// @notice Stake your FAET tokens for rewards.
+    /// @dev Anyone with a positive `amount` can call; there is no `onlyRole` because users supply their own tokens.
+    function stake(
+        uint256 amount,
+        uint256 lockDuration
+    ) external nonReentrant whenNotPaused updateReward(msg.sender) {
+        require(amount > 0, "Cannot stake 0");
+        require(
+            lockDuration == DURATION_0 ||
+                lockDuration == DURATION_1 ||
+                lockDuration == DURATION_3 ||
+                lockDuration == DURATION_6,
+            "Invalid lock duration"
+        );
+
+        uint256 multiplier = lockMultipliers[lockDuration];
+        require(multiplier > 0, "Invalid multiplier");
+
+        uint256 weightedAmount = amount * multiplier;
+        totalWeightedSupply += weightedAmount;
+        weightedBalances[msg.sender] += weightedAmount;
+
+        userStakes[msg.sender].push(
+            Stake({
+                amount: amount,
+                weightedAmount: weightedAmount,
+                multiplier: multiplier,
+                lockEndBlock: block.number + lockDuration
+            })
+        );
+
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        emit Staked(
+            msg.sender,
+            amount,
+            lockDuration,
+            userStakes[msg.sender].length - 1
+        );
+    }
+
+    /// @notice Withdraws one of your stakes after its lock period has ended.
+    /// @dev No `onlyRole` needed—any address can call to withdraw its own stake at index `stakeIndex`.
+    function withdraw(
+        uint256 stakeIndex
+    ) external nonReentrant whenNotPaused updateReward(msg.sender) {
+        require(
+            stakeIndex < userStakes[msg.sender].length,
+            "Invalid stake index"
+        );
+        Stake memory userStake = userStakes[msg.sender][stakeIndex];
+        require(block.number >= userStake.lockEndBlock, "Stake is locked");
+        require(userStake.amount > 0, "No stake to withdraw");
+
+        totalWeightedSupply -= userStake.weightedAmount;
+        weightedBalances[msg.sender] -= userStake.weightedAmount;
+
+        userStakes[msg.sender][stakeIndex] = userStakes[msg.sender][
+            userStakes[msg.sender].length - 1
+        ];
+        userStakes[msg.sender].pop();
+
+        stakingToken.safeTransfer(msg.sender, userStake.amount);
+        emit Withdrawn(msg.sender, userStake.amount, stakeIndex);
+    }
+
+    /// @notice Emergency: rotate admins and rescue stuck tokens
+    /// @dev Only callable by the current emergency admin (via ROLE).
+    ///      New admin address must be non-zero.
+    function emergencyWithdraw(
+        address newEmergencyAdmin
+    ) external onlyRole(EMERGENCY_ADMIN_ROLE) {
+        require(newEmergencyAdmin != address(0), "Invalid emergency admin");
+
+        // rotate roles
+        address oldEmergency = emergencyAdmin;
+        address oldDefault = defaultAdmin;
+
+        _revokeRole(EMERGENCY_ADMIN_ROLE, oldEmergency);
+        _revokeRole(DEFAULT_ADMIN_ROLE, oldDefault);
+
+        defaultAdmin = oldEmergency;
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
+
+        emergencyAdmin = newEmergencyAdmin;
+        _grantRole(EMERGENCY_ADMIN_ROLE, emergencyAdmin);
+
+        // pull out any stuck tokens
+        uint256 sBal = stakingToken.balanceOf(address(this));
+        if (sBal != 0) stakingToken.safeTransfer(defaultAdmin, sBal);
+
+        uint256 rBal = rewardsToken.balanceOf(address(this));
+        if (rBal != 0) rewardsToken.safeTransfer(defaultAdmin, rBal);
+
+        emit EmergencyWithdrawn(
+            msg.sender,
+            oldEmergency,
+            oldDefault,
+            newEmergencyAdmin,
+            sBal,
+            rBal
+        );
+    }
+
+    function rescueERC20(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        token.safeTransfer(to, amount);
+    }
+
+    /// @notice Claim your accumulated rewards.
+    /// @dev No `onlyRole` here because we want any holder with >0 reward to call it.
+    function getReward()
+        external
+        nonReentrant
+        whenNotPaused
+        updateReward(msg.sender)
+    {
+        uint256 reward = rewards[msg.sender];
+        require(reward > 0, "No rewards");
+        require(
+            rewardsToken.balanceOf(address(this)) >= reward,
+            "Insufficient reward tokens"
+        );
+
+        rewards[msg.sender] = 0;
+        rewardsToken.safeTransfer(msg.sender, reward);
+        emit RewardPaid(msg.sender, reward);
+    }
+
+    function fundRewards(uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(amount > 0, "Cannot fund 0");
+        rewardPerTokenStored = _rewardPerToken();
+        lastUpdateBlock = block.number;
+        rewardsToken.safeTransferFrom(msg.sender, address(this), amount);
+        emit RewardsFunded(msg.sender, amount);
+    }
+
+    function getStakeCount(address user) external view returns (uint256) {
+        return userStakes[user].length;
+    }
+
+    function getStakeDetails(
+        address user,
+        uint256 stakeIndex
+    )
+        external
+        view
+        returns (
+            uint256 _amount,
+            uint256 _weightedAmount,
+            uint256 _multiplier,
+            uint256 _lockEndBlock
+        )
+    {
+        require(stakeIndex < userStakes[user].length, "Invalid stake index");
+        Stake memory userStake = userStakes[user][stakeIndex];
+        return (
+            userStake.amount,
+            userStake.weightedAmount,
+            userStake.multiplier,
+            userStake.lockEndBlock
+        );
+    }
+}
