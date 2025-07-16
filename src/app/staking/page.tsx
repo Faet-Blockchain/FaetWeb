@@ -222,6 +222,9 @@ export default function StakingPage() {
         const networkOk = await checkNetwork();
         if (networkOk) {
           await initializeWeb3();
+        } else {
+          // Ensure staking interface is hidden on wrong network
+          setShowTokenStaking(false);
         }
       } catch (error) {
         console.error("Error connecting to MetaMask:", error);
@@ -374,18 +377,48 @@ export default function StakingPage() {
         const networkOk = await checkNetwork();
         if (!networkOk) {
           setShowTokenStaking(false);
+          // Clear web3 instances on wrong network
+          setProvider(null);
+          setSigner(null);
+          setTokenContract(null);
+          setStakingContract(null);
+          setTokenBalance("0");
+          setStakedBalance("0");
+          setPendingRewards("0");
+          setUserStakes([]);
+        } else if (account) {
+          // Reinitialize web3 if back on correct network
+          await initializeWeb3();
+        }
+      };
+
+      const handleAccountsChanged = async (accounts: string[]) => {
+        if (accounts.length === 0) {
+          // User disconnected
+          disconnectWallet();
+        } else {
+          // User switched accounts
+          setAccount(accounts[0]);
+          const networkOk = await checkNetwork();
+          if (networkOk) {
+            await initializeWeb3();
+          } else {
+            setShowTokenStaking(false);
+          }
         }
       };
 
       window.ethereum.on('chainChanged', handleChainChanged);
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
         if (window.ethereum?.removeListener) {
           window.ethereum.removeListener('chainChanged', handleChainChanged);
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
       };
     }
-  }, []);
+  }, [account]);
 
   // Check network on mount
   useEffect(() => {
@@ -401,9 +434,14 @@ export default function StakingPage() {
     }
   };
 
-  const handleGoToStaking = () => {
-    setShowTokenStaking(true);
-    setTimeout(() => scrollToSection("token-staking"), 100);
+  const handleGoToStaking = async () => {
+    const networkOk = await checkNetwork();
+    if (networkOk) {
+      setShowTokenStaking(true);
+      setTimeout(() => scrollToSection("token-staking"), 100);
+    } else {
+      alert("Please switch to Lisk Sepolia testnet to access staking features.");
+    }
   };
 
   return (
@@ -584,7 +622,7 @@ export default function StakingPage() {
         </motion.div>
 
         {/* Token Staking Container */}
-        {showTokenStaking && (
+        {showTokenStaking && !wrongNetwork && account && (
           <motion.div
             id="token-staking"
             initial={{ opacity: 0, y: 20, height: 0 }}
