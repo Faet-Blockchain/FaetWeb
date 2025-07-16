@@ -365,12 +365,13 @@ export default function StakingPage() {
   };
 
   const handleGoToStaking = async () => {
-    const networkOk = await checkNetwork();
-    if (networkOk && !wrongNetwork && account) {
+    // Only proceed if we're already on the correct network
+    if (!wrongNetwork && canAccessStaking) {
       setShowTokenStaking(true);
       setTimeout(() => scrollToSection("token-staking"), 100);
     } else {
-      alert("You must be connected to Lisk Sepolia testnet to access staking features. Please switch networks and try again.");
+      // This shouldn't happen since the button should show "Switch Network" instead
+      console.error("handleGoToStaking called while on wrong network or not eligible");
     }
   };
 
@@ -610,7 +611,7 @@ export default function StakingPage() {
                   </p>
                   <button
                     onClick={wrongNetwork ? switchToLiskSepolia : handleGoToStaking}
-                    disabled={!canAccessStaking && !wrongNetwork}
+                    disabled={!account || (!canAccessStaking && !wrongNetwork)}
                     className={`font-bold py-2 px-6 rounded-lg transition-colors ${
                       wrongNetwork
                         ? "bg-red-600 hover:bg-red-700 text-white"
