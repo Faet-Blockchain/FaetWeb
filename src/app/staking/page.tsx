@@ -15,6 +15,7 @@ export default function StakingPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [wrongNetwork, setWrongNetwork] = useState(false);
+  const [showTokenStaking, setShowTokenStaking] = useState(false);
 
   // Lisk Sepolia testnet configuration
   const LISK_SEPOLIA_CHAIN_ID = '0x106a'; // 4202 in decimal
@@ -103,6 +104,19 @@ export default function StakingPage() {
   const disconnectWallet = () => {
     setAccount(null);
     setWrongNetwork(false);
+    setShowTokenStaking(false);
+  };
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleGoToStaking = () => {
+    setShowTokenStaking(true);
+    setTimeout(() => scrollToSection('token-staking'), 100);
   };
 
   return (
@@ -129,9 +143,14 @@ export default function StakingPage() {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease: "easeInOut", delay: 0.2 }}
-          className="bg-gray-900 p-8 rounded-lg border border-gray-700"
+          animate={{ 
+            opacity: showTokenStaking ? 0 : 1, 
+            y: showTokenStaking ? -20 : 0,
+            height: showTokenStaking ? 0 : 'auto'
+          }}
+          transition={{ duration: 0.5, ease: "easeInOut", delay: showTokenStaking ? 0 : 0.2 }}
+          className={`bg-gray-900 p-8 rounded-lg border border-gray-700 overflow-hidden ${showTokenStaking ? 'mb-0' : 'mb-0'}`}
+          style={{ display: showTokenStaking ? 'none' : 'block' }}
         >
           <h2 className="text-2xl font-nocturne-serif-bold mb-6">Wallet Connection</h2>
 
@@ -189,14 +208,10 @@ export default function StakingPage() {
                   <h3 className="text-xl font-bold mb-4">Token Staking</h3>
                   <p className="text-gray-300 mb-4">Stake your FAET tokens to earn rewards</p>
                   <button 
-                    disabled={wrongNetwork}
-                    className={`font-bold py-2 px-6 rounded-lg transition-colors ${
-                      wrongNetwork 
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
+                    onClick={wrongNetwork ? switchToLiskSepolia : handleGoToStaking}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
                   >
-                    Coming Soon
+                    {wrongNetwork ? 'Change Network' : 'Go to Staking'}
                   </button>
                 </div>
 
@@ -225,6 +240,101 @@ export default function StakingPage() {
             </div>
           )}
         </motion.div>
+
+        {/* Token Staking Container */}
+        {showTokenStaking && (
+          <motion.div
+            id="token-staking"
+            initial={{ opacity: 0, y: 20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="bg-gray-900 p-8 rounded-lg border border-gray-700 mt-6"
+          >
+            <h2 className="text-2xl font-nocturne-serif-bold mb-6">Token Staking</h2>
+            
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-purple-400">Available Balance</h3>
+                <p className="text-3xl font-bold mb-2">0 FAET</p>
+                <p className="text-gray-400 text-sm">Connect your wallet to see balance</p>
+              </div>
+              
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-green-400">Staked Amount</h3>
+                <p className="text-3xl font-bold mb-2">0 FAET</p>
+                <p className="text-gray-400 text-sm">No tokens currently staked</p>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold mb-4">Stake FAET Tokens</h3>
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-2">Amount to Stake</label>
+                  <input
+                    type="number"
+                    placeholder="0.0"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <button
+                  disabled
+                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg"
+                >
+                  Stake Tokens
+                </button>
+              </div>
+              <p className="text-gray-400 text-sm mt-2">Minimum stake: 100 FAET</p>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold mb-4">Unstake FAET Tokens</h3>
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-2">Amount to Unstake</label>
+                  <input
+                    type="number"
+                    placeholder="0.0"
+                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+                <button
+                  disabled
+                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg"
+                >
+                  Unstake Tokens
+                </button>
+              </div>
+              <p className="text-gray-400 text-sm mt-2">Unstaking period: 7 days</p>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-xl font-bold mb-4 text-yellow-400">Rewards</h3>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <p className="text-sm text-gray-400">Pending Rewards</p>
+                  <p className="text-2xl font-bold">0 FAET</p>
+                </div>
+                <button
+                  disabled
+                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg"
+                >
+                  Claim Rewards
+                </button>
+              </div>
+              <p className="text-gray-400 text-sm">APY: 12% (estimated)</p>
+            </div>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setShowTokenStaking(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              >
+                Back to Overview
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
