@@ -103,9 +103,41 @@ export default function StakingPage() {
   const checkNetwork = async (): Promise<boolean> => {
     if (typeof window.ethereum !== "undefined") {
       try {
-        const chainId = (await window.ethereum.request({
-          method: "eth_chainId",
-        })) as string;
+        let chainId: string;
+        
+        // Different approaches based on permission state
+        try {
+          // First, try to get accounts to see if we have permissions
+          const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
+          
+          if (accounts.length > 0) {
+            // Permissions granted - use provider approach for fresh data
+            console.log("[checkNetwork] Permissions granted, using provider approach");
+            if (provider) {
+              const network = await provider.getNetwork();
+              chainId = "0x" + network.chainId.toString(16);
+              console.log("[checkNetwork] Got chain from provider:", chainId);
+            } else {
+              // Fallback to direct request if provider not ready
+              chainId = (await window.ethereum.request({
+                method: "eth_chainId",
+              })) as string;
+              console.log("[checkNetwork] Provider not ready, fallback to direct request:", chainId);
+            }
+          } else {
+            // No permissions - use direct request
+            console.log("[checkNetwork] No permissions, using direct eth_chainId");
+            chainId = (await window.ethereum.request({
+              method: "eth_chainId",
+            })) as string;
+          }
+        } catch (permissionError) {
+          // If accounts check fails, fall back to direct chain request
+          console.log("[checkNetwork] Permission check failed, using direct eth_chainId");
+          chainId = (await window.ethereum.request({
+            method: "eth_chainId",
+          })) as string;
+        }
 
         console.log(`[checkNetwork] Raw chain ID from wallet: "${chainId}"`);
         console.log(`[checkNetwork] Required chain ID: "${LISK_SEPOLIA_CHAIN_ID}"`);
