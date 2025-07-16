@@ -93,13 +93,12 @@ export default function StakingPage() {
           method: "eth_chainId",
         })) as string;
 
-        if (chainId !== LISK_SEPOLIA_CHAIN_ID) {
-          setWrongNetwork(true);
-          return false;
-        } else {
-          setWrongNetwork(false);
-          return true;
+        const isCorrectNetwork = chainId === LISK_SEPOLIA_CHAIN_ID;
+        setWrongNetwork(!isCorrectNetwork);
+        if (!isCorrectNetwork) {
+          setShowTokenStaking(false);
         }
+        return isCorrectNetwork;
       } catch (error) {
         console.error("Error checking network:", error);
         return false;
@@ -379,7 +378,7 @@ export default function StakingPage() {
       };
 
       window.ethereum.on('chainChanged', handleChainChanged);
-      
+
       return () => {
         if (window.ethereum?.removeListener) {
           window.ethereum.removeListener('chainChanged', handleChainChanged);
@@ -440,6 +439,13 @@ export default function StakingPage() {
             <label className="text-sm font-medium">Network:</label>
             <div className="flex bg-gray-800 rounded-lg p-1">
               <button
+                onClick={() => setSelectedNetwork('mainnet')}
+                disabled={true}
+                className="px-4 py-2 rounded-md text-sm font-medium text-gray-600 cursor-not-allowed"
+              >
+                Mainnet
+              </button>
+              <button
                 onClick={() => setSelectedNetwork('testnet')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   selectedNetwork === 'testnet'
@@ -448,13 +454,6 @@ export default function StakingPage() {
                 }`}
               >
                 Testnet
-              </button>
-              <button
-                onClick={() => setSelectedNetwork('mainnet')}
-                disabled={true}
-                className="px-4 py-2 rounded-md text-sm font-medium text-gray-600 cursor-not-allowed"
-              >
-                Mainnet
               </button>
             </div>
           </div>
