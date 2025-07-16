@@ -150,6 +150,9 @@ export default function StakingPage() {
 
   const loadUserData = async (token: ethers.Contract, staking: ethers.Contract, userAddress: string) => {
     try {
+      // Get current block number
+      const currentBlock = await provider?.getBlockNumber() || 0;
+      
       // Get token balance
       const balance = await token.balanceOf(userAddress);
       setTokenBalance(ethers.formatEther(balance));
@@ -167,12 +170,17 @@ export default function StakingPage() {
       const stakes = [];
       for (let i = 0; i < Number(stakeCount); i++) {
         const stakeDetails = await staking.getStakeDetails(userAddress, i);
+        const lockEndBlock = Number(stakeDetails.lockEndBlock);
+        const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
+        
         stakes.push({
           index: i,
           amount: ethers.formatEther(stakeDetails.amount),
           weightedAmount: ethers.formatEther(stakeDetails.weightedAmount),
           multiplier: Number(stakeDetails.multiplier),
-          lockEndBlock: Number(stakeDetails.lockEndBlock)
+          lockEndBlock: lockEndBlock,
+          isUnlocked: isUnlocked,
+          blocksRemaining: isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock)
         });
       }
       setUserStakes(stakes);
@@ -208,11 +216,26 @@ export default function StakingPage() {
   const handleStake = async () => {
     if (!tokenContract || !stakingContract || !stakeAmount) return;
     
+    // Double-check network before proceeding
+    const networkOk = await checkNetwork();
+    if (!networkOk) {
+      alert('Please switch to Lisk Sepolia testnet to stake tokens.');
+      return;
+    }
+    
     setIsLoading(true);
     setTxHash('');
     
     try {
       const amount = ethers.parseEther(stakeAmount);
+      
+      // Check if user has enough balance
+      const balance = await tokenContract.balanceOf(account);
+      if (balance < amount) {
+        alert('Insufficient FAET token balance.');
+        setIsLoading(false);
+        return;
+      }
       
       // Check allowance
       const allowance = await tokenContract.allowance(account, FAET_STAKING_ADDRESS);
@@ -247,6 +270,13 @@ export default function StakingPage() {
   const handleWithdraw = async (stakeIndex: number) => {
     if (!stakingContract) return;
     
+    // Double-check network before proceeding
+    const networkOk = await checkNetwork();
+    if (!networkOk) {
+      alert('Please switch to Lisk Sepolia testnet to withdraw tokens.');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -269,6 +299,13 @@ export default function StakingPage() {
 
   const handleClaimRewards = async () => {
     if (!stakingContract) return;
+    
+    // Double-check network before proceeding
+    const networkOk = await checkNetwork();
+    if (!networkOk) {
+      alert('Please switch to Lisk Sepolia testnet to claim rewards.');
+      return;
+    }
     
     setIsLoading(true);
     
@@ -484,19 +521,31 @@ export default function StakingPage() {
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-2">Amount to Stake</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    value={stakeAmount}
-                    onChange={(e) => setStakeAmount(e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      placeholder="0.0"
+                      value={stakeAmount}
+                      onChange={(e) => setStakeAmount(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setStakeAmount(tokenBalance)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+                    >
+                      MAX
+                    </button>
+                  </div>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Available: {parseFloat(tokenBalance).toFixed(2)} FAET
+                  </p>
                 </div>
                 <button
                   onClick={handleStake}
-                  disabled={!stakeAmount || isLoading || wrongNetwork}
-                  className={`font-bold py-2 px-6 rounded-lg transition-colors ${
-                    !stakeAmount || isLoading || wrongNetwork
+                  disabled={!stakeAmount || isLoading || wrongNetwork || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > parseFloat(tokenBalance)}
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] ${
+                    !stakeAmount || isLoading || wrongNetwork || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > parseFloat(tokenBalance)
                       ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
@@ -530,41 +579,54 @@ export default function StakingPage() {
                 <p className="text-gray-400">No active stakes found.</p>
               ) : (
                 <div className="space-y-4">
-                  {userStakes.map((stake, index) => {
-                    const isUnlocked = provider ? stake.lockEndBlock <= 0 : false; // In a real app, compare with current block
-                    
-                    return (
-                      <div key={index} className="bg-gray-700 p-4 rounded-lg">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
-                          <div>
-                            <p className="text-sm text-gray-400">Amount</p>
-                            <p className="font-bold">{parseFloat(stake.amount).toFixed(2)} FAET</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-400">Multiplier</p>
-                            <p className="font-bold">{stake.multiplier}x</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-400">Lock End Block</p>
-                            <p className="font-bold text-xs">{stake.lockEndBlock === 0 ? 'No Lock' : stake.lockEndBlock}</p>
-                          </div>
-                          <div>
-                            <button
-                              onClick={() => handleWithdraw(stake.index)}
-                              disabled={!isUnlocked || isLoading}
-                              className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
-                                !isUnlocked || isLoading
-                                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                  : 'bg-red-600 hover:bg-red-700 text-white'
-                              }`}
-                            >
-                              {isLoading ? 'Processing...' : isUnlocked ? 'Withdraw' : 'Locked'}
-                            </button>
+                  {userStakes.map((stake, index) => (
+                    <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-400">Amount</p>
+                          <p className="font-bold">{parseFloat(stake.amount).toFixed(2)} FAET</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Multiplier</p>
+                          <p className="font-bold text-purple-400">{stake.multiplier}x</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Status</p>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${stake.isUnlocked ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                            <p className={`font-bold text-sm ${stake.isUnlocked ? 'text-green-400' : 'text-red-400'}`}>
+                              {stake.isUnlocked ? 'Unlocked' : 'Locked'}
+                            </p>
                           </div>
                         </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Lock Info</p>
+                          {stake.lockEndBlock === 0 ? (
+                            <p className="font-bold text-green-400 text-sm">No Lock</p>
+                          ) : stake.isUnlocked ? (
+                            <p className="font-bold text-green-400 text-sm">Ready</p>
+                          ) : (
+                            <p className="font-bold text-red-400 text-sm">
+                              ~{stake.blocksRemaining.toLocaleString()} blocks
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleWithdraw(stake.index)}
+                            disabled={!stake.isUnlocked || isLoading || wrongNetwork}
+                            className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors min-w-[100px] ${
+                              !stake.isUnlocked || isLoading || wrongNetwork
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                : 'bg-red-600 hover:bg-red-700 text-white'
+                            }`}
+                          >
+                            {isLoading ? 'Processing...' : stake.isUnlocked ? 'Withdraw' : 'Locked'}
+                          </button>
+                        </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
