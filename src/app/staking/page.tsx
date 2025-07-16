@@ -51,6 +51,7 @@ export default function StakingPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const [showTokenStaking, setShowTokenStaking] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState<'testnet' | 'mainnet'>('testnet');
 
   // Web3 state
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -367,6 +368,33 @@ export default function StakingPage() {
     setUserStakes([]);
   };
 
+  // Listen for network changes
+  useEffect(() => {
+    if (typeof window.ethereum !== "undefined") {
+      const handleChainChanged = async () => {
+        const networkOk = await checkNetwork();
+        if (!networkOk) {
+          setShowTokenStaking(false);
+        }
+      };
+
+      window.ethereum.on('chainChanged', handleChainChanged);
+      
+      return () => {
+        if (window.ethereum?.removeListener) {
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, []);
+
+  // Check network on mount
+  useEffect(() => {
+    if (account) {
+      checkNetwork();
+    }
+  }, [account]);
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -388,19 +416,55 @@ export default function StakingPage() {
           transition={{ duration: 0.75, ease: "easeInOut" }}
           className="text-5xl md:text-7xl font-nocturne-serif-bold mb-8"
         >
-          STAKING
+          STAKING {selectedNetwork === 'testnet' ? '(TESTNET)' : '(MAINNET)'}
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: "easeInOut", delay: 0.1 }}
-          className="text-lg mb-12 max-w-3xl"
+          className="text-lg mb-6 max-w-3xl"
         >
           Stake your FAET tokens and NFTs to earn rewards and unlock exclusive
           platform benefits. Connect your MetaMask wallet to get started with
           staking on the FAET platform.
         </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: "easeInOut", delay: 0.15 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <label className="text-sm font-medium">Network:</label>
+            <div className="flex bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedNetwork('testnet')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedNetwork === 'testnet'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Testnet
+              </button>
+              <button
+                onClick={() => setSelectedNetwork('mainnet')}
+                disabled={true}
+                className="px-4 py-2 rounded-md text-sm font-medium text-gray-600 cursor-not-allowed"
+              >
+                Mainnet
+              </button>
+            </div>
+          </div>
+          <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
+            <p className="text-yellow-300 text-sm">
+              ⚠️ <strong>Testnet Only:</strong> Currently, only testnet staking is available. 
+              Mainnet functionality will be enabled in a future update.
+            </p>
+          </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -530,7 +594,7 @@ export default function StakingPage() {
             className="bg-gray-900 p-8 rounded-lg border border-gray-700 mt-6"
           >
             <h2 className="text-2xl font-nocturne-serif-bold mb-6">
-              Token Staking
+              Token Staking (Testnet)
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6 mb-6">
