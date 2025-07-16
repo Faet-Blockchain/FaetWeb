@@ -50,8 +50,8 @@ export default function StakingPage() {
   const [showTokenStaking, setShowTokenStaking] = useState(false);
   
   // Web3 state
-  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
-  const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(null);
   const [stakingContract, setStakingContract] = useState<ethers.Contract | null>(null);
   
@@ -130,10 +130,10 @@ export default function StakingPage() {
 
   const initializeWeb3 = async () => {
     if (typeof window.ethereum !== 'undefined') {
-      const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+      const web3Provider = new ethers.BrowserProvider(window.ethereum);
       setProvider(web3Provider);
       
-      const web3Signer = web3Provider.getSigner();
+      const web3Signer = await web3Provider.getSigner();
       setSigner(web3Signer);
       
       const token = new ethers.Contract(FAET_TOKEN_ADDRESS, FAET_TOKEN_ABI, web3Signer);
@@ -143,7 +143,8 @@ export default function StakingPage() {
       setStakingContract(staking);
       
       // Load user data
-      await loadUserData(token, staking, await web3Signer.getAddress());
+      const userAddress = await web3Signer.getAddress();
+      await loadUserData(token, staking, userAddress);
     }
   };
 
@@ -151,27 +152,27 @@ export default function StakingPage() {
     try {
       // Get token balance
       const balance = await token.balanceOf(userAddress);
-      setTokenBalance(ethers.utils.formatEther(balance));
+      setTokenBalance(ethers.formatEther(balance));
       
       // Get staked balance (weighted)
       const weighted = await staking.weightedBalances(userAddress);
-      setStakedBalance(ethers.utils.formatEther(weighted));
+      setStakedBalance(ethers.formatEther(weighted));
       
       // Get pending rewards
       const earned = await staking.earned(userAddress);
-      setPendingRewards(ethers.utils.formatEther(earned));
+      setPendingRewards(ethers.formatEther(earned));
       
       // Get user stakes
       const stakeCount = await staking.getStakeCount(userAddress);
       const stakes = [];
-      for (let i = 0; i < stakeCount.toNumber(); i++) {
+      for (let i = 0; i < Number(stakeCount); i++) {
         const stakeDetails = await staking.getStakeDetails(userAddress, i);
         stakes.push({
           index: i,
-          amount: ethers.utils.formatEther(stakeDetails.amount),
-          weightedAmount: ethers.utils.formatEther(stakeDetails.weightedAmount),
-          multiplier: stakeDetails.multiplier.toNumber(),
-          lockEndBlock: stakeDetails.lockEndBlock.toNumber()
+          amount: ethers.formatEther(stakeDetails.amount),
+          weightedAmount: ethers.formatEther(stakeDetails.weightedAmount),
+          multiplier: Number(stakeDetails.multiplier),
+          lockEndBlock: Number(stakeDetails.lockEndBlock)
         });
       }
       setUserStakes(stakes);
@@ -211,11 +212,11 @@ export default function StakingPage() {
     setTxHash('');
     
     try {
-      const amount = ethers.utils.parseEther(stakeAmount);
+      const amount = ethers.parseEther(stakeAmount);
       
       // Check allowance
       const allowance = await tokenContract.allowance(account, FAET_STAKING_ADDRESS);
-      if (allowance.lt(amount)) {
+      if (allowance < amount) {
         // Approve tokens
         console.log('Approving tokens...');
         const approveTx = await tokenContract.approve(FAET_STAKING_ADDRESS, amount);
