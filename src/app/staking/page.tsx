@@ -1,4 +1,3 @@
-
 "use client";
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -22,7 +21,7 @@ export default function StakingPage() {
       try {
         const accounts = await window.ethereum.request({
           method: 'eth_requestAccounts',
-        });
+        }) as string[];
         setAccount(accounts[0]);
       } catch (error) {
         console.error('Error connecting to MetaMask:', error);
@@ -49,7 +48,7 @@ export default function StakingPage() {
         >
           STAKING
         </motion.h1>
-        
+
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -67,7 +66,7 @@ export default function StakingPage() {
           className="bg-gray-900 p-8 rounded-lg border border-gray-700"
         >
           <h2 className="text-2xl font-nocturne-serif-bold mb-6">Wallet Connection</h2>
-          
+
           {!account ? (
             <div className="text-center">
               <p className="mb-6 text-gray-300">
@@ -101,7 +100,7 @@ export default function StakingPage() {
                   {account}
                 </p>
               </div>
-              
+
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-gray-800 p-6 rounded-lg">
                   <h3 className="text-xl font-bold mb-4">Token Staking</h3>
@@ -110,7 +109,7 @@ export default function StakingPage() {
                     Coming Soon
                   </button>
                 </div>
-                
+
                 <div className="bg-gray-800 p-6 rounded-lg">
                   <h3 className="text-xl font-bold mb-4">NFT Staking</h3>
                   <p className="text-gray-300 mb-4">Lock your NFTs for exclusive benefits</p>
@@ -119,7 +118,7 @@ export default function StakingPage() {
                   </button>
                 </div>
               </div>
-              
+
               <button
                 onClick={disconnectWallet}
                 className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
@@ -142,14 +141,14 @@ export default function StakingPage() {
               Earn ERC-20 tokens as rewards for staking your NFTs and participating in the ecosystem.
             </p>
           </div>
-          
+
           <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
             <h3 className="text-xl font-bold mb-4 text-blue-400">Exclusive Access</h3>
             <p className="text-gray-300">
               Unlock special in-game items, exclusive content, and early access to future NFT drops.
             </p>
           </div>
-          
+
           <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
             <h3 className="text-xl font-bold mb-4 text-green-400">Platform Benefits</h3>
             <p className="text-gray-300">
