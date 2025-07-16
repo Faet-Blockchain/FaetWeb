@@ -109,7 +109,11 @@ export default function StakingPage() {
         console.log(`Current chain ID: ${chainId}, Required: ${LISK_SEPOLIA_CHAIN_ID}`);
         setCurrentChainId(chainId);
         
-        const isCorrectNetwork = chainId === LISK_SEPOLIA_CHAIN_ID;
+        // Normalize both hex values to lowercase for comparison
+        const normalizedChainId = chainId.toLowerCase();
+        const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
+        
+        const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
         setWrongNetwork(!isCorrectNetwork);
         
         if (!isCorrectNetwork) {
@@ -382,7 +386,11 @@ export default function StakingPage() {
         console.log("Chain changed to:", chainId);
         setCurrentChainId(chainId);
         
-        const isCorrectNetwork = chainId === LISK_SEPOLIA_CHAIN_ID;
+        // Normalize both hex values to lowercase for comparison
+        const normalizedChainId = chainId.toLowerCase();
+        const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
+        
+        const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
         setWrongNetwork(!isCorrectNetwork);
         
         if (!isCorrectNetwork) {
@@ -461,7 +469,7 @@ export default function StakingPage() {
   };
 
   // Only allow staking interface if connected to correct network
-  const canAccessStaking = account && !wrongNetwork && currentChainId === LISK_SEPOLIA_CHAIN_ID && selectedNetwork === 'testnet';
+  const canAccessStaking = account && !wrongNetwork && currentChainId?.toLowerCase() === LISK_SEPOLIA_CHAIN_ID.toLowerCase() && selectedNetwork === 'testnet';
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
