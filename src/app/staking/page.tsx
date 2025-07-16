@@ -95,15 +95,23 @@ export default function StakingPage() {
 
         const isCorrectNetwork = chainId === LISK_SEPOLIA_CHAIN_ID;
         setWrongNetwork(!isCorrectNetwork);
+        
+        // Always hide staking interface if wrong network
         if (!isCorrectNetwork) {
           setShowTokenStaking(false);
+          console.log(`Wrong network detected. Current: ${chainId}, Required: ${LISK_SEPOLIA_CHAIN_ID}`);
         }
+        
         return isCorrectNetwork;
       } catch (error) {
         console.error("Error checking network:", error);
+        setWrongNetwork(true);
+        setShowTokenStaking(false);
         return false;
       }
     }
+    setWrongNetwork(true);
+    setShowTokenStaking(false);
     return false;
   };
 
@@ -218,13 +226,14 @@ export default function StakingPage() {
         })) as string[];
         setAccount(accounts[0]);
 
-        // Check network after connecting
+        // Force immediate network check after connecting
         const networkOk = await checkNetwork();
         if (networkOk) {
           await initializeWeb3();
         } else {
-          // Ensure staking interface is hidden on wrong network
+          // Ensure staking interface is hidden and warn user
           setShowTokenStaking(false);
+          alert("You are connected to the wrong network. Please switch to Lisk Sepolia testnet to access staking features.");
         }
       } catch (error) {
         console.error("Error connecting to MetaMask:", error);
@@ -420,12 +429,37 @@ export default function StakingPage() {
     }
   }, [account]);
 
-  // Check network on mount
+  // Check network on mount and when component loads
   useEffect(() => {
+    const initialNetworkCheck = async () => {
+      if (typeof window.ethereum !== "undefined") {
+        const networkOk = await checkNetwork();
+        if (!networkOk) {
+          setShowTokenStaking(false);
+        }
+      }
+    };
+    
+    initialNetworkCheck();
+    
     if (account) {
       checkNetwork();
     }
   }, [account]);
+
+  // Additional effect to ensure network is checked when wallet connects
+  useEffect(() => {
+    const handleInitialLoad = async () => {
+      if (typeof window.ethereum !== "undefined" && account) {
+        const networkOk = await checkNetwork();
+        if (!networkOk) {
+          setShowTokenStaking(false);
+        }
+      }
+    };
+    
+    handleInitialLoad();
+  }, []);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -435,12 +469,14 @@ export default function StakingPage() {
   };
 
   const handleGoToStaking = async () => {
+    // Force fresh network check
     const networkOk = await checkNetwork();
-    if (networkOk) {
+    if (networkOk && !wrongNetwork) {
       setShowTokenStaking(true);
       setTimeout(() => scrollToSection("token-staking"), 100);
     } else {
-      alert("Please switch to Lisk Sepolia testnet to access staking features.");
+      setShowTokenStaking(false);
+      alert("You must be connected to Lisk Sepolia testnet to access staking features. Please switch networks and try again.");
     }
   };
 
@@ -587,7 +623,12 @@ export default function StakingPage() {
                     onClick={
                       wrongNetwork ? switchToLiskSepolia : handleGoToStaking
                     }
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                    disabled={wrongNetwork && selectedNetwork !== 'testnet'}
+                    className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                      wrongNetwork || selectedNetwork !== 'testnet'
+                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                    }`}
                   >
                     {wrongNetwork ? "Change Network" : "Go to Staking"}
                   </button>
@@ -621,8 +662,8 @@ export default function StakingPage() {
           )}
         </motion.div>
 
-        {/* Token Staking Container */}
-        {showTokenStaking && !wrongNetwork && account && (
+        {/* Token Staking Container - Only show on correct network */}
+        {showTokenStaking && !wrongNetwork && account && selectedNetwork === 'testnet' && (
           <motion.div
             id="token-staking"
             initial={{ opacity: 0, y: 20, height: 0 }}
