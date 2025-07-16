@@ -56,6 +56,7 @@ export default function StakingPage() {
   const [showTokenStaking, setShowTokenStaking] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<'testnet' | 'mainnet'>('testnet');
   const [currentChainId, setCurrentChainId] = useState<string | null>(null);
+  const [currentChainIdNumber, setCurrentChainIdNumber] = useState<number | null>(null);
 
   // Web3 state
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -112,14 +113,16 @@ export default function StakingPage() {
         
         setCurrentChainId(chainId);
         
-        // Normalize both hex values to lowercase for comparison
-        const normalizedChainId = chainId?.toLowerCase() || "";
-        const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
+        // Convert hex strings to integers for reliable comparison
+        const currentChainNumber = parseInt(chainId, 16);
+        const requiredChainNumber = parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
         
-        console.log(`[checkNetwork] Normalized current: "${normalizedChainId}"`);
-        console.log(`[checkNetwork] Normalized required: "${normalizedRequiredChainId}"`);
+        setCurrentChainIdNumber(currentChainNumber);
         
-        const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
+        console.log(`[checkNetwork] Current chain number: ${currentChainNumber}`);
+        console.log(`[checkNetwork] Required chain number: ${requiredChainNumber}`);
+        
+        const isCorrectNetwork = currentChainNumber === requiredChainNumber;
         console.log(`[checkNetwork] Networks match: ${isCorrectNetwork}`);
         
         setWrongNetwork(!isCorrectNetwork);
@@ -136,6 +139,7 @@ export default function StakingPage() {
         console.error("[checkNetwork] Error checking network:", error);
         setWrongNetwork(true);
         setCurrentChainId(null);
+        setCurrentChainIdNumber(null);
         clearWeb3State();
         return false;
       }
@@ -143,6 +147,7 @@ export default function StakingPage() {
       console.log("[checkNetwork] No ethereum object found");
       setWrongNetwork(true);
       setCurrentChainId(null);
+      setCurrentChainIdNumber(null);
       clearWeb3State();
       return false;
     }
@@ -432,13 +437,16 @@ export default function StakingPage() {
           
           setCurrentChainId(actualChainId);
           
-          const normalizedChainId = actualChainId?.toLowerCase() || "";
-          const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
+          // Convert hex strings to integers for reliable comparison
+          const currentChainNumber = parseInt(actualChainId, 16);
+          const requiredChainNumber = parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
           
-          console.log("[handleChainChanged] Fresh normalized current:", normalizedChainId);
-          console.log("[handleChainChanged] Fresh normalized required:", normalizedRequiredChainId);
+          setCurrentChainIdNumber(currentChainNumber);
           
-          const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
+          console.log("[handleChainChanged] Fresh current chain number:", currentChainNumber);
+          console.log("[handleChainChanged] Fresh required chain number:", requiredChainNumber);
+          
+          const isCorrectNetwork = currentChainNumber === requiredChainNumber;
           console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
           
           setWrongNetwork(!isCorrectNetwork);
@@ -533,14 +541,14 @@ export default function StakingPage() {
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
-      if (account && !wrongNetwork && currentChainId?.toLowerCase() === LISK_SEPOLIA_CHAIN_ID.toLowerCase()) {
+      if (account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16)) {
         console.log("Auto-initializing Web3 due to state change");
         await initializeWeb3();
       }
     };
     
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainId]);
+  }, [account, wrongNetwork, currentChainIdNumber]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -550,7 +558,7 @@ export default function StakingPage() {
   };
 
   // Only allow staking interface if connected to correct network
-  const canAccessStaking = account && !wrongNetwork && currentChainId?.toLowerCase() === LISK_SEPOLIA_CHAIN_ID.toLowerCase() && selectedNetwork === 'testnet';
+  const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
@@ -562,10 +570,12 @@ export default function StakingPage() {
             <div>
               <p className="text-blue-400">Current Chain ID:</p>
               <p className="text-white font-mono">{currentChainId || "Not detected"}</p>
+              <p className="text-gray-400 text-xs">({currentChainIdNumber || "N/A"})</p>
             </div>
             <div>
               <p className="text-blue-400">Required Chain ID:</p>
               <p className="text-white font-mono">{LISK_SEPOLIA_CHAIN_ID}</p>
+              <p className="text-gray-400 text-xs">({parseInt(LISK_SEPOLIA_CHAIN_ID, 16)})</p>
             </div>
             <div>
               <p className="text-blue-400">Wrong Network Status:</p>
