@@ -518,41 +518,49 @@ export default function StakingPage() {
                 </select>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-2">Amount to Stake</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      placeholder="0.0"
-                      value={stakeAmount}
-                      onChange={(e) => setStakeAmount(e.target.value)}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
-                    />
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between">
+                  <label className="block text-sm font-medium">Amount to Stake</label>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0.0"
+                        value={stakeAmount}
+                        onChange={(e) => setStakeAmount(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setStakeAmount(tokenBalance)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+                      >
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center">
                     <button
-                      type="button"
-                      onClick={() => setStakeAmount(tokenBalance)}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+                      onClick={handleStake}
+                      disabled={!stakeAmount || isLoading || wrongNetwork || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > parseFloat(tokenBalance)}
+                      className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] h-10 ${
+                        !stakeAmount || isLoading || wrongNetwork || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > parseFloat(tokenBalance)
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
                     >
-                      MAX
+                      {isLoading ? 'Processing...' : 'Stake Tokens'}
                     </button>
                   </div>
-                  <p className="text-gray-400 text-xs mt-1">
+                </div>
+                
+                <div className="flex justify-start">
+                  <p className="text-gray-400 text-xs">
                     Available: {parseFloat(tokenBalance).toFixed(2)} FAET
                   </p>
-                </div>
-                <div className="flex flex-col justify-end">
-                  <button
-                    onClick={handleStake}
-                    disabled={!stakeAmount || isLoading || wrongNetwork || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > parseFloat(tokenBalance)}
-                    className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] h-10 ${
-                      !stakeAmount || isLoading || wrongNetwork || parseFloat(stakeAmount) <= 0 || parseFloat(stakeAmount) > parseFloat(tokenBalance)
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
-                    }`}
-                  >
-                    {isLoading ? 'Processing...' : 'Stake Tokens'}
-                  </button>
                 </div>
               </div>
               <p className="text-gray-400 text-sm mt-2">
