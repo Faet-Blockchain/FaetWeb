@@ -19,9 +19,9 @@ const FAET_STAKING_ADDRESS = '0x5189477536B1E476C4025c156526f7e37438BD90';
 // Lock duration options (in blocks)
 const LOCK_DURATIONS = {
   NO_LOCK: { blocks: 0, multiplier: 1, label: 'No Lock' },
-  SIX_MONTHS: { blocks: 15768000, multiplier: 20, label: '6 Months' },
-  EIGHTEEN_MONTHS: { blocks: 47304000, multiplier: 30, label: '18 Months' },
-  THREE_YEARS: { blocks: 94608000, multiplier: 50, label: '3 Years' }
+  SIX_MONTHS: { blocks: 15768000, multiplier: 20, label: '1 Year' },
+  EIGHTEEN_MONTHS: { blocks: 47304000, multiplier: 30, label: '3 Years' },
+  THREE_YEARS: { blocks: 94608000, multiplier: 50, label: '6 Years' }
 };
 
 // Simplified ABI for the functions we need
