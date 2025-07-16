@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -11,6 +12,8 @@ declare global {
         params?: unknown[];
       }) => Promise<unknown>;
       isMetaMask?: boolean;
+      on?: (event: string, callback: (...args: any[]) => void) => void;
+      removeListener?: (event: string, callback: (...args: any[]) => void) => void;
     };
   }
 }
@@ -52,15 +55,13 @@ export default function StakingPage() {
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const [showTokenStaking, setShowTokenStaking] = useState(false);
   const [selectedNetwork, setSelectedNetwork] = useState<'testnet' | 'mainnet'>('testnet');
+  const [currentChainId, setCurrentChainId] = useState<string | null>(null);
 
   // Web3 state
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
-  const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(
-    null,
-  );
-  const [stakingContract, setStakingContract] =
-    useState<ethers.Contract | null>(null);
+  const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(null);
+  const [stakingContract, setStakingContract] = useState<ethers.Contract | null>(null);
 
   // Token/Staking state
   const [tokenBalance, setTokenBalance] = useState<string>("0");
@@ -86,32 +87,48 @@ export default function StakingPage() {
     blockExplorerUrls: ["https://sepolia-blockscout.lisk.com"],
   };
 
-  const checkNetwork = async () => {
+  const clearWeb3State = () => {
+    setProvider(null);
+    setSigner(null);
+    setTokenContract(null);
+    setStakingContract(null);
+    setTokenBalance("0");
+    setStakedBalance("0");
+    setPendingRewards("0");
+    setUserStakes([]);
+    setShowTokenStaking(false);
+  };
+
+  const checkNetwork = async (): Promise<boolean> => {
     if (typeof window.ethereum !== "undefined") {
       try {
         const chainId = (await window.ethereum.request({
           method: "eth_chainId",
         })) as string;
 
+        console.log(`Current chain ID: ${chainId}, Required: ${LISK_SEPOLIA_CHAIN_ID}`);
+        setCurrentChainId(chainId);
+        
         const isCorrectNetwork = chainId === LISK_SEPOLIA_CHAIN_ID;
         setWrongNetwork(!isCorrectNetwork);
         
-        // Always hide staking interface if wrong network
         if (!isCorrectNetwork) {
-          setShowTokenStaking(false);
-          console.log(`Wrong network detected. Current: ${chainId}, Required: ${LISK_SEPOLIA_CHAIN_ID}`);
+          clearWeb3State();
+          console.log("Wrong network detected, clearing state");
         }
         
         return isCorrectNetwork;
       } catch (error) {
         console.error("Error checking network:", error);
         setWrongNetwork(true);
-        setShowTokenStaking(false);
+        setCurrentChainId(null);
+        clearWeb3State();
         return false;
       }
     }
     setWrongNetwork(true);
-    setShowTokenStaking(false);
+    setCurrentChainId(null);
+    clearWeb3State();
     return false;
   };
 
@@ -122,16 +139,13 @@ export default function StakingPage() {
           method: "wallet_switchEthereumChain",
           params: [{ chainId: LISK_SEPOLIA_CHAIN_ID }],
         });
-        setWrongNetwork(false);
       } catch (switchError: any) {
-        // This error code indicates that the chain has not been added to MetaMask
         if (switchError.code === 4902) {
           try {
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
               params: [LISK_SEPOLIA_CONFIG],
             });
-            setWrongNetwork(false);
           } catch (addError) {
             console.error("Error adding network:", addError);
           }
@@ -143,30 +157,33 @@ export default function StakingPage() {
   };
 
   const initializeWeb3 = async () => {
-    if (typeof window.ethereum !== "undefined") {
-      const web3Provider = new ethers.BrowserProvider(window.ethereum);
-      setProvider(web3Provider);
+    if (typeof window.ethereum !== "undefined" && account) {
+      try {
+        const web3Provider = new ethers.BrowserProvider(window.ethereum);
+        setProvider(web3Provider);
 
-      const web3Signer = await web3Provider.getSigner();
-      setSigner(web3Signer);
+        const web3Signer = await web3Provider.getSigner();
+        setSigner(web3Signer);
 
-      const token = new ethers.Contract(
-        FAET_TOKEN_ADDRESS,
-        FAET_TOKEN_ABI,
-        web3Signer,
-      );
-      const staking = new ethers.Contract(
-        FAET_STAKING_ADDRESS,
-        FAET_STAKING_ABI,
-        web3Signer,
-      );
+        const token = new ethers.Contract(
+          FAET_TOKEN_ADDRESS,
+          FAET_TOKEN_ABI,
+          web3Signer,
+        );
+        const staking = new ethers.Contract(
+          FAET_STAKING_ADDRESS,
+          FAET_STAKING_ABI,
+          web3Signer,
+        );
 
-      setTokenContract(token);
-      setStakingContract(staking);
+        setTokenContract(token);
+        setStakingContract(staking);
 
-      // Load user data
-      const userAddress = await web3Signer.getAddress();
-      await loadUserData(token, staking, userAddress);
+        await loadUserData(token, staking, account);
+      } catch (error) {
+        console.error("Error initializing Web3:", error);
+        clearWeb3State();
+      }
     }
   };
 
@@ -176,22 +193,17 @@ export default function StakingPage() {
     userAddress: string,
   ) => {
     try {
-      // Get current block number
       const currentBlock = (await provider?.getBlockNumber()) || 0;
 
-      // Get token balance
       const balance = await token.balanceOf(userAddress);
       setTokenBalance(ethers.formatEther(balance));
 
-      // Get staked balance (weighted)
       const weighted = await staking.weightedBalances(userAddress);
       setStakedBalance(ethers.formatEther(weighted));
 
-      // Get pending rewards
       const earned = await staking.earned(userAddress);
       setPendingRewards(ethers.formatEther(earned));
 
-      // Get user stakes
       const stakeCount = await staking.getStakeCount(userAddress);
       const stakes = [];
       for (let i = 0; i < Number(stakeCount); i++) {
@@ -206,9 +218,7 @@ export default function StakingPage() {
           multiplier: Number(stakeDetails.multiplier),
           lockEndBlock: lockEndBlock,
           isUnlocked: isUnlocked,
-          blocksRemaining: isUnlocked
-            ? 0
-            : Math.max(0, lockEndBlock - currentBlock),
+          blocksRemaining: isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock),
         });
       }
       setUserStakes(stakes);
@@ -224,15 +234,13 @@ export default function StakingPage() {
         const accounts = (await window.ethereum.request({
           method: "eth_requestAccounts",
         })) as string[];
+        
         setAccount(accounts[0]);
-
-        // Force immediate network check after connecting
+        
+        // Immediate network check after connection
         const networkOk = await checkNetwork();
-        if (networkOk) {
-          await initializeWeb3();
-        } else {
-          // Ensure staking interface is hidden and warn user
-          setShowTokenStaking(false);
+        if (!networkOk) {
+          console.log("Connected to wrong network, will not initialize Web3");
           alert("You are connected to the wrong network. Please switch to Lisk Sepolia testnet to access staking features.");
         }
       } catch (error) {
@@ -248,7 +256,6 @@ export default function StakingPage() {
   const handleStake = async () => {
     if (!tokenContract || !stakingContract || !stakeAmount) return;
 
-    // Double-check network before proceeding
     const networkOk = await checkNetwork();
     if (!networkOk) {
       alert("Please switch to Lisk Sepolia testnet to stake tokens.");
@@ -261,7 +268,6 @@ export default function StakingPage() {
     try {
       const amount = ethers.parseEther(stakeAmount);
 
-      // Check if user has enough balance
       const balance = await tokenContract.balanceOf(account);
       if (balance < amount) {
         alert("Insufficient FAET token balance.");
@@ -269,29 +275,19 @@ export default function StakingPage() {
         return;
       }
 
-      // Check allowance
-      const allowance = await tokenContract.allowance(
-        account,
-        FAET_STAKING_ADDRESS,
-      );
+      const allowance = await tokenContract.allowance(account, FAET_STAKING_ADDRESS);
       if (allowance < amount) {
-        // Approve tokens
         console.log("Approving tokens...");
-        const approveTx = await tokenContract.approve(
-          FAET_STAKING_ADDRESS,
-          amount,
-        );
+        const approveTx = await tokenContract.approve(FAET_STAKING_ADDRESS, amount);
         await approveTx.wait();
         console.log("Approval confirmed");
       }
 
-      // Stake tokens
       console.log("Staking tokens...");
       const stakeTx = await stakingContract.stake(amount, selectedLockDuration);
       setTxHash(stakeTx.hash);
       await stakeTx.wait();
 
-      // Reload user data
       if (account) {
         await loadUserData(tokenContract, stakingContract, account);
       }
@@ -308,7 +304,6 @@ export default function StakingPage() {
   const handleWithdraw = async (stakeIndex: number) => {
     if (!stakingContract) return;
 
-    // Double-check network before proceeding
     const networkOk = await checkNetwork();
     if (!networkOk) {
       alert("Please switch to Lisk Sepolia testnet to withdraw tokens.");
@@ -322,7 +317,6 @@ export default function StakingPage() {
       setTxHash(withdrawTx.hash);
       await withdrawTx.wait();
 
-      // Reload user data
       if (account) {
         await loadUserData(tokenContract!, stakingContract, account);
       }
@@ -338,7 +332,6 @@ export default function StakingPage() {
   const handleClaimRewards = async () => {
     if (!stakingContract) return;
 
-    // Double-check network before proceeding
     const networkOk = await checkNetwork();
     if (!networkOk) {
       alert("Please switch to Lisk Sepolia testnet to claim rewards.");
@@ -352,7 +345,6 @@ export default function StakingPage() {
       setTxHash(claimTx.hash);
       await claimTx.wait();
 
-      // Reload user data
       if (account) {
         await loadUserData(tokenContract!, stakingContract, account);
       }
@@ -368,51 +360,50 @@ export default function StakingPage() {
   const disconnectWallet = () => {
     setAccount(null);
     setWrongNetwork(false);
-    setShowTokenStaking(false);
-    setProvider(null);
-    setSigner(null);
-    setTokenContract(null);
-    setStakingContract(null);
-    setTokenBalance("0");
-    setStakedBalance("0");
-    setPendingRewards("0");
-    setUserStakes([]);
+    setCurrentChainId(null);
+    clearWeb3State();
   };
 
-  // Listen for network changes
+  const handleGoToStaking = async () => {
+    const networkOk = await checkNetwork();
+    if (networkOk && !wrongNetwork && account) {
+      setShowTokenStaking(true);
+      setTimeout(() => scrollToSection("token-staking"), 100);
+    } else {
+      alert("You must be connected to Lisk Sepolia testnet to access staking features. Please switch networks and try again.");
+    }
+  };
+
+  // Network detection and event handling
   useEffect(() => {
-    if (typeof window.ethereum !== "undefined") {
-      const handleChainChanged = async () => {
-        const networkOk = await checkNetwork();
-        if (!networkOk) {
-          setShowTokenStaking(false);
-          // Clear web3 instances on wrong network
-          setProvider(null);
-          setSigner(null);
-          setTokenContract(null);
-          setStakingContract(null);
-          setTokenBalance("0");
-          setStakedBalance("0");
-          setPendingRewards("0");
-          setUserStakes([]);
+    if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
+      const handleChainChanged = async (chainId: string) => {
+        console.log("Chain changed to:", chainId);
+        setCurrentChainId(chainId);
+        
+        const isCorrectNetwork = chainId === LISK_SEPOLIA_CHAIN_ID;
+        setWrongNetwork(!isCorrectNetwork);
+        
+        if (!isCorrectNetwork) {
+          console.log("Wrong network detected, clearing state");
+          clearWeb3State();
         } else if (account) {
-          // Reinitialize web3 if back on correct network
-          await initializeWeb3();
+          console.log("Correct network detected, reinitializing Web3");
+          setTimeout(async () => {
+            await initializeWeb3();
+          }, 1000);
         }
       };
 
       const handleAccountsChanged = async (accounts: string[]) => {
+        console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
-          // User disconnected
           disconnectWallet();
         } else {
-          // User switched accounts
           setAccount(accounts[0]);
           const networkOk = await checkNetwork();
-          if (networkOk) {
-            await initializeWeb3();
-          } else {
-            setShowTokenStaking(false);
+          if (!networkOk) {
+            clearWeb3State();
           }
         }
       };
@@ -429,37 +420,37 @@ export default function StakingPage() {
     }
   }, [account]);
 
-  // Check network on mount and when component loads
+  // Initialize on mount and when account changes
   useEffect(() => {
-    const initialNetworkCheck = async () => {
+    const initialize = async () => {
+      await checkNetwork();
+      
+      // Check if already connected
       if (typeof window.ethereum !== "undefined") {
-        const networkOk = await checkNetwork();
-        if (!networkOk) {
-          setShowTokenStaking(false);
+        try {
+          const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+          }
+        } catch (error) {
+          console.error("Error checking existing connection:", error);
         }
       }
     };
     
-    initialNetworkCheck();
-    
-    if (account) {
-      checkNetwork();
-    }
-  }, [account]);
-
-  // Additional effect to ensure network is checked when wallet connects
-  useEffect(() => {
-    const handleInitialLoad = async () => {
-      if (typeof window.ethereum !== "undefined" && account) {
-        const networkOk = await checkNetwork();
-        if (!networkOk) {
-          setShowTokenStaking(false);
-        }
-      }
-    };
-    
-    handleInitialLoad();
+    initialize();
   }, []);
+
+  // Initialize Web3 when account and network are both correct
+  useEffect(() => {
+    const initWeb3IfReady = async () => {
+      if (account && !wrongNetwork && currentChainId === LISK_SEPOLIA_CHAIN_ID) {
+        await initializeWeb3();
+      }
+    };
+    
+    initWeb3IfReady();
+  }, [account, wrongNetwork, currentChainId]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -468,17 +459,8 @@ export default function StakingPage() {
     }
   };
 
-  const handleGoToStaking = async () => {
-    // Force fresh network check
-    const networkOk = await checkNetwork();
-    if (networkOk && !wrongNetwork) {
-      setShowTokenStaking(true);
-      setTimeout(() => scrollToSection("token-staking"), 100);
-    } else {
-      setShowTokenStaking(false);
-      alert("You must be connected to Lisk Sepolia testnet to access staking features. Please switch networks and try again.");
-    }
-  };
+  // Only allow staking interface if connected to correct network
+  const canAccessStaking = account && !wrongNetwork && currentChainId === LISK_SEPOLIA_CHAIN_ID && selectedNetwork === 'testnet';
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
@@ -595,14 +577,21 @@ export default function StakingPage() {
                 <p className="text-white font-mono text-sm break-all">
                   {account}
                 </p>
+                {currentChainId && (
+                  <p className="text-gray-300 text-xs mt-2">
+                    Chain ID: {currentChainId}
+                  </p>
+                )}
               </div>
 
               {wrongNetwork && (
                 <div className="bg-red-900 border border-red-600 rounded-lg p-4 mb-6">
                   <p className="text-red-300 mb-2">⚠️ Wrong Network</p>
-                  <p className="text-white mb-4">
-                    Please switch to Lisk Sepolia Testnet to access staking
-                    features.
+                  <p className="text-white mb-2">
+                    Please switch to Lisk Sepolia Testnet to access staking features.
+                  </p>
+                  <p className="text-gray-300 text-sm mb-4">
+                    Current: {currentChainId || 'Unknown'} | Required: {LISK_SEPOLIA_CHAIN_ID}
                   </p>
                   <button
                     onClick={switchToLiskSepolia}
@@ -620,17 +609,17 @@ export default function StakingPage() {
                     Stake your FAET tokens to earn rewards
                   </p>
                   <button
-                    onClick={
-                      wrongNetwork ? switchToLiskSepolia : handleGoToStaking
-                    }
-                    disabled={wrongNetwork && selectedNetwork !== 'testnet'}
+                    onClick={wrongNetwork ? switchToLiskSepolia : handleGoToStaking}
+                    disabled={!canAccessStaking && !wrongNetwork}
                     className={`font-bold py-2 px-6 rounded-lg transition-colors ${
-                      wrongNetwork || selectedNetwork !== 'testnet'
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
+                      wrongNetwork
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : canAccessStaking
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {wrongNetwork ? "Change Network" : "Go to Staking"}
+                    {wrongNetwork ? "Switch Network" : "Go to Staking"}
                   </button>
                 </div>
 
@@ -640,12 +629,8 @@ export default function StakingPage() {
                     Lock your NFTs for exclusive benefits
                   </p>
                   <button
-                    disabled={wrongNetwork}
-                    className={`font-bold py-2 px-6 rounded-lg transition-colors ${
-                      wrongNetwork
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
+                    disabled={true}
+                    className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg transition-colors"
                   >
                     Coming Soon
                   </button>
@@ -663,7 +648,7 @@ export default function StakingPage() {
         </motion.div>
 
         {/* Token Staking Container - Only show on correct network */}
-        {showTokenStaking && !wrongNetwork && account && selectedNetwork === 'testnet' && (
+        {showTokenStaking && canAccessStaking && (
           <motion.div
             id="token-staking"
             initial={{ opacity: 0, y: 20, height: 0 }}
