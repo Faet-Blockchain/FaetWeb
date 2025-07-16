@@ -106,34 +106,46 @@ export default function StakingPage() {
           method: "eth_chainId",
         })) as string;
 
-        console.log(`Current chain ID: ${chainId}, Required: ${LISK_SEPOLIA_CHAIN_ID}`);
+        console.log(`[checkNetwork] Raw chain ID from wallet: "${chainId}"`);
+        console.log(`[checkNetwork] Required chain ID: "${LISK_SEPOLIA_CHAIN_ID}"`);
+        console.log(`[checkNetwork] Type of chainId: ${typeof chainId}`);
+        
         setCurrentChainId(chainId);
         
         // Normalize both hex values to lowercase for comparison
-        const normalizedChainId = chainId.toLowerCase();
+        const normalizedChainId = chainId?.toLowerCase() || "";
         const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
         
+        console.log(`[checkNetwork] Normalized current: "${normalizedChainId}"`);
+        console.log(`[checkNetwork] Normalized required: "${normalizedRequiredChainId}"`);
+        
         const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
+        console.log(`[checkNetwork] Networks match: ${isCorrectNetwork}`);
+        
         setWrongNetwork(!isCorrectNetwork);
         
         if (!isCorrectNetwork) {
           clearWeb3State();
-          console.log("Wrong network detected, clearing state");
+          console.log("[checkNetwork] Wrong network detected, clearing state");
+        } else {
+          console.log("[checkNetwork] Correct network confirmed");
         }
         
         return isCorrectNetwork;
       } catch (error) {
-        console.error("Error checking network:", error);
+        console.error("[checkNetwork] Error checking network:", error);
         setWrongNetwork(true);
         setCurrentChainId(null);
         clearWeb3State();
         return false;
       }
+    } else {
+      console.log("[checkNetwork] No ethereum object found");
+      setWrongNetwork(true);
+      setCurrentChainId(null);
+      clearWeb3State();
+      return false;
     }
-    setWrongNetwork(true);
-    setCurrentChainId(null);
-    clearWeb3State();
-    return false;
   };
 
   const switchToLiskSepolia = async () => {
@@ -398,22 +410,19 @@ export default function StakingPage() {
   useEffect(() => {
     if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
       const handleChainChanged = async (chainId: string) => {
-        console.log("Chain changed to:", chainId);
-        setCurrentChainId(chainId);
+        console.log("[handleChainChanged] Chain changed event fired");
+        console.log("[handleChainChanged] New chain ID:", chainId);
+        console.log("[handleChainChanged] Type:", typeof chainId);
         
-        // Normalize both hex values to lowercase for comparison
-        const normalizedChainId = chainId.toLowerCase();
-        const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
+        // Force immediate re-check using the network detection function
+        const networkOk = await checkNetwork();
         
-        const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
-        setWrongNetwork(!isCorrectNetwork);
-        
-        if (!isCorrectNetwork) {
-          console.log("Wrong network detected, clearing state and hiding staking interface");
+        if (!networkOk) {
+          console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
           clearWeb3State();
           setShowTokenStaking(false); // Hide staking interface when wrong network
         } else if (account) {
-          console.log("Correct network detected, reinitializing Web3");
+          console.log("[handleChainChanged] Correct network detected, reinitializing Web3");
           setTimeout(async () => {
             await initializeWeb3();
           }, 1000);
@@ -519,6 +528,33 @@ export default function StakingPage() {
   return (
     <div className="min-h-screen bg-black text-white pt-20">
       <div className="max-w-6xl mx-auto px-4 py-16">
+        {/* Debug Chain Display */}
+        <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-bold text-blue-300 mb-2">Debug: Chain Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-blue-400">Current Chain ID:</p>
+              <p className="text-white font-mono">{currentChainId || "Not detected"}</p>
+            </div>
+            <div>
+              <p className="text-blue-400">Required Chain ID:</p>
+              <p className="text-white font-mono">{LISK_SEPOLIA_CHAIN_ID}</p>
+            </div>
+            <div>
+              <p className="text-blue-400">Wrong Network Status:</p>
+              <p className={`font-bold ${wrongNetwork ? "text-red-400" : "text-green-400"}`}>
+                {wrongNetwork ? "TRUE (Wrong Network)" : "FALSE (Correct Network)"}
+              </p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <p className="text-blue-400">Wallet Connected:</p>
+            <p className={`font-bold ${account ? "text-green-400" : "text-red-400"}`}>
+              {account ? `YES (${account.slice(0, 6)}...${account.slice(-4)})` : "NO"}
+            </p>
+          </div>
+        </div>
+
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
