@@ -163,10 +163,15 @@ export default function StakingPage() {
   const initializeWeb3 = async () => {
     if (typeof window.ethereum !== "undefined" && account) {
       try {
+        console.log("Initializing Web3 for account:", account);
+        
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
         setProvider(web3Provider);
 
         const web3Signer = await web3Provider.getSigner();
+        const signerAddress = await web3Signer.getAddress();
+        console.log("Signer address:", signerAddress);
+        
         setSigner(web3Signer);
 
         const token = new ethers.Contract(
@@ -183,11 +188,16 @@ export default function StakingPage() {
         setTokenContract(token);
         setStakingContract(staking);
 
+        console.log("Contracts initialized, loading user data...");
         await loadUserData(token, staking, account);
+        console.log("Web3 initialization complete");
       } catch (error) {
         console.error("Error initializing Web3:", error);
         clearWeb3State();
+        alert("Failed to initialize Web3 connection. Please try reconnecting your wallet.");
       }
+    } else {
+      console.log("Cannot initialize Web3: missing ethereum or account");
     }
   };
 
@@ -239,16 +249,32 @@ export default function StakingPage() {
           method: "eth_requestAccounts",
         })) as string[];
         
-        setAccount(accounts[0]);
-        
-        // Immediate network check after connection
-        const networkOk = await checkNetwork();
-        if (!networkOk) {
-          console.log("Connected to wrong network, will not initialize Web3");
-          alert("You are connected to the wrong network. Please switch to Lisk Sepolia testnet to access staking features.");
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          
+          // Immediate network check after connection
+          const networkOk = await checkNetwork();
+          if (networkOk) {
+            console.log("Connected to correct network, initializing Web3");
+            // Initialize Web3 immediately if on correct network
+            setTimeout(async () => {
+              await initializeWeb3();
+            }, 500);
+          } else {
+            console.log("Connected to wrong network, will not initialize Web3");
+            alert("You are connected to the wrong network. Please switch to Lisk Sepolia testnet to access staking features.");
+          }
+        } else {
+          console.error("No accounts returned from MetaMask");
+          alert("Failed to connect to MetaMask. Please try again.");
         }
       } catch (error) {
         console.error("Error connecting to MetaMask:", error);
+        if (error.code === 4001) {
+          alert("Connection rejected by user.");
+        } else {
+          alert("Failed to connect to MetaMask. Please try again.");
+        }
       } finally {
         setIsConnecting(false);
       }
@@ -453,7 +479,8 @@ export default function StakingPage() {
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
-      if (account && !wrongNetwork && currentChainId === LISK_SEPOLIA_CHAIN_ID) {
+      if (account && !wrongNetwork && currentChainId?.toLowerCase() === LISK_SEPOLIA_CHAIN_ID.toLowerCase()) {
+        console.log("Auto-initializing Web3 due to state change");
         await initializeWeb3();
       }
     };
