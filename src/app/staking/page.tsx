@@ -411,22 +411,49 @@ export default function StakingPage() {
     if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
       const handleChainChanged = async (chainId: string) => {
         console.log("[handleChainChanged] Chain changed event fired");
-        console.log("[handleChainChanged] New chain ID:", chainId);
+        console.log("[handleChainChanged] Event chain ID:", chainId);
         console.log("[handleChainChanged] Type:", typeof chainId);
         
-        // Force immediate re-check using the network detection function
-        const networkOk = await checkNetwork();
-        
-        if (!networkOk) {
-          console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
-          clearWeb3State();
-          setShowTokenStaking(false); // Hide staking interface when wrong network
-        } else if (account) {
-          console.log("[handleChainChanged] Correct network detected, reinitializing Web3");
-          setTimeout(async () => {
-            await initializeWeb3();
-          }, 1000);
-        }
+        // Add delay to ensure wallet state is fully updated
+        setTimeout(async () => {
+          console.log("[handleChainChanged] Checking network after delay...");
+          
+          // Force fresh read from wallet instead of using event data
+          let actualChainId;
+          try {
+            actualChainId = (await window.ethereum!.request({
+              method: "eth_chainId",
+            })) as string;
+            console.log("[handleChainChanged] Fresh chain ID from wallet:", actualChainId);
+          } catch (error) {
+            console.error("[handleChainChanged] Error reading fresh chain ID:", error);
+            return;
+          }
+          
+          setCurrentChainId(actualChainId);
+          
+          const normalizedChainId = actualChainId?.toLowerCase() || "";
+          const normalizedRequiredChainId = LISK_SEPOLIA_CHAIN_ID.toLowerCase();
+          
+          console.log("[handleChainChanged] Fresh normalized current:", normalizedChainId);
+          console.log("[handleChainChanged] Fresh normalized required:", normalizedRequiredChainId);
+          
+          const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
+          console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
+          
+          setWrongNetwork(!isCorrectNetwork);
+          
+          if (!isCorrectNetwork) {
+            console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
+            clearWeb3State();
+            setShowTokenStaking(false);
+          } else if (account) {
+            console.log("[handleChainChanged] Correct network detected, reinitializing Web3");
+            setTimeout(async () => {
+              await initializeWeb3();
+            }, 500);
+          }
+        }, 500); // 500ms delay to let wallet update
       };
 
       const handleAccountsChanged = async (accounts: string[]) => {
