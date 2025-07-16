@@ -1,0 +1,84 @@
+You're very close — your setup is thorough, and you've even added great debug output. But the core issue likely boils down to event timing and state desync between MetaMask and your React state when the component first mounts or when the chain is changed.
+
+✅ Root Cause:
+window.ethereum.request({ method: "eth_chainId" }) is returning the correct value,
+but you're reading it before MetaMask has fully updated — particularly right after a user switches networks or connects the wallet.
+
+MetaMask may emit the chainChanged event with a stale value, or React state might lag one render behind because of useState() batching.
+
+✅ Fix Strategy:
+Instead of comparing raw strings and assuming immediate state availability, you should:
+
+Normalize chain IDs using parseInt(chainId, 16) to guarantee numerical comparison.
+
+Always use a fresh read from MetaMask inside checkNetwork() rather than relying on event-provided chainId.
+
+Move the "current chain ID" comparison logic into a reliable helper that is called both on connection and event triggers.
+
+✅ Minimal Fix to checkNetwork:
+Update this line:
+
+ts
+Copy
+Edit
+const isCorrectNetwork = normalizedChainId === normalizedRequiredChainId;
+To use integer comparison:
+
+ts
+Copy
+Edit
+const isCorrectNetwork =
+  parseInt(chainId, 16) === parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
+And for all comparisons like this later:
+
+ts
+Copy
+Edit
+currentChainId?.toLowerCase() === LISK_SEPOLIA_CHAIN_ID.toLowerCase()
+Replace with:
+
+ts
+Copy
+Edit
+parseInt(currentChainId || '', 16) === parseInt(LISK_SEPOLIA_CHAIN_ID, 16)
+✅ Optional But Strongly Recommended:
+Replace string-based storage of chainId with a number. Store and compare chain IDs as number, not hex strings.
+
+Add this state:
+ts
+Copy
+Edit
+const [chainId, setChainId] = useState<number | null>(null);
+In checkNetwork():
+ts
+Copy
+Edit
+const rawChainId = await window.ethereum.request({ method: "eth_chainId" }) as string;
+const parsed = parseInt(rawChainId, 16);
+setChainId(parsed);
+const isCorrectNetwork = parsed === 4202; // Lisk Sepolia
+✅ Last Mile Check:
+Make sure your MetaMask is not returning mixed-cased hex like 0x106A (uppercase A), which won't match "0x106a".
+
+Using parseInt(..., 16) circumvents this.
+
+✅ Confirm Fix:
+Your debug box already shows the output, so once you switch chains in MetaMask, this should now show:
+
+Current Chain ID: 0x106a
+
+Required Chain ID: 0x106a
+
+Wrong Network Status: FALSE
+
+Let me know if you want me to rewrite the relevant logic cleanly based on this fix, or just update the specific functions.
+
+
+
+
+
+
+
+
+
+Ask ChatGPT
