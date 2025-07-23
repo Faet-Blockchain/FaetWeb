@@ -71,6 +71,8 @@ export default function StakingPage() {
   const [userStakes, setUserStakes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState<string>("");
+  const [approvedAmount, setApprovedAmount] = useState<string>("0");
+  const [approvalAmount, setApprovalAmount] = useState<string>("");
 
   // Lisk Sepolia testnet configuration
   const LISK_SEPOLIA_CHAIN_ID = "0x106a"; // 4202 in decimal
@@ -95,6 +97,8 @@ export default function StakingPage() {
     setStakedBalance("0");
     setPendingRewards("0");
     setUserStakes([]);
+    setApprovedAmount("0");
+    setApprovalAmount("");
     setShowTokenStaking(false);
   };
 
@@ -231,6 +235,9 @@ export default function StakingPage() {
 
       const earned = await staking.earned(userAddress);
       setPendingRewards(ethers.formatEther(earned));
+
+      const allowance = await token.allowance(userAddress, FAET_STAKING_ADDRESS);
+      setApprovedAmount(ethers.formatEther(allowance));
 
       const stakeCount = await staking.getStakeCount(userAddress);
       const stakes = [];
@@ -386,6 +393,37 @@ export default function StakingPage() {
       console.log("Rewards claimed successfully!");
     } catch (error: any) {
       console.error("Claim failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!tokenContract || !approvalAmount) return;
+
+    const networkOk = await checkNetwork();
+    if (!networkOk) {
+      console.error("Cannot approve: wrong network");
+      return;
+    }
+
+    setIsLoading(true);
+    setTxHash("");
+
+    try {
+      const amount = ethers.parseEther(approvalAmount);
+      console.log("Approving tokens...");
+      const approveTx = await tokenContract.approve(FAET_STAKING_ADDRESS, amount);
+      setTxHash(approveTx.hash);
+      await approveTx.wait();
+
+      if (account) {
+        await loadUserData(tokenContract, stakingContract!, account);
+      }
+      setApprovalAmount("");
+      console.log("Approval successful!");
+    } catch (error: any) {
+      console.error("Approval failed:", error);
     } finally {
       setIsLoading(false);
     }
@@ -765,6 +803,64 @@ export default function StakingPage() {
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold mb-4">Token Approval</h3>
+              
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-300">Current Approved Amount:</span>
+                  <span className="text-lg font-bold text-green-400">
+                    {parseFloat(approvedAmount).toFixed(2)} FAET
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mb-4">
+                  This is the amount the staking contract can spend on your behalf. You need approval before staking.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      placeholder="Amount to approve"
+                      value={approvalAmount}
+                      onChange={(e) => setApprovalAmount(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setApprovalAmount(tokenBalance)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded transition-colors"
+                    >
+                      MAX
+                    </button>
+                    <button
+                      onClick={handleApprove}
+                      disabled={
+                        !approvalAmount ||
+                        isLoading ||
+                        wrongNetwork ||
+                        parseFloat(approvalAmount) <= 0 ||
+                        parseFloat(approvalAmount) > parseFloat(tokenBalance)
+                      }
+                      className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[100px] h-10 ${
+                        !approvalAmount ||
+                        isLoading ||
+                        wrongNetwork ||
+                        parseFloat(approvalAmount) <= 0 ||
+                        parseFloat(approvalAmount) > parseFloat(tokenBalance)
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-700 text-white"
+                      }`}
+                    >
+                      {isLoading ? "Approving..." : "Approve"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
               <h3 className="text-xl font-bold mb-4">Stake FAET Tokens</h3>
 
               <div className="mb-4">
@@ -799,7 +895,7 @@ export default function StakingPage() {
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm text-gray-300">Lock Period:</span>
                     <span className="text-sm text-blue-400">
-                      {selectedDays === 0 ? "No Lock" : `${selectedDays} days`}
+                      {selectedDays === 0 ? "No Lock" : `${selectedDays} days (~${(selectedDays * 43200).toLocaleString()} blocks)`}
                     </span>
                   </div>
                 </div>
@@ -928,9 +1024,14 @@ export default function StakingPage() {
                               Ready
                             </p>
                           ) : (
-                            <p className="font-bold text-red-400 text-sm">
-                              ~{stake.blocksRemaining.toLocaleString()} blocks
-                            </p>
+                            <div>
+                              <p className="font-bold text-red-400 text-sm">
+                                ~{Math.ceil(stake.blocksRemaining / 43200)} days left
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                ({stake.blocksRemaining.toLocaleString()} blocks)
+                              </p>
+                            </div>
                           )}
                         </div>
                         <div className="flex justify-end">
