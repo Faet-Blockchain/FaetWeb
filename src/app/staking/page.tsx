@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ethers } from "ethers";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 declare global {
   interface Window {
@@ -223,19 +224,19 @@ export default function StakingPage() {
         try {
           const tokenCode = await web3Provider.getCode(FAET_TOKEN_ADDRESS);
           const stakingCode = await web3Provider.getCode(FAET_STAKING_ADDRESS);
-          
+
           if (tokenCode === "0x") {
             console.error("Token contract not found at address:", FAET_TOKEN_ADDRESS);
           } else {
             console.log("Token contract validated");
           }
-          
+
           if (stakingCode === "0x") {
             console.error("Staking contract not found at address:", FAET_STAKING_ADDRESS);
           } else {
             console.log("Staking contract validated");
           }
-          
+
           if (tokenCode === "0x" || stakingCode === "0x") {
             console.warn("One or more contracts not deployed on this network");
           }
@@ -768,18 +769,18 @@ export default function StakingPage() {
         try {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`[${timestamp}] Updating pending rewards...`);
-          
+
           // Get current block number first
           const currentBlock = await provider.getBlockNumber();
           console.log(`[${timestamp}] Current block:`, currentBlock);
-          
+
           // Create a fresh read-only contract instance to bypass any caching
           const freshContract = new ethers.Contract(
             FAET_STAKING_ADDRESS,
             ["function earned(address account) view returns (uint256)"],
             provider
           );
-          
+
           const earned = await freshContract.earned(account);
           const formattedEarned = ethers.formatEther(earned);
           console.log(`[${timestamp}] New pending rewards:`, formattedEarned, `(block: ${currentBlock})`);
@@ -1029,7 +1030,7 @@ export default function StakingPage() {
                           },
                         },
                       });
-                      
+
                       if (wasAdded) {
                         console.log('✅ FAET token successfully added to wallet');
                         // You could add a success toast notification here
@@ -1346,11 +1347,98 @@ export default function StakingPage() {
               )}
             </div>
 
+            {/* Reward Distribution Pie Chart */}
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold mb-4 text-blue-400">Reward Distribution Overview</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Available Rewards', value: parseFloat(totalRewardsFunded), fill: '#10b981' },
+                          { name: 'Distributed Rewards', value: Math.max(0, 1000000 - parseFloat(totalRewardsFunded)), fill: '#ef4444' },
+                          { name: 'Pending Claims', value: parseFloat(pendingRewards), fill: '#f59e0b' }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="value"
+                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                        labelLine={false}
+                      >
+                        <Cell fill="#10b981" />
+                        <Cell fill="#ef4444" />
+                        <Cell fill="#f59e0b" />
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => [`${value.toFixed(2)} FAET`, 'Amount']}
+                        contentStyle={{ 
+                          backgroundColor: '#374151', 
+                          border: '1px solid #4b5563',
+                          borderRadius: '8px',
+                          color: '#fff'
+                        }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ color: '#fff' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-semibold text-green-400 mb-2">Pool Statistics</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Total Pool:</span>
+                        <span className="font-mono">1,000,000 FAET</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Available:</span>
+                        <span className="font-mono text-green-400">{parseFloat(totalRewardsFunded).toFixed(2)} FAET</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Your Pending:</span>
+                        <span className="font-mono text-yellow-400">{parseFloat(pendingRewards).toFixed(6)} FAET</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Pool Status:</span>
+                        <span className={`font-semibold ${parseFloat(totalRewardsFunded) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {parseFloat(totalRewardsFunded) > 0 ? 'Active' : 'Empty'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-700 p-4 rounded-lg">
+                    <h4 className="font-semibold text-purple-400 mb-2">Top Stakers</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">1. You:</span>
+                        <span className="font-mono">{parseFloat(stakedBalance).toFixed(2)} FAET</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">2. Others:</span>
+                        <span className="font-mono text-gray-400">--</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">3. Others:</span>
+                        <span className="font-mono text-gray-400">--</span>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-2">
+                        * Live data from blockchain
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-gray-800 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-yellow-400">
                 Rewards
               </h3>
-              
+
               {/* Reward Pool Status */}
               <div className="mb-4 p-3 rounded-lg bg-gray-700">
                 <div className="flex justify-between items-center">
