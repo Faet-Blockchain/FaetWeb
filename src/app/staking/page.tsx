@@ -734,7 +734,10 @@ export default function StakingPage() {
   useEffect(() => {
     let rewardsUpdateInterval: NodeJS.Timeout;
 
-    if (account && !wrongNetwork && stakingContract && canAccessStaking) {
+    // Check if we can access staking (inline check instead of using canAccessStaking variable)
+    const canAccess = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
+
+    if (account && !wrongNetwork && stakingContract && canAccess) {
       const updatePendingRewards = async () => {
         try {
           const earned = await stakingContract.earned(account);
@@ -756,7 +759,7 @@ export default function StakingPage() {
         clearInterval(rewardsUpdateInterval);
       }
     };
-  }, [account, wrongNetwork, stakingContract, canAccessStaking]);
+  }, [account, wrongNetwork, stakingContract, currentChainIdNumber, selectedNetwork]);
 
   // Only allow staking interface if connected to correct network
   const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
