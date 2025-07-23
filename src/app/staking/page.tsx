@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -235,7 +234,7 @@ export default function StakingPage() {
       console.log("Loading user data for:", userAddress);
       console.log("Staking contract address:", await staking.getAddress());
       console.log("Token contract address:", await token.getAddress());
-      
+
       // Get current block number from the provider
       let currentBlock = 0;
       if (provider) {
@@ -245,7 +244,7 @@ export default function StakingPage() {
         const tempProvider = new ethers.BrowserProvider(window.ethereum);
         currentBlock = await tempProvider.getBlockNumber();
       }
-      
+
       console.log("Current block number:", currentBlock);
 
       // Get token balance
@@ -259,14 +258,17 @@ export default function StakingPage() {
 
       // Get weighted balance (active staking weight)
       try {
+        // Try getActiveWeight first since it's the actual current active weight
         const activeWeight = await staking.getActiveWeight(userAddress);
         setStakedBalance(ethers.formatEther(activeWeight));
+        console.log("Successfully fetched active weight:", ethers.formatEther(activeWeight));
       } catch (error) {
         console.error("Error fetching active weight:", error);
-        // Fallback to weightedBalances if getActiveWeight fails
+        // Try weightedBalances as fallback
         try {
           const weighted = await staking.weightedBalances(userAddress);
           setStakedBalance(ethers.formatEther(weighted));
+          console.log("Successfully fetched weighted balance:", ethers.formatEther(weighted));
         } catch (fallbackError) {
           console.error("Error fetching weighted balances:", fallbackError);
           setStakedBalance("0");
@@ -295,7 +297,7 @@ export default function StakingPage() {
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
         const stakeCountNumber = Number(stakeCount);
-        
+
         if (stakeCountNumber === 0) {
           console.log("User has no stakes");
           setUserStakes([]);
@@ -303,7 +305,7 @@ export default function StakingPage() {
         }
 
         const stakes = [];
-        
+
         for (let i = 0; i < stakeCountNumber; i++) {
           try {
             const stakeView = await staking.getStakeView(userAddress, i);
