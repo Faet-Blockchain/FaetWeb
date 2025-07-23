@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -21,10 +22,11 @@ declare global {
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
 const FAET_STAKING_ADDRESS = "0x3A70F607d7E6a0eEDB32B9743CabB1cB3D4844a3";
 
-// Calculate multiplier based on days to match contract logic
-// Contract formula: 1e18 + (daysLocked * 19e18) / 730
-// This gives us 1x at 0 days, 20x at 730 days (2 years)
+// Calculate multiplier based on days - linear from 1x to 20x over 730 days
 const calculateMultiplier = (days: number): number => {
+  if (days === 0) return 1.0;
+  if (days >= 730) return 20.0;
+  // Linear interpolation: 1 + (days * 19) / 730
   return 1 + (days * 19) / 730;
 };
 
@@ -45,7 +47,6 @@ const FAET_STAKING_ABI = [
   "function getStakeDetails(address user, uint256 stakeIndex) view returns (uint256 _amount, uint256 _weightedAmount, uint256 _multiplier, uint256 _lockEndBlock)",
   "function weightedBalances(address account) view returns (uint256)",
   "function rewards(address account) view returns (uint256)",
-  "function userStakes(address user, uint256 index) view returns (uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock)",
 ];
 
 export default function StakingPage() {
@@ -241,50 +242,69 @@ export default function StakingPage() {
       const balance = await token.balanceOf(userAddress);
       setTokenBalance(ethers.formatEther(balance));
 
-      const weighted = await staking.weightedBalances(userAddress);
-      setStakedBalance(ethers.formatEther(weighted));
+      try {
+        const weighted = await staking.weightedBalances(userAddress);
+        setStakedBalance(ethers.formatEther(weighted));
+      } catch (error) {
+        console.error("Error fetching weighted balances:", error);
+        setStakedBalance("0");
+      }
 
-      const earned = await staking.earned(userAddress);
-      setPendingRewards(ethers.formatEther(earned));
+      try {
+        const earned = await staking.earned(userAddress);
+        setPendingRewards(ethers.formatEther(earned));
+      } catch (error) {
+        console.error("Error fetching earnings:", error);
+        setPendingRewards("0");
+      }
 
       const allowance = await token.allowance(userAddress, FAET_STAKING_ADDRESS);
       setApprovedAmount(ethers.formatEther(allowance));
 
-      const stakeCount = await staking.getStakeCount(userAddress);
-      const stakes = [];
-      for (let i = 0; i < Number(stakeCount); i++) {
-        const stakeDetails = await staking.getStakeDetails(userAddress, i);
-        // Access by array index since contract returns a tuple
-        const amount = stakeDetails[0];
-        const weightedAmount = stakeDetails[1];
-        const multiplier = stakeDetails[2];
-        const lockEndBlock = Number(stakeDetails[3]);
+      try {
+        const stakeCount = await staking.getStakeCount(userAddress);
+        const stakes = [];
+        
+        for (let i = 0; i < Number(stakeCount); i++) {
+          try {
+            const stakeDetails = await staking.getStakeDetails(userAddress, i);
+            // Access by array index since contract returns a tuple
+            const amount = stakeDetails[0];
+            const weightedAmount = stakeDetails[1];
+            const multiplier = stakeDetails[2];
+            const lockEndBlock = Number(stakeDetails[3]);
 
-        const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
-        const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
+            const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
+            const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
 
-        // Debug logging with actual contract values
-        console.log(`Stake ${i} details:`, {
-          currentBlock,
-          lockEndBlock,
-          blocksRemaining,
-          daysRemaining: Math.ceil(blocksRemaining / 43200),
-          amount: amount.toString(),
-          weightedAmount: weightedAmount.toString(),
-          multiplier: multiplier.toString()
-        });
+            console.log(`Stake ${i} details:`, {
+              currentBlock,
+              lockEndBlock,
+              blocksRemaining,
+              daysRemaining: Math.ceil(blocksRemaining / 43200),
+              amount: amount.toString(),
+              weightedAmount: weightedAmount.toString(),
+              multiplier: multiplier.toString()
+            });
 
-        stakes.push({
-          index: i,
-          amount: ethers.formatEther(amount),
-          weightedAmount: ethers.formatEther(weightedAmount),
-          multiplier: Number(multiplier) / 1e18, // Convert from wei to decimal
-          lockEndBlock: lockEndBlock,
-          isUnlocked: isUnlocked,
-          blocksRemaining: blocksRemaining,
-        });
+            stakes.push({
+              index: i,
+              amount: ethers.formatEther(amount),
+              weightedAmount: ethers.formatEther(weightedAmount),
+              multiplier: Number(multiplier) / 1e18, // Convert from wei to decimal
+              lockEndBlock: lockEndBlock,
+              isUnlocked: isUnlocked,
+              blocksRemaining: blocksRemaining,
+            });
+          } catch (stakeError) {
+            console.error(`Error loading stake ${i}:`, stakeError);
+          }
+        }
+        setUserStakes(stakes);
+      } catch (error) {
+        console.error("Error loading stakes:", error);
+        setUserStakes([]);
       }
-      setUserStakes(stakes);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
@@ -748,8 +768,6 @@ export default function StakingPage() {
                 )}
               </div>
 
-
-
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-gray-800 p-6 rounded-lg">
                   <h3 className="text-xl font-bold mb-4">Token Staking</h3>
@@ -912,8 +930,8 @@ export default function StakingPage() {
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
                     <span>0 days (1.00x)</span>
-                    <span>180 days (5.68x)</span>
-                    <span>365 days (10.49x)</span>
+                    <span>180 days ({calculateMultiplier(180).toFixed(2)}x)</span>
+                    <span>365 days ({calculateMultiplier(365).toFixed(2)}x)</span>
                     <span>730 days (20.00x)</span>
                   </div>
                 </div>
