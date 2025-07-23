@@ -239,33 +239,68 @@ export default function StakingPage() {
       
       console.log("Current block number:", currentBlock);
 
-      const balance = await token.balanceOf(userAddress);
-      setTokenBalance(ethers.formatEther(balance));
+      // Get token balance
+      try {
+        const balance = await token.balanceOf(userAddress);
+        setTokenBalance(ethers.formatEther(balance));
+      } catch (error) {
+        console.error("Error fetching token balance:", error);
+        setTokenBalance("0");
+      }
 
+      // Get weighted balance with fallback handling
       try {
         const weighted = await staking.weightedBalances(userAddress);
-        setStakedBalance(ethers.formatEther(weighted));
+        // Handle empty return data (0x)
+        if (weighted && weighted !== "0x" && weighted.toString() !== "0") {
+          setStakedBalance(ethers.formatEther(weighted));
+        } else {
+          console.log("No weighted balance found (user hasn't staked)");
+          setStakedBalance("0");
+        }
       } catch (error) {
         console.error("Error fetching weighted balances:", error);
+        // If the function doesn't exist or returns empty, set to 0
         setStakedBalance("0");
       }
 
+      // Get pending rewards with fallback handling
       try {
         const earned = await staking.earned(userAddress);
-        setPendingRewards(ethers.formatEther(earned));
+        if (earned && earned !== "0x" && earned.toString() !== "0") {
+          setPendingRewards(ethers.formatEther(earned));
+        } else {
+          console.log("No pending rewards found");
+          setPendingRewards("0");
+        }
       } catch (error) {
         console.error("Error fetching earnings:", error);
         setPendingRewards("0");
       }
 
-      const allowance = await token.allowance(userAddress, FAET_STAKING_ADDRESS);
-      setApprovedAmount(ethers.formatEther(allowance));
+      // Get allowance
+      try {
+        const allowance = await token.allowance(userAddress, FAET_STAKING_ADDRESS);
+        setApprovedAmount(ethers.formatEther(allowance));
+      } catch (error) {
+        console.error("Error fetching allowance:", error);
+        setApprovedAmount("0");
+      }
 
+      // Get user stakes with proper error handling
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
+        const stakeCountNumber = Number(stakeCount);
+        
+        if (stakeCountNumber === 0) {
+          console.log("User has no stakes");
+          setUserStakes([]);
+          return;
+        }
+
         const stakes = [];
         
-        for (let i = 0; i < Number(stakeCount); i++) {
+        for (let i = 0; i < stakeCountNumber; i++) {
           try {
             const stakeDetails = await staking.getStakeDetails(userAddress, i);
             // Access by array index since contract returns a tuple
@@ -307,6 +342,12 @@ export default function StakingPage() {
       }
     } catch (error) {
       console.error("Error loading user data:", error);
+      // Set fallback values
+      setTokenBalance("0");
+      setStakedBalance("0");
+      setPendingRewards("0");
+      setApprovedAmount("0");
+      setUserStakes([]);
     }
   };
 
