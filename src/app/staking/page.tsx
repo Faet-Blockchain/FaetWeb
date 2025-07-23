@@ -242,10 +242,11 @@ export default function StakingPage() {
       const stakes = [];
       for (let i = 0; i < Number(stakeCount); i++) {
         const stakeDetails = await staking.getStakeDetails(userAddress, i);
-        const lockEndBlock = Number(stakeDetails._lockEndBlock);
-        const amount = stakeDetails._amount;
-        const weightedAmount = stakeDetails._weightedAmount;
-        const multiplier = stakeDetails._multiplier;
+        // Access by array index since contract returns a tuple
+        const amount = stakeDetails[0];
+        const weightedAmount = stakeDetails[1];
+        const multiplier = stakeDetails[2];
+        const lockEndBlock = Number(stakeDetails[3]);
 
         const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
         const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
