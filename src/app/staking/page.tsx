@@ -1252,22 +1252,24 @@ export default function StakingPage() {
 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
-                    <input
-                      type="number"
-                      placeholder="Amount to approve"
-                      value={approvalAmount}
-                      onChange={(e) => setApprovalAmount(e.target.value)}
-                      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="Amount to approve"
+                        value={approvalAmount}
+                        onChange={(e) => setApprovalAmount(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setApprovalAmount(tokenBalance)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+                      >
+                        MAX
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setApprovalAmount(tokenBalance)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-2 rounded transition-colors"
-                    >
-                      MAX
-                    </button>
+                  <div className="flex">
                     <button
                       onClick={handleApprove}
                       disabled={
@@ -1287,7 +1289,7 @@ export default function StakingPage() {
                           : "bg-green-600 hover:bg-green-700 text-white"
                       }`}
                     >
-                      {isLoading ? "Approving..." : "Approve"}
+                      {isLoading ? "Processing..." : "Approve"}
                     </button>
                   </div>
                 </div>
