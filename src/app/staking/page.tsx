@@ -751,9 +751,9 @@ export default function StakingPage() {
       // Update immediately
       updatePendingRewards();
 
-      // Then update every 10 seconds for more responsive UI
-      rewardsUpdateInterval = setInterval(updatePendingRewards, 10000);
-      console.log("Started 10-second rewards update interval");
+      // Then update every 2 seconds for real-time updates
+      rewardsUpdateInterval = setInterval(updatePendingRewards, 2000);
+      console.log("Started 2-second rewards update interval");
     } else {
       console.log("Not starting rewards interval - missing:", {
         stakingContract: !!stakingContract,
@@ -1313,7 +1313,7 @@ export default function StakingPage() {
                 </button>
               </div>
               <p className="text-gray-400 text-sm">
-                Rate: 1.0 FAET per block (~2s), UI updates every 10s
+                Rate: 1.0 FAET per block (~2s), UI updates every 2s
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
