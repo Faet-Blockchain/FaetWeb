@@ -44,9 +44,11 @@ const FAET_STAKING_ABI = [
   "function getReward()",
   "function earned(address account) view returns (uint256)",
   "function getStakeCount(address user) view returns (uint256)",
-  "function getStakeDetails(address user, uint256 stakeIndex) view returns (uint256 _amount, uint256 _weightedAmount, uint256 _multiplier, uint256 _lockEndBlock)",
+  "function getStakeView(address user, uint256 index) view returns (tuple(uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock))",
   "function weightedBalances(address account) view returns (uint256)",
   "function rewards(address account) view returns (uint256)",
+  "function getMultiplier(uint256 daysLocked) view returns (uint256)",
+  "function getActiveWeight(address user) view returns (uint256)",
 ];
 
 export default function StakingPage() {
@@ -248,31 +250,26 @@ export default function StakingPage() {
         setTokenBalance("0");
       }
 
-      // Get weighted balance with fallback handling
+      // Get weighted balance (active staking weight)
       try {
-        const weighted = await staking.weightedBalances(userAddress);
-        // Handle empty return data (0x)
-        if (weighted && weighted !== "0x" && weighted.toString() !== "0") {
+        const activeWeight = await staking.getActiveWeight(userAddress);
+        setStakedBalance(ethers.formatEther(activeWeight));
+      } catch (error) {
+        console.error("Error fetching active weight:", error);
+        // Fallback to weightedBalances if getActiveWeight fails
+        try {
+          const weighted = await staking.weightedBalances(userAddress);
           setStakedBalance(ethers.formatEther(weighted));
-        } else {
-          console.log("No weighted balance found (user hasn't staked)");
+        } catch (fallbackError) {
+          console.error("Error fetching weighted balances:", fallbackError);
           setStakedBalance("0");
         }
-      } catch (error) {
-        console.error("Error fetching weighted balances:", error);
-        // If the function doesn't exist or returns empty, set to 0
-        setStakedBalance("0");
       }
 
       // Get pending rewards with fallback handling
       try {
         const earned = await staking.earned(userAddress);
-        if (earned && earned !== "0x" && earned.toString() !== "0") {
-          setPendingRewards(ethers.formatEther(earned));
-        } else {
-          console.log("No pending rewards found");
-          setPendingRewards("0");
-        }
+        setPendingRewards(ethers.formatEther(earned));
       } catch (error) {
         console.error("Error fetching earnings:", error);
         setPendingRewards("0");
@@ -302,12 +299,12 @@ export default function StakingPage() {
         
         for (let i = 0; i < stakeCountNumber; i++) {
           try {
-            const stakeDetails = await staking.getStakeDetails(userAddress, i);
-            // Access by array index since contract returns a tuple
-            const amount = stakeDetails[0];
-            const weightedAmount = stakeDetails[1];
-            const multiplier = stakeDetails[2];
-            const lockEndBlock = Number(stakeDetails[3]);
+            const stakeView = await staking.getStakeView(userAddress, i);
+            // stakeView is a struct with: amount, weightedAmount, multiplier, lockEndBlock
+            const amount = stakeView[0];
+            const weightedAmount = stakeView[1];
+            const multiplier = stakeView[2];
+            const lockEndBlock = Number(stakeView[3]);
 
             const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
             const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
@@ -880,7 +877,7 @@ export default function StakingPage() {
 
               <div className="bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-4 text-green-400">
-                  Weighted Staked
+                  Active Staking Weight
                 </h3>
                 <p className="text-3xl font-bold mb-2">
                   {parseFloat(stakedBalance).toFixed(2)} FAET
