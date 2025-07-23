@@ -1,4 +1,3 @@
-
 "use client";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -112,30 +111,30 @@ export default function StakingPage() {
         console.log(`[checkNetwork] Raw chain ID from wallet: "${chainId}"`);
         console.log(`[checkNetwork] Required chain ID: "${LISK_SEPOLIA_CHAIN_ID}"`);
         console.log(`[checkNetwork] Type of chainId: ${typeof chainId}`);
-        
+
         setCurrentChainId(chainId);
-        
+
         // Convert hex strings to integers for reliable comparison
         const currentChainNumber = parseInt(chainId, 16);
         const requiredChainNumber = parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
-        
+
         setCurrentChainIdNumber(currentChainNumber);
-        
+
         console.log(`[checkNetwork] Current chain number: ${currentChainNumber}`);
         console.log(`[checkNetwork] Required chain number: ${requiredChainNumber}`);
-        
+
         const isCorrectNetwork = currentChainNumber === requiredChainNumber;
         console.log(`[checkNetwork] Networks match: ${isCorrectNetwork}`);
-        
+
         setWrongNetwork(!isCorrectNetwork);
-        
+
         if (!isCorrectNetwork) {
           clearWeb3State();
           console.log("[checkNetwork] Wrong network detected, clearing state");
         } else {
           console.log("[checkNetwork] Correct network confirmed");
         }
-        
+
         return isCorrectNetwork;
       } catch (error) {
         console.error("[checkNetwork] Error checking network:", error);
@@ -183,14 +182,14 @@ export default function StakingPage() {
     if (typeof window.ethereum !== "undefined" && account) {
       try {
         console.log("Initializing Web3 for account:", account);
-        
+
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
         setProvider(web3Provider);
 
         const web3Signer = await web3Provider.getSigner();
         const signerAddress = await web3Signer.getAddress();
         console.log("Signer address:", signerAddress);
-        
+
         setSigner(web3Signer);
 
         const token = new ethers.Contract(
@@ -269,10 +268,10 @@ export default function StakingPage() {
         const accounts = (await window.ethereum.request({
           method: "eth_requestAccounts",
         })) as string[];
-        
+
         if (accounts.length > 0) {
           setAccount(accounts[0]);
-          
+
           // Immediate network check after connection
           const networkOk = await checkNetwork();
           if (networkOk) {
@@ -455,11 +454,11 @@ export default function StakingPage() {
         console.log("[handleChainChanged] Chain changed event fired");
         console.log("[handleChainChanged] Event chain ID:", chainId);
         console.log("[handleChainChanged] Type:", typeof chainId);
-        
+
         // Add delay to ensure wallet state is fully updated
         setTimeout(async () => {
           console.log("[handleChainChanged] Checking network after delay...");
-          
+
           // Force fresh read from wallet instead of using event data
           let actualChainId;
           try {
@@ -471,23 +470,23 @@ export default function StakingPage() {
             console.error("[handleChainChanged] Error reading fresh chain ID:", error);
             return;
           }
-          
+
           setCurrentChainId(actualChainId);
-          
+
           // Convert hex strings to integers for reliable comparison
           const currentChainNumber = parseInt(actualChainId, 16);
           const requiredChainNumber = parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
-          
+
           setCurrentChainIdNumber(currentChainNumber);
-          
+
           console.log("[handleChainChanged] Fresh current chain number:", currentChainNumber);
           console.log("[handleChainChanged] Fresh required chain number:", requiredChainNumber);
-          
+
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
           console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
-          
+
           setWrongNetwork(!isCorrectNetwork);
-          
+
           if (!isCorrectNetwork) {
             console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
             clearWeb3State();
@@ -571,7 +570,7 @@ export default function StakingPage() {
         }
       }
     };
-    
+
     initialize();
   }, []);
 
@@ -583,7 +582,7 @@ export default function StakingPage() {
         await initializeWeb3();
       }
     };
-    
+
     initWeb3IfReady();
   }, [account, wrongNetwork, currentChainIdNumber]);
 
@@ -719,7 +718,7 @@ export default function StakingPage() {
                 )}
               </div>
 
-              
+
 
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-gray-800 p-6 rounded-lg">
@@ -805,7 +804,7 @@ export default function StakingPage() {
 
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
               <h3 className="text-xl font-bold mb-4">Token Approval</h3>
-              
+
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-300">Current Approved Amount:</span>
@@ -816,7 +815,7 @@ export default function StakingPage() {
                 <p className="text-xs text-gray-400 mb-4">
                   This is the amount the staking contract can spend on your behalf. You need approval before staking.
                 </p>
-                
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
                     <input
@@ -862,7 +861,7 @@ export default function StakingPage() {
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-bold mb-4">Stake FAET Tokens</h3>
+              <h3 className="text-xl font-nocturne-serif-bold mb-4">Stake FAET Tokens</h3>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">
@@ -882,7 +881,7 @@ export default function StakingPage() {
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
                     <span>0 days (1.00x)</span>
-                    <span>365 days (14.00x)</span>
+                    <span>365 days ({calculateMultiplier(365).toFixed(2)}x)</span>
                     <span>730 days (20.00x)</span>
                   </div>
                 </div>
