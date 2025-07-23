@@ -1,0 +1,330 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+
+contract FaetTestStaking is ReentrancyGuard, Pausable, AccessControl {
+    using SafeERC20 for IERC20;
+
+    bytes32 public constant EMERGENCY_ADMIN_ROLE =
+        keccak256("EMERGENCY_ADMIN_ROLE");
+
+    IERC20 public immutable stakingToken;
+    IERC20 public immutable rewardsToken;
+    uint256 public immutable rewardPerBlock;
+    uint256 public lastUpdateBlock;
+    uint256 public rewardPerTokenStored;
+    uint256 public totalWeightedSupply;
+    uint256 public totalRewardsFunded;
+    uint256 public totalStaked;
+    address private defaultAdmin;
+    address private emergencyAdmin;
+    
+
+    mapping(address => uint256) public weightedBalances;
+    mapping(address => uint256) public userRewardPerTokenPaid;
+    mapping(address => uint256) public rewards;
+
+    struct Stake {
+        uint256 amount;
+        uint256 weightedAmount;
+        uint256 multiplier;
+        uint256 lockEndBlock;
+    }
+
+    mapping(address => Stake[]) public userStakes;
+
+    event Staked(
+        address indexed user,
+        uint256 amount,
+        uint256 duration,
+        uint256 stakeIndex
+    );
+    event Withdrawn(address indexed user, uint256 amount, uint256 stakeIndex);
+    event RewardPaid(address indexed user, uint256 reward);
+    event RewardsFunded(address indexed admin, uint256 amount);
+    event StakeExpired(address indexed user, uint256 indexed index);
+
+    event EmergencyWithdrawn(
+        address indexed caller,
+        address indexed oldEmergencyAdmin,
+        address indexed oldDefaultAdmin,
+        address newEmergencyAdmin,
+        uint256 stakingTokenAmount,
+        uint256 rewardsTokenAmount
+    );
+
+    constructor(
+        address _stakingToken,
+        address _rewardsToken,
+        uint256 _rewardPerBlock,
+        address _emergencyAdmin
+    ) {
+        require(_stakingToken != address(0), "Invalid staking token");
+        require(_rewardsToken != address(0), "Invalid rewards token");
+        require(_emergencyAdmin != address(0), "Invalid emergency admin");
+
+        stakingToken = IERC20(_stakingToken);
+        rewardsToken = IERC20(_rewardsToken);
+        rewardPerBlock = _rewardPerBlock;
+        lastUpdateBlock = block.number;
+
+        _setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
+
+        _setRoleAdmin(EMERGENCY_ADMIN_ROLE, EMERGENCY_ADMIN_ROLE);
+        _grantRole(EMERGENCY_ADMIN_ROLE, _emergencyAdmin);
+        emergencyAdmin = _emergencyAdmin;
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        defaultAdmin = msg.sender;
+    }
+
+    function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _pause();
+    }
+
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _unpause();
+    }
+
+    modifier updateReward(address account) {
+        rewardPerTokenStored = _rewardPerToken();
+        lastUpdateBlock = block.number;
+
+        if (account != address(0)) {
+            _removeExpiredStakeWeight(account);
+            rewards[account] = _earned(account);
+            userRewardPerTokenPaid[account] = rewardPerTokenStored;
+        }
+        _;
+    }
+
+    function _removeExpiredStakeWeight(address account) internal {
+        Stake[] storage stakes = userStakes[account];
+
+        for (uint256 i = 0; i < stakes.length; i++) {
+            Stake storage s = stakes[i];
+            if (
+                s.amount > 0 &&
+                block.number >= s.lockEndBlock &&
+                s.weightedAmount > 0
+            ) {
+                totalWeightedSupply -= s.weightedAmount;
+                weightedBalances[account] -= s.weightedAmount;
+                s.weightedAmount = 0;
+                emit StakeExpired(account, i);
+            }
+        }
+    }
+
+    function _rewardPerToken() internal view returns (uint256) {
+        if (totalWeightedSupply == 0) {
+            return rewardPerTokenStored;
+        }
+        uint256 blocksElapsed = block.number - lastUpdateBlock;
+        return
+            rewardPerTokenStored +
+            (blocksElapsed * rewardPerBlock * 1e18) /
+            totalWeightedSupply;
+    }
+
+    function rewardPerToken() external view returns (uint256) {
+        return _rewardPerToken();
+    }
+
+    function _earned(address account) internal view returns (uint256) {
+        return
+            (weightedBalances[account] *
+                (_rewardPerToken() - userRewardPerTokenPaid[account])) /
+            1e18 +
+            rewards[account];
+    }
+
+    function earned(address account) external view returns (uint256) {
+        return _earned(account);
+    }
+
+    /// @notice Stake your FAET tokens for rewards.
+    /// @dev Anyone with a positive `amount` can call; there is no `onlyRole` because users supply their own tokens.
+    function stake(
+        uint256 amount,
+        uint256 daysLocked
+    ) external nonReentrant whenNotPaused updateReward(msg.sender) {
+        require(amount > 0, "Cannot stake 0");
+        require(daysLocked <= 730, "Lock exceeds max duration");
+
+        uint256 lockDuration = daysLocked * 43200; // 1 day = 43200 blocks
+        require(lockDuration / 43200 == daysLocked, "Overflow");
+
+        uint256 multiplier = 1e18 + (daysLocked * 19e18) / 730;
+
+        // Multiplier in 1e18 format, e.g., 1.0x = 1e18, 20.0x = 20e18
+        uint256 weightedAmount = (amount * multiplier) / 1e18;
+        require(
+            weightedAmount / amount == multiplier / 1e18,
+            "Multiplier overflow"
+        ); // optional
+
+        totalWeightedSupply += weightedAmount;
+        weightedBalances[msg.sender] += weightedAmount;
+        totalStaked += amount;
+
+        userStakes[msg.sender].push(
+            Stake({
+                amount: amount,
+                weightedAmount: weightedAmount,
+                multiplier: multiplier,
+                lockEndBlock: block.number + lockDuration
+            })
+        );
+
+        stakingToken.safeTransferFrom(msg.sender, address(this), amount);
+        emit Staked(
+            msg.sender,
+            amount,
+            lockDuration,
+            userStakes[msg.sender].length - 1
+        );
+    }
+
+    function getMultiplier(uint256 daysLocked) public pure returns (uint256) {
+        require(daysLocked <= 730, "Too long");
+        return 1e18 + (daysLocked * 19e18) / 730;
+    }
+
+    /// @notice Withdraws one of your stakes after its lock period has ended.
+    /// @dev No `onlyRole` needed—any address can call to withdraw its own stake at index `stakeIndex`.
+    function withdraw(
+        uint256 stakeIndex
+    ) external nonReentrant whenNotPaused updateReward(msg.sender) {
+        require(
+            stakeIndex < userStakes[msg.sender].length,
+            "Invalid stake index"
+        );
+        Stake memory userStake = userStakes[msg.sender][stakeIndex];
+        require(block.number >= userStake.lockEndBlock, "Stake is locked");
+        require(userStake.amount > 0, "No stake to withdraw");
+
+        totalWeightedSupply -= userStake.weightedAmount;
+        weightedBalances[msg.sender] -= userStake.weightedAmount;
+
+        userStakes[msg.sender][stakeIndex] = userStakes[msg.sender][
+            userStakes[msg.sender].length - 1
+        ];
+        userStakes[msg.sender].pop();
+
+        totalStaked -= userStake.amount;
+
+        stakingToken.safeTransfer(msg.sender, userStake.amount);
+        emit Withdrawn(msg.sender, userStake.amount, stakeIndex);
+    }
+
+    /// @notice Emergency: rotate admins and rescue stuck tokens
+    /// @dev Only callable by the current emergency admin (via ROLE).
+    ///      New admin address must be non-zero.
+    function emergencyWithdraw(
+        address newEmergencyAdmin
+    ) external onlyRole(EMERGENCY_ADMIN_ROLE) {
+        require(newEmergencyAdmin != address(0), "Invalid emergency admin");
+
+        // rotate roles
+        address oldEmergency = emergencyAdmin;
+        address oldDefault = defaultAdmin;
+
+        _revokeRole(EMERGENCY_ADMIN_ROLE, oldEmergency);
+        _revokeRole(DEFAULT_ADMIN_ROLE, oldDefault);
+
+        defaultAdmin = oldEmergency;
+        _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
+
+        emergencyAdmin = newEmergencyAdmin;
+        _grantRole(EMERGENCY_ADMIN_ROLE, emergencyAdmin);
+
+        // pull out any stuck tokens
+        uint256 sBal = stakingToken.balanceOf(address(this));
+        if (sBal != 0) stakingToken.safeTransfer(defaultAdmin, sBal);
+
+        uint256 rBal = rewardsToken.balanceOf(address(this));
+        if (rBal != 0) rewardsToken.safeTransfer(defaultAdmin, rBal);
+
+        emit EmergencyWithdrawn(
+            msg.sender,
+            oldEmergency,
+            oldDefault,
+            newEmergencyAdmin,
+            sBal,
+            rBal
+        );
+    }
+
+    function rescueERC20(
+        IERC20 token,
+        address to,
+        uint256 amount
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        token.safeTransfer(to, amount);
+    }
+
+    /// @notice Claim your accumulated rewards.
+    /// @dev No `onlyRole` here because we want any holder with >0 reward to call it.
+    function getReward()
+        external
+        nonReentrant
+        whenNotPaused
+        updateReward(msg.sender)
+    {
+        uint256 reward = rewards[msg.sender];
+        require(reward > 0, "No rewards");
+        require(reward <= totalRewardsFunded, "Insufficient funded rewards");
+
+        rewards[msg.sender] = 0;
+        totalRewardsFunded -= reward;
+        rewardsToken.safeTransfer(msg.sender, reward);
+        emit RewardPaid(msg.sender, reward);
+    }
+
+    function fundRewards(uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(amount > 0, "Cannot fund 0");
+        rewardPerTokenStored = _rewardPerToken();
+        lastUpdateBlock = block.number;
+        rewardsToken.safeTransferFrom(msg.sender, address(this), amount);
+        totalRewardsFunded += amount;
+        emit RewardsFunded(msg.sender, amount);
+    }
+
+    function getStakeCount(address user) external view returns (uint256) {
+        return userStakes[user].length;
+    }
+
+    function getActiveWeight(
+        address user
+    ) external view returns (uint256 total) {
+        Stake[] memory stakes = userStakes[user];
+        for (uint256 i = 0; i < stakes.length; i++) {
+            if (block.number < stakes[i].lockEndBlock) {
+                total += stakes[i].weightedAmount;
+            }
+        }
+    }
+
+    struct StakeView {
+        uint256 amount;
+        uint256 weightedAmount;
+        uint256 multiplier;
+        uint256 lockEndBlock;
+    }
+
+    function getStakeView(
+        address user,
+        uint256 index
+    ) external view returns (StakeView memory) {
+        require(index < userStakes[user].length, "Invalid index");
+        Stake memory s = userStakes[user][index];
+        return
+            StakeView(s.amount, s.weightedAmount, s.multiplier, s.lockEndBlock);
+    }
+}
