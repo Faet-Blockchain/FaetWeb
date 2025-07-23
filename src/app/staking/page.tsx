@@ -481,7 +481,16 @@ export default function StakingPage() {
       setStakeAmount("");
       console.log("Staking successful!");
     } catch (error: any) {
-      console.error("Staking failed:", error);
+      // Handle different types of errors gracefully
+      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+        console.log('ℹ️ User cancelled staking transaction');
+      } else if (error?.code === -32002) {
+        console.log('⚠️ Staking request already pending in MetaMask');
+      } else if (error?.reason === "Insufficient funded rewards") {
+        console.error("❌ Staking failed: Contract has insufficient rewards");
+      } else {
+        console.error("Staking failed:", error?.reason || error?.message || "Unknown error");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -508,7 +517,14 @@ export default function StakingPage() {
       }
       console.log("Withdrawal successful!");
     } catch (error: any) {
-      console.error("Withdrawal failed:", error);
+      // Handle different types of errors gracefully
+      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+        console.log('ℹ️ User cancelled withdrawal transaction');
+      } else if (error?.code === -32002) {
+        console.log('⚠️ Withdrawal request already pending in MetaMask');
+      } else {
+        console.error("Withdrawal failed:", error?.reason || error?.message || "Unknown error");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -536,16 +552,22 @@ export default function StakingPage() {
       }
       console.log("Rewards claimed successfully!");
     } catch (error: any) {
-      console.error("Claim failed:", error);
-      
-      // Handle specific error cases
-      if (error?.reason === "Insufficient funded rewards" || 
-          error?.message?.includes("Insufficient funded rewards")) {
+      // Handle different types of errors gracefully
+      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+        console.log('ℹ️ User cancelled claim rewards transaction');
+        // Don't show alert for user cancellation - it's expected behavior
+      } else if (error?.code === -32002) {
+        console.log('⚠️ Claim request already pending in MetaMask');
+      } else if (error?.reason === "Insufficient funded rewards" || 
+                 error?.message?.includes("Insufficient funded rewards")) {
+        console.error("❌ Claim Failed: Insufficient funded rewards");
         alert("❌ Claim Failed: The reward pool is currently empty. Please wait for the pool to be refunded by the administrators.");
       } else if (error?.reason === "No rewards" || 
                  error?.message?.includes("No rewards")) {
+        console.error("❌ Claim Failed: No rewards available");
         alert("❌ Claim Failed: You have no rewards to claim at this time.");
       } else {
+        console.error("Claim failed:", error?.reason || error?.message || "Unknown error");
         alert(`❌ Claim Failed: ${error?.reason || error?.message || "Unknown error occurred"}`);
       }
     } finally {
@@ -579,7 +601,14 @@ export default function StakingPage() {
       setApprovalAmount("");
       console.log("Approval successful!");
     } catch (error: any) {
-      console.error("Approval failed:", error);
+      // Handle different types of errors gracefully
+      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+        console.log('ℹ️ User cancelled approval transaction');
+      } else if (error?.code === -32002) {
+        console.log('⚠️ Approval request already pending in MetaMask');
+      } else {
+        console.error("Approval failed:", error?.reason || error?.message || "Unknown error");
+      }
     } finally {
       setIsLoading(false);
     }
