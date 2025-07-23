@@ -1,0 +1,159 @@
+
+"use client";
+import React from "react";
+
+// Calculate multiplier based on days - linear from 1x to 20x over 730 days
+const calculateMultiplier = (days: number): number => {
+  if (days === 0) return 1.0;
+  if (days >= 730) return 20.0;
+  // Linear interpolation: 1 + (days * 19) / 730
+  return 1 + (days * 19) / 730;
+};
+
+type StakeFormProps = {
+  stakeAmount: string;
+  selectedDays: number;
+  tokenBalance: string;
+  isLoading: boolean;
+  wrongNetwork: boolean;
+  txHash: string;
+  onStakeAmountChange: (amount: string) => void;
+  onSelectedDaysChange: (days: number) => void;
+  onStake: () => void;
+};
+
+const StakeForm = ({
+  stakeAmount,
+  selectedDays,
+  tokenBalance,
+  isLoading,
+  wrongNetwork,
+  txHash,
+  onStakeAmountChange,
+  onSelectedDaysChange,
+  onStake
+}: StakeFormProps) => {
+  return (
+    <div className="bg-gray-800 p-6 rounded-lg mb-6">
+      <h3 className="text-xl font-nocturne-serif-bold mb-4">Stake FAET Tokens</h3>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">
+          Lock Duration: {selectedDays} days
+        </label>
+        <div className="mb-3">
+          <input
+            type="range"
+            min="0"
+            max="730"
+            step="1"
+            value={selectedDays}
+            onChange={(e) => onSelectedDaysChange(parseInt(e.target.value))}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+            style={{
+              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`
+            }}
+          />
+          <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <span>0 days (1.00x)</span>
+            <span>180 days ({calculateMultiplier(180).toFixed(2)}x)</span>
+            <span>365 days ({calculateMultiplier(365).toFixed(2)}x)</span>
+            <span>730 days (20.00x)</span>
+          </div>
+        </div>
+        <div className="bg-gray-700 p-3 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-300">Multiplier:</span>
+            <span className="text-lg font-bold text-purple-400">
+              {calculateMultiplier(selectedDays).toFixed(2)}x
+            </span>
+          </div>
+          <div className="flex justify-between items-center mt-1">
+            <span className="text-sm text-gray-300">Lock Period:</span>
+            <span className="text-sm text-blue-400">
+              {selectedDays === 0 ? "No Lock" : `${selectedDays} days`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between">
+          <label className="block text-sm font-medium">
+            Amount to Stake
+          </label>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <input
+                type="number"
+                placeholder="0.0"
+                value={stakeAmount}
+                onChange={(e) => onStakeAmountChange(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+              />
+              <button
+                type="button"
+                onClick={() => onStakeAmountChange(tokenBalance)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+              >
+                MAX
+              </button>
+            </div>
+          </div>
+          <div className="flex flex-col justify-center">
+            <button
+              onClick={onStake}
+              disabled={
+                !stakeAmount ||
+                isLoading ||
+                wrongNetwork ||
+                parseFloat(stakeAmount) <= 0 ||
+                parseFloat(stakeAmount) > parseFloat(tokenBalance)
+              }
+              className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] h-10 ${
+                !stakeAmount ||
+                isLoading ||
+                wrongNetwork ||
+                parseFloat(stakeAmount) <= 0 ||
+                parseFloat(stakeAmount) > parseFloat(tokenBalance)
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
+            >
+              {isLoading ? "Processing..." : "Stake Tokens"}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex justify-start">
+          <p className="text-gray-400 text-xs">
+            Available: {parseFloat(tokenBalance).toFixed(2)} FAET
+          </p>
+        </div>
+      </div>
+      <p className="text-gray-400 text-sm mt-2">
+        Reward rate: 1.0 FAET per block, 2-second blocks. Higher
+        multipliers = more rewards!
+      </p>
+
+      {txHash && (
+        <div className="mt-4 p-3 bg-blue-900 border border-blue-600 rounded-lg">
+          <p className="text-blue-300 text-sm">Transaction Hash:</p>
+          <a
+            href={`https://sepolia-blockscout.lisk.com/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 text-sm font-mono break-all"
+          >
+            {txHash}
+          </a>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default StakeForm;
