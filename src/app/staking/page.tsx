@@ -52,7 +52,9 @@ const FAET_STAKING_ABI = [
   "function totalStaked() view returns (uint256)",
   "function totalRewardsFunded() view returns (uint256)",
   "function rewardPerToken() view returns (uint256)",
-  "event Stake(address indexed user, uint256 amount, uint256 daysLocked, uint256 multiplier)",
+  "event Staked(address indexed user, uint256 amount, uint256 duration, uint256 stakeIndex)",
+  "event Withdrawn(address indexed user, uint256 amount, uint256 stakeIndex)",
+  "event RewardPaid(address indexed user, uint256 reward)",
 ];
 
 export default function StakingPage() {
@@ -1525,7 +1527,7 @@ export default function StakingPage() {
                     {parseFloat(pendingRewards).toFixed(6)} FAET
                   </p>
                   <p className="text-xs text-blue-400 mt-1">
-                    Next block: +{(parseFloat(stakedBalance) / Math.max(1, parseFloat(stakedBalance) + 1000000)).toFixed(6)} FAET
+                    Next block: +{stakedBalance && parseFloat(stakedBalance) > 0 ? (parseFloat(stakedBalance) * 1.0 / Math.max(1, parseFloat(stakedBalance))).toFixed(6) : "0.000000"} FAET
                   </p>
                 </div>
                 <button
