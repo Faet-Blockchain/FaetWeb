@@ -730,6 +730,34 @@ export default function StakingPage() {
     initialize();
   }, []);
 
+  // Update pending rewards every 30 seconds
+  useEffect(() => {
+    let rewardsUpdateInterval: NodeJS.Timeout;
+
+    if (account && !wrongNetwork && stakingContract && canAccessStaking) {
+      const updatePendingRewards = async () => {
+        try {
+          const earned = await stakingContract.earned(account);
+          setPendingRewards(ethers.formatEther(earned));
+        } catch (error) {
+          console.warn("Error updating pending rewards:", error);
+        }
+      };
+
+      // Update immediately
+      updatePendingRewards();
+
+      // Then update every 30 seconds
+      rewardsUpdateInterval = setInterval(updatePendingRewards, 30000);
+    }
+
+    return () => {
+      if (rewardsUpdateInterval) {
+        clearInterval(rewardsUpdateInterval);
+      }
+    };
+  }, [account, wrongNetwork, stakingContract, canAccessStaking]);
+
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
