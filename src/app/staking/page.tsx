@@ -916,7 +916,7 @@ export default function StakingPage() {
                     <span>365 days (10.49x)</span>
                     <span>730 days (20.00x)</span>
                   </div>
-                </div></div>
+                </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-300">Multiplier:</span>
