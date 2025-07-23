@@ -19,7 +19,7 @@ declare global {
 
 // Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
-const FAET_STAKING_ADDRESS = "0x5e16C16d2a3A197CFa8d6596685F28c55Bc67230";
+const FAET_STAKING_ADDRESS = "0x3A70F607d7E6a0eEDB32B9743CabB1cB3D4844a3";
 
 // Calculate multiplier based on days (1x to 20x over 730 days)
 const calculateMultiplier = (days: number): number => {
@@ -40,10 +40,11 @@ const FAET_STAKING_ABI = [
   "function getReward()",
   "function earned(address account) view returns (uint256)",
   "function getStakeCount(address user) view returns (uint256)",
-  "function getStakeDetails(address user, uint256 stakeIndex) view returns (uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock)",
+  "function getStakeView(address user, uint256 index) view returns (tuple(uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock))",
   "function weightedBalances(address account) view returns (uint256)",
   "function rewards(address account) view returns (uint256)",
   "function getMultiplier(uint256 daysLocked) view returns (uint256)",
+  "function userStakes(address user, uint256 index) view returns (uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock)",
 ];
 
 export default function StakingPage() {
@@ -251,7 +252,7 @@ export default function StakingPage() {
       const stakeCount = await staking.getStakeCount(userAddress);
       const stakes = [];
       for (let i = 0; i < Number(stakeCount); i++) {
-        const stakeDetails = await staking.getStakeDetails(userAddress, i);
+        const stakeDetails = await staking.getStakeView(userAddress, i);
         // Access by array index since contract returns a tuple
         const amount = stakeDetails[0];
         const weightedAmount = stakeDetails[1];
