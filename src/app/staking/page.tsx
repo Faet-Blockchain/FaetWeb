@@ -79,6 +79,7 @@ export default function StakingPage() {
   const [txHash, setTxHash] = useState<string>("");
   const [approvedAmount, setApprovedAmount] = useState<string>("0");
   const [approvalAmount, setApprovalAmount] = useState<string>("");
+  const [totalRewardsFunded, setTotalRewardsFunded] = useState<string>("0");
 
   // Lisk Sepolia testnet configuration
   const LISK_SEPOLIA_CHAIN_ID = "0x106a"; // 4202 in decimal
@@ -105,6 +106,7 @@ export default function StakingPage() {
     setUserStakes([]);
     setApprovedAmount("0");
     setApprovalAmount("");
+    setTotalRewardsFunded("0");
     setShowTokenStaking(false);
   };
 
@@ -322,6 +324,16 @@ export default function StakingPage() {
         setApprovedAmount("0");
       }
 
+      // Get total rewards funded
+      try {
+        const totalFunded = await staking.totalRewardsFunded();
+        setTotalRewardsFunded(ethers.formatEther(totalFunded));
+        console.log("Successfully fetched total rewards funded:", ethers.formatEther(totalFunded));
+      } catch (error: any) {
+        console.warn("Error fetching total rewards funded:", error?.code || error?.message);
+        setTotalRewardsFunded("0");
+      }
+
       // Get user stakes with proper error handling
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
@@ -388,6 +400,7 @@ export default function StakingPage() {
       setPendingRewards("0");
       setApprovedAmount("0");
       setUserStakes([]);
+      setTotalRewardsFunded("0");
     }
   };
 
@@ -511,6 +524,7 @@ export default function StakingPage() {
     }
 
     setIsLoading(true);
+    setTxHash("");
 
     try {
       const claimTx = await stakingContract.getReward();
@@ -523,6 +537,17 @@ export default function StakingPage() {
       console.log("Rewards claimed successfully!");
     } catch (error: any) {
       console.error("Claim failed:", error);
+      
+      // Handle specific error cases
+      if (error?.reason === "Insufficient funded rewards" || 
+          error?.message?.includes("Insufficient funded rewards")) {
+        alert("❌ Claim Failed: The reward pool is currently empty. Please wait for the pool to be refunded by the administrators.");
+      } else if (error?.reason === "No rewards" || 
+                 error?.message?.includes("No rewards")) {
+        alert("❌ Claim Failed: You have no rewards to claim at this time.");
+      } else {
+        alert(`❌ Claim Failed: ${error?.reason || error?.message || "Unknown error occurred"}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -1195,6 +1220,24 @@ export default function StakingPage() {
               <h3 className="text-xl font-bold mb-4 text-yellow-400">
                 Rewards
               </h3>
+              
+              {/* Reward Pool Status */}
+              <div className="mb-4 p-3 rounded-lg bg-gray-700">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Reward Pool:</span>
+                  <span className={`text-sm font-bold ${
+                    parseFloat(totalRewardsFunded) > 0 ? "text-green-400" : "text-red-400"
+                  }`}>
+                    {parseFloat(totalRewardsFunded).toFixed(2)} FAET
+                  </span>
+                </div>
+                {parseFloat(totalRewardsFunded) === 0 && (
+                  <p className="text-xs text-red-400 mt-1">
+                    ⚠️ Reward pool is empty. Claims are not possible until refunded.
+                  </p>
+                )}
+              </div>
+
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <p className="text-sm text-gray-400">Pending Rewards</p>
@@ -1206,16 +1249,25 @@ export default function StakingPage() {
                   onClick={handleClaimRewards}
                   disabled={
                     parseFloat(pendingRewards) === 0 ||
+                    parseFloat(totalRewardsFunded) === 0 ||
                     isLoading ||
                     wrongNetwork
                   }
                   className={`font-bold py-2 px-6 rounded-lg transition-colors ${
                     parseFloat(pendingRewards) === 0 ||
+                    parseFloat(totalRewardsFunded) === 0 ||
                     isLoading ||
                     wrongNetwork
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-yellow-600 hover:bg-yellow-700 text-white"
                   }`}
+                  title={
+                    parseFloat(totalRewardsFunded) === 0 
+                      ? "Reward pool is empty - cannot claim rewards"
+                      : parseFloat(pendingRewards) === 0
+                        ? "No rewards available to claim"
+                        : "Claim your pending rewards"
+                  }
                 >
                   {isLoading ? "Processing..." : "Claim Rewards"}
                 </button>
