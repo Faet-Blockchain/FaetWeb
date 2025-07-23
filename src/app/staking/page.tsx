@@ -224,7 +224,17 @@ export default function StakingPage() {
     userAddress: string,
   ) => {
     try {
-      const currentBlock = (await provider?.getBlockNumber()) || 0;
+      // Get current block number from the provider
+      let currentBlock = 0;
+      if (provider) {
+        currentBlock = await provider.getBlockNumber();
+      } else if (typeof window.ethereum !== "undefined") {
+        // Fallback: create a temporary provider to get block number
+        const tempProvider = new ethers.BrowserProvider(window.ethereum);
+        currentBlock = await tempProvider.getBlockNumber();
+      }
+      
+      console.log("Current block number:", currentBlock);
 
       const balance = await token.balanceOf(userAddress);
       setTokenBalance(ethers.formatEther(balance));
