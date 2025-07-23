@@ -1063,6 +1063,32 @@ export default function StakingPage() {
               </button>
             </div>
 
+            {/* Contract Addresses */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-400 mb-2">Staking Contract</h4>
+                <a
+                  href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 font-mono text-xs break-all"
+                >
+                  {FAET_STAKING_ADDRESS}
+                </a>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-semibold text-green-400 mb-2">Token Contract</h4>
+                <a
+                  href={`https://sepolia-blockscout.lisk.com/address/${FAET_TOKEN_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-400 hover:text-green-300 font-mono text-xs break-all"
+                >
+                  {FAET_TOKEN_ADDRESS}
+                </a>
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <div className="bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-4 text-purple-400">
@@ -1347,92 +1373,7 @@ export default function StakingPage() {
               )}
             </div>
 
-            {/* Reward Distribution Pie Chart */}
-            <div className="bg-gray-800 p-6 rounded-lg mb-6">
-              <h3 className="text-xl font-bold mb-4 text-blue-400">Reward Distribution Overview</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Available Rewards', value: parseFloat(totalRewardsFunded), fill: '#10b981' },
-                          { name: 'Distributed Rewards', value: Math.max(0, 1000000 - parseFloat(totalRewardsFunded)), fill: '#ef4444' },
-                          { name: 'Pending Claims', value: parseFloat(pendingRewards), fill: '#f59e0b' }
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                        labelLine={false}
-                      >
-                        <Cell fill="#10b981" />
-                        <Cell fill="#ef4444" />
-                        <Cell fill="#f59e0b" />
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value: number) => [`${value.toFixed(2)} FAET`, 'Amount']}
-                        contentStyle={{ 
-                          backgroundColor: '#374151', 
-                          border: '1px solid #4b5563',
-                          borderRadius: '8px',
-                          color: '#fff'
-                        }}
-                      />
-                      <Legend 
-                        wrapperStyle={{ color: '#fff' }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <h4 className="font-semibold text-green-400 mb-2">Pool Statistics</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Total Pool:</span>
-                        <span className="font-mono">1,000,000 FAET</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Available:</span>
-                        <span className="font-mono text-green-400">{parseFloat(totalRewardsFunded).toFixed(2)} FAET</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Your Pending:</span>
-                        <span className="font-mono text-yellow-400">{parseFloat(pendingRewards).toFixed(6)} FAET</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">Pool Status:</span>
-                        <span className={`font-semibold ${parseFloat(totalRewardsFunded) > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {parseFloat(totalRewardsFunded) > 0 ? 'Active' : 'Empty'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-700 p-4 rounded-lg">
-                    <h4 className="font-semibold text-purple-400 mb-2">Top Stakers</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">1. You:</span>
-                        <span className="font-mono">{parseFloat(stakedBalance).toFixed(2)} FAET</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">2. Others:</span>
-                        <span className="font-mono text-gray-400">--</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-300">3. Others:</span>
-                        <span className="font-mono text-gray-400">--</span>
-                      </div>
-                      <div className="text-xs text-gray-400 mt-2">
-                        * Live data from blockchain
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
 
             <div className="bg-gray-800 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-yellow-400">
@@ -1462,6 +1403,9 @@ export default function StakingPage() {
                   <p className="text-2xl font-bold">
                     {parseFloat(pendingRewards).toFixed(6)} FAET
                   </p>
+                  <p className="text-xs text-blue-400 mt-1">
+                    Next block: +{(parseFloat(stakedBalance) / Math.max(1, parseFloat(stakedBalance) + 1000000)).toFixed(6)} FAET
+                  </p>
                 </div>
                 <button
                   onClick={handleClaimRewards}
@@ -1490,32 +1434,91 @@ export default function StakingPage() {
                   {isLoading ? "Processing..." : "Claim Rewards"}
                 </button>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-400 text-sm mb-6">
                 Rate: 1.0 FAET per block (~2s), UI updates every 2s
               </p>
 
-              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                <div className="bg-gray-700 p-3 rounded">
-                  <p className="text-gray-400">Contract Address</p>
-                  <a
-                    href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 font-mono text-xs break-all"
-                  >
-                    {FAET_STAKING_ADDRESS}
-                  </a>
-                </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <p className="text-gray-400">Token Address</p>
-                  <a
-                    href={`https://sepolia-blockscout.lisk.com/address/${FAET_TOKEN_ADDRESS}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 font-mono text-xs break-all"
-                  >
-                    {FAET_TOKEN_ADDRESS}
-                  </a>
+              {/* Top Stakers Chart */}
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h4 className="font-semibold text-purple-400 mb-4">Top Stakers Distribution</h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Your Stake', value: parseFloat(stakedBalance), fill: '#a855f7' },
+                            { name: 'Other Stakers', value: Math.max(0, 1000000 - parseFloat(stakedBalance)), fill: '#6b7280' },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="value"
+                          label={({name, percent}) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                          labelLine={false}
+                        >
+                          <Cell fill="#a855f7" />
+                          <Cell fill="#6b7280" />
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => [`${value.toFixed(2)} FAET`, 'Staked Amount']}
+                          contentStyle={{ 
+                            backgroundColor: '#374151', 
+                            border: '1px solid #4b5563',
+                            borderRadius: '8px',
+                            color: '#fff'
+                          }}
+                        />
+                        <Legend 
+                          wrapperStyle={{ color: '#fff' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-gray-600 p-4 rounded-lg">
+                      <h5 className="font-semibold text-purple-400 mb-2">Top Stakers</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">1. You:</span>
+                          <span className="font-mono text-purple-400">{parseFloat(stakedBalance).toFixed(2)} FAET</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">2. Others:</span>
+                          <span className="font-mono text-gray-400">--</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">3. Others:</span>
+                          <span className="font-mono text-gray-400">--</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2">
+                          * Live staking data from blockchain
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-600 p-4 rounded-lg">
+                      <h5 className="font-semibold text-green-400 mb-2">Your Stats</h5>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Active Stakes:</span>
+                          <span className="font-mono">{userStakes.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Total Weight:</span>
+                          <span className="font-mono text-green-400">{parseFloat(stakedBalance).toFixed(2)} FAET</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Avg Multiplier:</span>
+                          <span className="font-mono text-purple-400">
+                            {userStakes.length > 0 
+                              ? (userStakes.reduce((acc, stake) => acc + stake.multiplier, 0) / userStakes.length).toFixed(2)
+                              : '0.00'
+                            }x
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
