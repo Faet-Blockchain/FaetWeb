@@ -848,7 +848,7 @@ export default function StakingPage() {
         } catch (error) {
           console.error("Error checking existing connection:", error);
           await checkNetwork();
-        }        }
+        }
       }
     };
 
