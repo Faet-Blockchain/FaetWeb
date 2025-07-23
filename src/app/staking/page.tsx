@@ -417,8 +417,9 @@ export default function StakingPage() {
       setTxHash(approveTx.hash);
       await approveTx.wait();
 
-      if (account) {
-        await loadUserData(tokenContract, stakingContract!, account);
+      // Reload user data to update approved amount
+      if (account && stakingContract) {
+        await loadUserData(tokenContract, stakingContract, account);
       }
       setApprovalAmount("");
       console.log("Approval successful!");
