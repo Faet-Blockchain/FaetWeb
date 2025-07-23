@@ -20,7 +20,7 @@ declare global {
 
 // Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
-const FAET_STAKING_ADDRESS = "0x5189477536B1E476C4025c156526f7e37438BD90";
+const FAET_STAKING_ADDRESS = "0x5e16C16d2a3A197CFa8d6596685F28c55Bc67230";
 
 // Calculate multiplier based on days (1x to 20x over 730 days)
 const calculateMultiplier = (days: number): number => {
