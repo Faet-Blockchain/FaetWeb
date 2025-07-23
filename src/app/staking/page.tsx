@@ -52,6 +52,7 @@ const FAET_STAKING_ABI = [
   "function totalStaked() view returns (uint256)",
   "function totalRewardsFunded() view returns (uint256)",
   "function rewardPerToken() view returns (uint256)",
+  "event Stake(address indexed user, uint256 amount, uint256 daysLocked, uint256 multiplier)",
 ];
 
 export default function StakingPage() {
@@ -260,24 +261,44 @@ export default function StakingPage() {
 
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {
-      // This is a simplified approach - in a real implementation, you'd need to:
-      // 1. Listen to staking events to track all stakers
-      // 2. Query multiple addresses for their weights
-      // 3. Use a subgraph or indexing service for efficient queries
+      // Get real staking data from blockchain events
+      const stakingAddress = await staking.getAddress();
+      const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
       
-      // For now, we'll simulate with some mock data and the current user
-      const mockTopStakers = [
-        { address: account || "0x0000000000000000000000000000000000000000", weight: stakedBalance },
-        { address: "0x1234567890123456789012345678901234567890", weight: "850000.00" },
-        { address: "0x2345678901234567890123456789012345678901", weight: "720000.00" },
-        { address: "0x3456789012345678901234567890123456789012", weight: "650000.00" },
-        { address: "0x4567890123456789012345678901234567890123", weight: "580000.00" }
-      ];
-
-      // Sort by weight (highest first) and take top 5
-      const sortedStakers = mockTopStakers
+      // Get all Stake events to find unique stakers
+      const stakeEvents = await staking.queryFilter(
+        staking.filters.Stake(),
+        fromBlock,
+        'latest'
+      );
+      
+      // Get unique staker addresses
+      const uniqueStakers = [...new Set(stakeEvents.map(event => event.args[0]))];
+      
+      // Get current active weight for each staker
+      const stakerWeights = await Promise.all(
+        uniqueStakers.map(async (stakerAddress) => {
+          try {
+            const activeWeight = await staking.getActiveWeight(stakerAddress);
+            return {
+              address: stakerAddress,
+              weight: ethers.formatEther(activeWeight)
+            };
+          } catch (error) {
+            console.warn(`Failed to get weight for ${stakerAddress}:`, error);
+            return {
+              address: stakerAddress,
+              weight: "0"
+            };
+          }
+        })
+      );
+      
+      // Filter out zero balances and sort by weight (highest first), take top 10
+      const sortedStakers = stakerWeights
+        .filter(staker => parseFloat(staker.weight) > 0)
         .sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))
-        .slice(0, 5);
+        .slice(0, 10);
 
       setTopStakers(sortedStakers);
 
@@ -1162,25 +1183,25 @@ export default function StakingPage() {
             {/* Contract Addresses */}
             <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-gray-800 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-400 mb-2">Staking Contract</h4>
-                <a
-                  href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 font-mono text-xs break-all"
-                >
-                  {FAET_STAKING_ADDRESS}
-                </a>
-              </div>
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <h4 className="font-semibold text-green-400 mb-2">Token Contract</h4>
+                <h4 className="font-semibold text-purple-400 mb-2">Token Contract</h4>
                 <a
                   href={`https://sepolia-blockscout.lisk.com/address/${FAET_TOKEN_ADDRESS}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-green-400 hover:text-green-300 font-mono text-xs break-all"
+                  className="text-purple-400 hover:text-purple-300 font-mono text-xs break-all"
                 >
                   {FAET_TOKEN_ADDRESS}
+                </a>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-semibold text-green-400 mb-2">Staking Contract</h4>
+                <a
+                  href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-400 hover:text-green-300 font-mono text-xs break-all"
+                >
+                  {FAET_STAKING_ADDRESS}
                 </a>
               </div>
             </div>
@@ -1575,24 +1596,33 @@ export default function StakingPage() {
                   </div>
                   <div className="space-y-4">
                     <div className="bg-gray-600 p-4 rounded-lg">
-                      <h5 className="font-semibold text-purple-400 mb-2">Top 5 Stakers</h5>
-                      <div className="space-y-2 text-sm">
-                        {topStakers.map((staker, index) => (
-                          <div key={index} className="flex justify-between items-center">
-                            <span className="text-gray-300">{index + 1}.</span>
-                            <button
-                              onClick={() => copyToClipboard(staker.address)}
-                              className="font-mono text-blue-400 hover:text-blue-300 transition-colors cursor-pointer text-xs"
-                              title={`Click to copy: ${staker.address}`}
-                            >
-                              {formatAddress(staker.address)}
-                            </button>
-                            <span className="font-mono text-purple-400 text-xs">
-                              {parseFloat(staker.weight).toLocaleString()} FAET
-                            </span>
+                      <h5 className="font-semibold text-purple-400 mb-2">Top 10 Stakers</h5>
+                      <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
+                        {topStakers.length === 0 ? (
+                          <div className="text-gray-400 text-center py-4">
+                            Loading stakers data...
                           </div>
-                        ))}
-                        <div className="text-xs text-gray-400 mt-2">
+                        ) : (
+                          topStakers.map((staker, index) => (
+                            <div key={staker.address} className="flex justify-between items-center">
+                              <span className="text-gray-300 min-w-[25px]">{index + 1}.</span>
+                              <button
+                                onClick={() => copyToClipboard(staker.address)}
+                                className="font-mono text-blue-400 hover:text-blue-300 transition-colors cursor-pointer text-xs flex-1 text-center"
+                                title={`Click to copy: ${staker.address}`}
+                              >
+                                {formatAddress(staker.address)}
+                              </button>
+                              <span className="font-mono text-purple-400 text-xs min-w-[80px] text-right">
+                                {parseFloat(staker.weight).toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 2
+                                })} FAET
+                              </span>
+                            </div>
+                          ))
+                        )}
+                        <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-500">
                           * Click addresses to copy to clipboard
                         </div>
                       </div>
