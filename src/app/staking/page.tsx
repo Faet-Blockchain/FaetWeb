@@ -49,6 +49,9 @@ const FAET_STAKING_ABI = [
   "function rewards(address account) view returns (uint256)",
   "function getMultiplier(uint256 daysLocked) view returns (uint256)",
   "function getActiveWeight(address user) view returns (uint256)",
+  "function totalStaked() view returns (uint256)",
+  "function totalRewardsFunded() view returns (uint256)",
+  "function rewardPerToken() view returns (uint256)",
 ];
 
 export default function StakingPage() {
@@ -229,6 +232,10 @@ export default function StakingPage() {
     userAddress: string,
   ) => {
     try {
+      console.log("Loading user data for:", userAddress);
+      console.log("Staking contract address:", await staking.getAddress());
+      console.log("Token contract address:", await token.getAddress());
+      
       // Get current block number from the provider
       let currentBlock = 0;
       if (provider) {
