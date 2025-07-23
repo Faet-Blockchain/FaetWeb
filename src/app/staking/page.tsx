@@ -213,11 +213,39 @@ export default function StakingPage() {
         setTokenContract(token);
         setStakingContract(staking);
 
+        console.log("Token contract address:", FAET_TOKEN_ADDRESS);
+        console.log("Staking contract address:", FAET_STAKING_ADDRESS);
+        console.log("Current chain ID:", currentChainId);
+
+        // Validate contracts exist by checking if they have code
+        try {
+          const tokenCode = await web3Provider.getCode(FAET_TOKEN_ADDRESS);
+          const stakingCode = await web3Provider.getCode(FAET_STAKING_ADDRESS);
+          
+          if (tokenCode === "0x") {
+            console.error("Token contract not found at address:", FAET_TOKEN_ADDRESS);
+          } else {
+            console.log("Token contract validated");
+          }
+          
+          if (stakingCode === "0x") {
+            console.error("Staking contract not found at address:", FAET_STAKING_ADDRESS);
+          } else {
+            console.log("Staking contract validated");
+          }
+          
+          if (tokenCode === "0x" || stakingCode === "0x") {
+            console.warn("One or more contracts not deployed on this network");
+          }
+        } catch (codeError) {
+          console.warn("Could not validate contract deployment:", codeError);
+        }
+
         console.log("Contracts initialized, loading user data...");
         await loadUserData(token, staking, account);
         console.log("Web3 initialization complete");
-      } catch (error) {
-        console.error("Error initializing Web3:", error);
+      } catch (error: any) {
+        console.error("Error initializing Web3:", error?.message || error);
         clearWeb3State();
       }
     } else {
@@ -262,15 +290,15 @@ export default function StakingPage() {
         const activeWeight = await staking.getActiveWeight(userAddress);
         setStakedBalance(ethers.formatEther(activeWeight));
         console.log("Successfully fetched active weight:", ethers.formatEther(activeWeight));
-      } catch (error) {
-        console.error("Error fetching active weight:", error);
+      } catch (error: any) {
+        console.warn("Error fetching active weight:", error?.code || error?.message);
         // Try weightedBalances as fallback
         try {
           const weighted = await staking.weightedBalances(userAddress);
           setStakedBalance(ethers.formatEther(weighted));
           console.log("Successfully fetched weighted balance:", ethers.formatEther(weighted));
-        } catch (fallbackError) {
-          console.error("Error fetching weighted balances:", fallbackError);
+        } catch (fallbackError: any) {
+          console.warn("Error fetching weighted balances:", fallbackError?.code || fallbackError?.message);
           setStakedBalance("0");
         }
       }
@@ -279,8 +307,9 @@ export default function StakingPage() {
       try {
         const earned = await staking.earned(userAddress);
         setPendingRewards(ethers.formatEther(earned));
-      } catch (error) {
-        console.error("Error fetching earnings:", error);
+        console.log("Successfully fetched earnings:", ethers.formatEther(earned));
+      } catch (error: any) {
+        console.warn("Error fetching earnings (contract may not exist or wrong network):", error?.code || error?.message);
         setPendingRewards("0");
       }
 
@@ -297,6 +326,7 @@ export default function StakingPage() {
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
         const stakeCountNumber = Number(stakeCount);
+        console.log("Successfully fetched stake count:", stakeCountNumber);
 
         if (stakeCountNumber === 0) {
           console.log("User has no stakes");
@@ -342,12 +372,16 @@ export default function StakingPage() {
           }
         }
         setUserStakes(stakes);
-      } catch (error) {
-        console.error("Error loading stakes:", error);
+        console.log("Successfully loaded", stakes.length, "stakes");
+      } catch (error: any) {
+        console.warn("Error loading stakes (contract may not exist or wrong network):", error?.code || error?.message);
         setUserStakes([]);
       }
-    } catch (error) {
-      console.error("Error loading user data:", error);
+    } catch (error: any) {
+      console.error("Critical error loading user data:", error?.message || error);
+      if (error?.code === "BAD_DATA") {
+        console.warn("Contract decode error - likely wrong network or contract not deployed");
+      }
       // Set fallback values
       setTokenBalance("0");
       setStakedBalance("0");
