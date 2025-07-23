@@ -59,6 +59,50 @@ const HeroSection = () => {
 					</Link>
 					<p className="text-sm mt-2 text-center">If you already have a founders pass <br /> Requires Chrome with Metamask, or Metamask Browser for Mobile.</p>
 				</div>
+
+				<motion.button
+					initial={{ opacity: 0, y: 20, scale: 0.5 }}
+					whileInView={{ opacity: 1, y: 0, scale: 1 }}
+					transition={{ type: "spring", stiffness: 400, damping: 15 }}
+					whileHover={{
+						scale: 1.1,
+						transition: { duration: 0.3 },
+					}}
+					onClick={async () => {
+						if (typeof window !== "undefined" && window.ethereum) {
+							try {
+								await window.ethereum.request({
+									method: "wallet_addEthereumChain",
+									params: [{
+										chainId: "0x106a",
+										chainName: "Lisk Sepolia Testnet",
+										nativeCurrency: {
+											name: "Sepolia Ether",
+											symbol: "ETH",
+											decimals: 18,
+										},
+										rpcUrls: ["https://rpc.sepolia-api.lisk.com"],
+										blockExplorerUrls: ["https://sepolia-blockscout.lisk.com"],
+									}],
+								});
+								console.log("✅ Lisk Sepolia network added to MetaMask");
+							} catch (error: any) {
+								if (error?.code === 4001) {
+									console.log("ℹ️ User cancelled adding network");
+								} else if (error?.code === -32002) {
+									console.log("⚠️ Request already pending in MetaMask");
+								} else {
+									console.warn("⚠️ Error adding network:", error?.message || "Unknown error");
+								}
+							}
+						} else {
+							console.warn("⚠️ MetaMask not detected");
+						}
+					}}
+					className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-3 text-xl font-nocturne-serif-bold transition-colors"
+				>
+					Add Lisk Sepolia
+				</motion.button>
 			</div>
 
 			<br />
