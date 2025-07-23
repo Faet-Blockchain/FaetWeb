@@ -980,9 +980,42 @@ export default function StakingPage() {
             transition={{ duration: 0.5, ease: "easeInOut" }}
             className="bg-gray-900 p-8 rounded-lg border border-gray-700 mt-6"
           >
-            <h2 className="text-2xl font-nocturne-serif-bold mb-6">
-              Token Staking (Testnet)
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-nocturne-serif-bold">
+                Token Staking (Testnet)
+              </h2>
+              <button
+                onClick={async () => {
+                  if (typeof window.ethereum !== "undefined") {
+                    try {
+                      await window.ethereum.request({
+                        method: 'wallet_watchAsset',
+                        params: {
+                          type: 'ERC20',
+                          options: {
+                            address: FAET_TOKEN_ADDRESS,
+                            symbol: 'FAET',
+                            decimals: 18,
+                            image: 'https://your-domain.com/faet-token-icon.png',
+                          },
+                        },
+                      });
+                      console.log('FAET token added to wallet');
+                    } catch (error) {
+                      console.error('Error adding token to wallet:', error);
+                    }
+                  }
+                }}
+                disabled={!account || wrongNetwork}
+                className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
+                  !account || wrongNetwork
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                Add Test Token to Metamask
+              </button>
+            </div>
 
             <div className="grid md:grid-cols-2 gap-6 mb-6">
               <div className="bg-gray-800 p-6 rounded-lg">
@@ -1354,44 +1387,7 @@ export default function StakingPage() {
               </div>
             </div>
 
-            <div className="mt-6 text-center space-y-4">
-              <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-lg font-bold text-blue-400">Add Token to Wallet</h4>
-                  <button
-                    onClick={async () => {
-                      if (typeof window.ethereum !== "undefined") {
-                        try {
-                          await window.ethereum.request({
-                            method: 'wallet_watchAsset',
-                            params: {
-                              type: 'ERC20',
-                              options: {
-                                address: FAET_TOKEN_ADDRESS,
-                                symbol: 'FAET',
-                                decimals: 18,
-                                image: 'https://your-domain.com/faet-token-icon.png', // You can replace this with actual icon URL
-                              },
-                            },
-                          });
-                          console.log('FAET token added to wallet');
-                        } catch (error) {
-                          console.error('Error adding token to wallet:', error);
-                        }
-                      }
-                    }}
-                    disabled={!account || wrongNetwork}
-                    className={`font-bold py-1 px-3 rounded text-sm transition-colors ${
-                      !account || wrongNetwork
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
-                  >
-                    Add Token
-                  </button>
-                </div>
-              </div>
-              
+            <div className="mt-6 text-center">
               <button
                 onClick={() => setShowTokenStaking(false)}
                 className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
