@@ -261,28 +261,42 @@ export default function StakingPage() {
 
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {
-      // Get real staking data from blockchain events
-      const stakingAddress = await staking.getAddress();
-      const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
+      console.log("Loading real blockchain staking data...");
       
       // Get all Stake events to find unique stakers
+      const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
+      
+      console.log("Fetching Stake events from blockchain...");
       const stakeEvents = await staking.queryFilter(
-        staking.filters.Stake(),
+        staking.filters.Staked(),
         fromBlock,
         'latest'
       );
       
-      // Get unique staker addresses
-      const uniqueStakers = [...new Set(stakeEvents.map(event => event.args[0]))];
+      console.log(`Found ${stakeEvents.length} stake events`);
+      
+      // Get unique staker addresses from events
+      const uniqueStakers = [...new Set(stakeEvents.map(event => event.args?.[0]).filter(Boolean))];
+      console.log(`Found ${uniqueStakers.length} unique stakers`);
+      
+      if (uniqueStakers.length === 0) {
+        console.log("No stakers found, using empty data");
+        setTopStakers([]);
+        setStakingRanges([]);
+        return;
+      }
       
       // Get current active weight for each staker
+      console.log("Fetching current weights for all stakers...");
       const stakerWeights = await Promise.all(
         uniqueStakers.map(async (stakerAddress) => {
           try {
             const activeWeight = await staking.getActiveWeight(stakerAddress);
+            const weightStr = ethers.formatEther(activeWeight);
+            console.log(`Staker ${stakerAddress}: ${weightStr} FAET`);
             return {
               address: stakerAddress,
-              weight: ethers.formatEther(activeWeight)
+              weight: weightStr
             };
           } catch (error) {
             console.warn(`Failed to get weight for ${stakerAddress}:`, error);
@@ -295,55 +309,45 @@ export default function StakingPage() {
       );
       
       // Filter out zero balances and sort by weight (highest first), take top 10
-      const sortedStakers = stakerWeights
-        .filter(staker => parseFloat(staker.weight) > 0)
+      const activeStakers = stakerWeights.filter(staker => parseFloat(staker.weight) > 0);
+      const sortedStakers = activeStakers
         .sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))
         .slice(0, 10);
 
+      console.log(`Found ${activeStakers.length} active stakers, showing top ${sortedStakers.length}`);
       setTopStakers(sortedStakers);
 
-      // Create staking ranges distribution
+      // Create 5 distribution ranges with real data
       const ranges = [
-        { min: 0, max: 1000, label: "0-1K" },
-        { min: 1000, max: 5000, label: "1K-5K" },
-        { min: 5000, max: 10000, label: "5K-10K" },
-        { min: 10000, max: 25000, label: "10K-25K" },
-        { min: 25000, max: 50000, label: "25K-50K" },
-        { min: 50000, max: 100000, label: "50K-100K" },
-        { min: 100000, max: 250000, label: "100K-250K" },
-        { min: 250000, max: 500000, label: "250K-500K" },
+        { min: 0, max: 10000, label: "0-10K" },
+        { min: 10000, max: 100000, label: "10K-100K" },
+        { min: 100000, max: 500000, label: "100K-500K" },
         { min: 500000, max: 1000000, label: "500K-1M" },
-        { min: 1000000, max: 2500000, label: "1M-2.5M" },
-        { min: 2500000, max: 5000000, label: "2.5M-5M" },
-        { min: 5000000, max: 10000000, label: "5M-10M" },
-        { min: 10000000, max: 25000000, label: "10M-25M" },
-        { min: 25000000, max: 50000000, label: "25M-50M" },
-        { min: 50000000, max: Infinity, label: "50M+" }
+        { min: 1000000, max: Infinity, label: "1M+" }
       ];
 
-      // Simulate distribution data (in real implementation, query blockchain)
-      const distributionData = [
-        { range: "0-1K", count: 145, totalWeight: "87500.00" },
-        { range: "1K-5K", count: 89, totalWeight: "267000.00" },
-        { range: "5K-10K", count: 34, totalWeight: "255000.00" },
-        { range: "10K-25K", count: 28, totalWeight: "420000.00" },
-        { range: "25K-50K", count: 15, totalWeight: "562500.00" },
-        { range: "50K-100K", count: 12, totalWeight: "900000.00" },
-        { range: "100K-250K", count: 8, totalWeight: "1400000.00" },
-        { range: "250K-500K", count: 5, totalWeight: "1875000.00" },
-        { range: "500K-1M", count: 3, totalWeight: "2250000.00" },
-        { range: "1M-2.5M", count: 2, totalWeight: "3000000.00" },
-        { range: "2.5M-5M", count: 1, totalWeight: "3750000.00" },
-        { range: "5M-10M", count: 1, totalWeight: "7500000.00" },
-        { range: "10M-25M", count: 0, totalWeight: "0.00" },
-        { range: "25M-50M", count: 0, totalWeight: "0.00" },
-        { range: "50M+", count: 0, totalWeight: "0.00" }
-      ].filter(item => item.count > 0); // Only show ranges with stakers
+      // Categorize actual stakers into ranges
+      const distributionData = ranges.map(range => {
+        const stakersInRange = activeStakers.filter(staker => {
+          const weight = parseFloat(staker.weight);
+          return weight >= range.min && weight < range.max;
+        });
+        
+        const totalWeight = stakersInRange.reduce((sum, staker) => sum + parseFloat(staker.weight), 0);
+        
+        return {
+          range: range.label,
+          count: stakersInRange.length,
+          totalWeight: totalWeight.toFixed(2)
+        };
+      }).filter(item => item.count > 0); // Only show ranges with stakers
 
+      console.log("Distribution data:", distributionData);
       setStakingRanges(distributionData);
 
     } catch (error) {
-      console.warn("Error loading top stakers data:", error);
+      console.error("Error loading top stakers data:", error);
+      // Set empty data on error
       setTopStakers([]);
       setStakingRanges([]);
     }
