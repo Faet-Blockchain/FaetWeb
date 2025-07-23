@@ -758,6 +758,9 @@ export default function StakingPage() {
     };
   }, [account, wrongNetwork, stakingContract, canAccessStaking]);
 
+  // Only allow staking interface if connected to correct network
+  const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
+
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
@@ -776,9 +779,6 @@ export default function StakingPage() {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  // Only allow staking interface if connected to correct network
-  const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
