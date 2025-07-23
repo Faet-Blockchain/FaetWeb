@@ -734,14 +734,26 @@ export default function StakingPage() {
   useEffect(() => {
     let rewardsUpdateInterval: NodeJS.Timeout;
 
-    if (stakingContract && account && !wrongNetwork) {
+    if (stakingContract && account && !wrongNetwork && provider) {
       const updatePendingRewards = async () => {
         try {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`[${timestamp}] Updating pending rewards...`);
-          const earned = await stakingContract.earned(account);
+          
+          // Get current block number first
+          const currentBlock = await provider.getBlockNumber();
+          console.log(`[${timestamp}] Current block:`, currentBlock);
+          
+          // Create a fresh read-only contract instance to bypass any caching
+          const freshContract = new ethers.Contract(
+            FAET_STAKING_ADDRESS,
+            ["function earned(address account) view returns (uint256)"],
+            provider
+          );
+          
+          const earned = await freshContract.earned(account);
           const formattedEarned = ethers.formatEther(earned);
-          console.log(`[${timestamp}] New pending rewards:`, formattedEarned);
+          console.log(`[${timestamp}] New pending rewards:`, formattedEarned, `(block: ${currentBlock})`);
           setPendingRewards(formattedEarned);
         } catch (error) {
           console.warn("Error updating pending rewards:", error);
