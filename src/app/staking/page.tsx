@@ -988,7 +988,7 @@ export default function StakingPage() {
                 onClick={async () => {
                   if (typeof window.ethereum !== "undefined") {
                     try {
-                      await window.ethereum.request({
+                      const wasAdded = await window.ethereum.request({
                         method: 'wallet_watchAsset',
                         params: {
                           type: 'ERC20',
@@ -1000,10 +1000,26 @@ export default function StakingPage() {
                           },
                         },
                       });
-                      console.log('FAET token added to wallet');
-                    } catch (error) {
-                      console.error('Error adding token to wallet:', error);
+                      
+                      if (wasAdded) {
+                        console.log('✅ FAET token successfully added to wallet');
+                        // You could add a success toast notification here
+                      } else {
+                        console.log('ℹ️ Token addition was not completed');
+                      }
+                    } catch (error: any) {
+                      // Handle different types of errors gracefully
+                      if (error?.code === 4001) {
+                        console.log('ℹ️ User cancelled adding token to wallet');
+                      } else if (error?.code === -32002) {
+                        console.log('⚠️ Request already pending in MetaMask');
+                      } else {
+                        console.warn('⚠️ Error adding token to wallet:', error?.message || 'Unknown error');
+                      }
+                      // Don't show error for user cancellation - it's expected behavior
                     }
+                  } else {
+                    console.warn('⚠️ MetaMask not detected');
                   }
                 }}
                 disabled={!account || wrongNetwork}
