@@ -21,9 +21,17 @@ declare global {
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
 const FAET_STAKING_ADDRESS = "0x3A70F607d7E6a0eEDB32B9743CabB1cB3D4844a3";
 
-// Calculate multiplier based on days (1x to 20x over 730 days)
+// Calculate multiplier based on days to match contract logic
 const calculateMultiplier = (days: number): number => {
-  return 1 + (days * 19) / 730;
+  if (days >= 2190) { // 6 years
+    return 50;
+  } else if (days >= 1095) { // 3 years  
+    return 30;
+  } else if (days >= 365) { // 1 year
+    return 20;
+  } else {
+    return 1; // No lock
+  }
 };
 
 // Simplified ABI for the functions we need
@@ -35,15 +43,14 @@ const FAET_TOKEN_ABI = [
 ];
 
 const FAET_STAKING_ABI = [
-  "function stake(uint256 amount, uint256 daysLocked)",
+  "function stake(uint256 amount, uint256 lockDuration)",
   "function withdraw(uint256 stakeIndex)",
   "function getReward()",
   "function earned(address account) view returns (uint256)",
   "function getStakeCount(address user) view returns (uint256)",
-  "function getStakeView(address user, uint256 index) view returns (tuple(uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock))",
+  "function getStakeDetails(address user, uint256 stakeIndex) view returns (uint256 _amount, uint256 _weightedAmount, uint256 _multiplier, uint256 _lockEndBlock)",
   "function weightedBalances(address account) view returns (uint256)",
   "function rewards(address account) view returns (uint256)",
-  "function getMultiplier(uint256 daysLocked) view returns (uint256)",
   "function userStakes(address user, uint256 index) view returns (uint256 amount, uint256 weightedAmount, uint256 multiplier, uint256 lockEndBlock)",
 ];
 
@@ -252,7 +259,7 @@ export default function StakingPage() {
       const stakeCount = await staking.getStakeCount(userAddress);
       const stakes = [];
       for (let i = 0; i < Number(stakeCount); i++) {
-        const stakeDetails = await staking.getStakeView(userAddress, i);
+        const stakeDetails = await staking.getStakeDetails(userAddress, i);
         // Access by array index since contract returns a tuple
         const amount = stakeDetails[0];
         const weightedAmount = stakeDetails[1];
@@ -355,7 +362,20 @@ export default function StakingPage() {
       }
 
       console.log("Staking tokens...");
-      const stakeTx = await stakingContract.stake(amount, selectedDays);
+      // Convert days to lock duration in blocks
+      // Based on contract: 0 days = 0, 1 year = 15_768_000, 3 years = 47_304_000, 6 years = 94_608_000
+      let lockDuration = 0;
+      if (selectedDays >= 2190) { // 6 years
+        lockDuration = 94608000;
+      } else if (selectedDays >= 1095) { // 3 years  
+        lockDuration = 47304000;
+      } else if (selectedDays >= 365) { // 1 year
+        lockDuration = 15768000;
+      } else {
+        lockDuration = 0; // No lock
+      }
+      
+      const stakeTx = await stakingContract.stake(amount, lockDuration);
       setTxHash(stakeTx.hash);
       await stakeTx.wait();
 
@@ -899,18 +919,20 @@ export default function StakingPage() {
                   <input
                     type="range"
                     min="0"
-                    max="730"
+                    max="2190"
+                    step="365"
                     value={selectedDays}
                     onChange={(e) => setSelectedDays(parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                     style={{
-                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`
+                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 2190) * 100}%, #374151 ${(selectedDays / 2190) * 100}%, #374151 100%)`
                     }}
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>0 days (1.00x)</span>
-                    <span>365 days ({calculateMultiplier(365).toFixed(2)}x)</span>
-                    <span>730 days (20.00x)</span>
+                    <span>0 days (1x)</span>
+                    <span>1 year (20x)</span>
+                    <span>3 years (30x)</span>
+                    <span>6 years (50x)</span>
                   </div>
                 </div>
                 <div className="bg-gray-700 p-3 rounded-lg">
