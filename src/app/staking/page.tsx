@@ -737,10 +737,11 @@ export default function StakingPage() {
     if (stakingContract && account && !wrongNetwork) {
       const updatePendingRewards = async () => {
         try {
-          console.log("Updating pending rewards...");
+          const timestamp = new Date().toLocaleTimeString();
+          console.log(`[${timestamp}] Updating pending rewards...`);
           const earned = await stakingContract.earned(account);
           const formattedEarned = ethers.formatEther(earned);
-          console.log("New pending rewards:", formattedEarned);
+          console.log(`[${timestamp}] New pending rewards:`, formattedEarned);
           setPendingRewards(formattedEarned);
         } catch (error) {
           console.warn("Error updating pending rewards:", error);
@@ -750,9 +751,9 @@ export default function StakingPage() {
       // Update immediately
       updatePendingRewards();
 
-      // Then update every 30 seconds
-      rewardsUpdateInterval = setInterval(updatePendingRewards, 30000);
-      console.log("Started 30-second rewards update interval");
+      // Then update every 10 seconds for more responsive UI
+      rewardsUpdateInterval = setInterval(updatePendingRewards, 10000);
+      console.log("Started 10-second rewards update interval");
     } else {
       console.log("Not starting rewards interval - missing:", {
         stakingContract: !!stakingContract,
@@ -1312,7 +1313,7 @@ export default function StakingPage() {
                 </button>
               </div>
               <p className="text-gray-400 text-sm">
-                Rate: 1.0 FAET per block (varies with multipliers)
+                Rate: 1.0 FAET per block (~2s), UI updates every 10s
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
