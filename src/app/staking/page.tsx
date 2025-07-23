@@ -242,17 +242,33 @@ export default function StakingPage() {
       const stakes = [];
       for (let i = 0; i < Number(stakeCount); i++) {
         const stakeDetails = await staking.getStakeDetails(userAddress, i);
-        const lockEndBlock = Number(stakeDetails.lockEndBlock);
+        const lockEndBlock = Number(stakeDetails._lockEndBlock);
+        const amount = stakeDetails._amount;
+        const weightedAmount = stakeDetails._weightedAmount;
+        const multiplier = stakeDetails._multiplier;
+
         const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
+        const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
+
+        // Debug logging with actual contract values
+        console.log(`Stake ${i} details:`, {
+          currentBlock,
+          lockEndBlock,
+          blocksRemaining,
+          daysRemaining: Math.ceil(blocksRemaining / 43200),
+          amount: amount.toString(),
+          weightedAmount: weightedAmount.toString(),
+          multiplier: multiplier.toString()
+        });
 
         stakes.push({
           index: i,
-          amount: ethers.formatEther(stakeDetails.amount),
-          weightedAmount: ethers.formatEther(stakeDetails.weightedAmount),
-          multiplier: Number(stakeDetails.multiplier) / 1e18, // Convert from wei to decimal
+          amount: ethers.formatEther(amount),
+          weightedAmount: ethers.formatEther(weightedAmount),
+          multiplier: Number(multiplier) / 1e18, // Convert from wei to decimal
           lockEndBlock: lockEndBlock,
           isUnlocked: isUnlocked,
-          blocksRemaining: isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock),
+          blocksRemaining: blocksRemaining,
         });
       }
       setUserStakes(stakes);
