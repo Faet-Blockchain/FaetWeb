@@ -22,16 +22,10 @@ const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
 const FAET_STAKING_ADDRESS = "0x3A70F607d7E6a0eEDB32B9743CabB1cB3D4844a3";
 
 // Calculate multiplier based on days to match contract logic
+// Contract formula: 1e18 + (daysLocked * 19e18) / 730
+// This gives us 1x at 0 days, 20x at 730 days (2 years)
 const calculateMultiplier = (days: number): number => {
-  if (days >= 2190) { // 6 years
-    return 50;
-  } else if (days >= 1095) { // 3 years  
-    return 30;
-  } else if (days >= 365) { // 1 year
-    return 20;
-  } else {
-    return 1; // No lock
-  }
+  return 1 + (days * 19) / 730;
 };
 
 // Simplified ABI for the functions we need
@@ -43,7 +37,7 @@ const FAET_TOKEN_ABI = [
 ];
 
 const FAET_STAKING_ABI = [
-  "function stake(uint256 amount, uint256 lockDuration)",
+  "function stake(uint256 amount, uint256 daysLocked)",
   "function withdraw(uint256 stakeIndex)",
   "function getReward()",
   "function earned(address account) view returns (uint256)",
@@ -362,20 +356,8 @@ export default function StakingPage() {
       }
 
       console.log("Staking tokens...");
-      // Convert days to lock duration in blocks
-      // Based on contract: 0 days = 0, 1 year = 15_768_000, 3 years = 47_304_000, 6 years = 94_608_000
-      let lockDuration = 0;
-      if (selectedDays >= 2190) { // 6 years
-        lockDuration = 94608000;
-      } else if (selectedDays >= 1095) { // 3 years  
-        lockDuration = 47304000;
-      } else if (selectedDays >= 365) { // 1 year
-        lockDuration = 15768000;
-      } else {
-        lockDuration = 0; // No lock
-      }
-      
-      const stakeTx = await stakingContract.stake(amount, lockDuration);
+      // Contract now takes days directly as the second parameter
+      const stakeTx = await stakingContract.stake(amount, selectedDays);
       setTxHash(stakeTx.hash);
       await stakeTx.wait();
 
@@ -919,22 +901,22 @@ export default function StakingPage() {
                   <input
                     type="range"
                     min="0"
-                    max="2190"
-                    step="365"
+                    max="730"
+                    step="1"
                     value={selectedDays}
                     onChange={(e) => setSelectedDays(parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
                     style={{
-                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 2190) * 100}%, #374151 ${(selectedDays / 2190) * 100}%, #374151 100%)`
+                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`
                     }}
                   />
                   <div className="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>0 days (1x)</span>
-                    <span>1 year (20x)</span>
-                    <span>3 years (30x)</span>
-                    <span>6 years (50x)</span>
+                    <span>0 days (1.00x)</span>
+                    <span>180 days (5.68x)</span>
+                    <span>365 days (10.49x)</span>
+                    <span>730 days (20.00x)</span>
                   </div>
-                </div>
+                </div></div>
                 <div className="bg-gray-700 p-3 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-300">Multiplier:</span>
@@ -945,7 +927,7 @@ export default function StakingPage() {
                   <div className="flex justify-between items-center mt-1">
                     <span className="text-sm text-gray-300">Lock Period:</span>
                     <span className="text-sm text-blue-400">
-                      {selectedDays === 0 ? "No Lock" : `${selectedDays} days (~${(selectedDays * 43200).toLocaleString()} blocks)`}
+                      {selectedDays === 0 ? "No Lock" : `${selectedDays} days`}
                     </span>
                   </div>
                 </div>
