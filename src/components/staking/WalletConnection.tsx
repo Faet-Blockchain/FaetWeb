@@ -260,26 +260,26 @@ const WalletConnection = ({
                         signer
                       );
 
-                      // Test Character NFT contract setup (to check ownership)
-                      const testCharacterABI = [
+                      // Founder's Pass NFT contract setup (to check ownership)
+                      const foundersPassABI = [
                         "function balanceOf(address owner) view returns (uint256)",
                         "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)"
                       ];
 
-                      const testCharacterContract = new ethers.Contract(
-                        "0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12", // Test Character NFT contract
-                        testCharacterABI,
+                      const foundersPassContract = new ethers.Contract(
+                        "0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D", // Founder's Pass NFT contract
+                        foundersPassABI,
                         signer
                       );
 
-                      console.log("📋 Checking Test Character NFT balance...");
+                      console.log("📋 Checking Founder's Pass NFT balance...");
 
-                      // Check if user owns any Test Character NFTs
-                      const nftBalance = await testCharacterContract.balanceOf(account);
-                      console.log(`User owns ${nftBalance} Test Character NFTs`);
+                      // Check if user owns any Founder's Pass NFTs
+                      const nftBalance = await foundersPassContract.balanceOf(account);
+                      console.log(`User owns ${nftBalance} Founder's Pass NFTs`);
 
                       if (nftBalance === 0n) {
-                        alert("❌ No Test Character NFTs found in your wallet.\n\nYou need to own at least one Test Character NFT to claim the airdrop.");
+                        alert("❌ No Founder's Pass NFTs found in your wallet.\n\nYou need to own at least one Founder's Pass NFT to claim the airdrop.");
                         return;
                       }
 
@@ -287,14 +287,14 @@ const WalletConnection = ({
                       const ownedTokenIds = [];
                       for (let i = 0; i < Number(nftBalance); i++) {
                         try {
-                          const tokenId = await testCharacterContract.tokenOfOwnerByIndex(account, i);
+                          const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
                           ownedTokenIds.push(Number(tokenId));
                         } catch (error) {
                           console.log(`Could not get token at index ${i}:`, error);
                         }
                       }
 
-                      console.log("Owned Test Character token IDs:", ownedTokenIds);
+                      console.log("Owned Founder's Pass token IDs:", ownedTokenIds);
 
                       // Check which of the owned tokens are claimable via the FAET token contract
                       const claimableTokens = [];
@@ -310,7 +310,7 @@ const WalletConnection = ({
                       }
 
                       if (claimableTokens.length === 0) {
-                        alert("❌ No claimable airdrop tokens found.\n\nYou need to own a Test Character NFT with unclaimed tokens to use this feature.");
+                        alert("❌ No claimable airdrop tokens found.\n\nYou need to own a Founder's Pass NFT with unclaimed tokens to use this feature.");
                         return;
                       }
 
@@ -334,7 +334,7 @@ const WalletConnection = ({
                       console.log("Transaction confirmed:", receipt);
 
                       // Show success message
-                      alert(`🎉 Airdrop claimed successfully!\n\nTest Character tokens claimed: ${claimableTokens.length}\nTransaction: ${tx.hash}`);
+                      alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.length}\nTransaction: ${tx.hash}`);
 
                     } catch (error: any) {
                       console.error("Error claiming airdrop:", error);
@@ -344,7 +344,7 @@ const WalletConnection = ({
                       } else if (error?.code === -32002) {
                         alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
                       } else if (error?.reason?.includes("Not claimable") || error?.message?.includes("Not claimable")) {
-                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Test Character NFT\n- The token has already been claimed\n- The token ID is invalid");
+                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid");
                       } else if (error?.reason?.includes("paused") || error?.message?.includes("paused")) {
                         alert("❌ Airdrop claiming is currently paused by the contract administrators.");
                       } else {
