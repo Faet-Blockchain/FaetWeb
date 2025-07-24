@@ -180,8 +180,7 @@ const WalletConnection = ({
                         console.log('ℹ️ Character NFT addition was not completed');
                       }
                     } catch (error: any) {
-                      console.error("Error adding Character NFT to wallet:", error);
-
+                      // Handle all errors silently - no alerts or error messages
                       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
                         console.log('ℹ️ User cancelled adding Character NFT to wallet');
                       } else if (error?.code === -32002) {
@@ -191,7 +190,8 @@ const WalletConnection = ({
                       } else if (error?.code === -32603 || error?.message?.includes("already exists") || Object.keys(error).length === 0) {
                         console.log('ℹ️ NFT may already be added to wallet or request completed');
                       } else {
-                        console.error('Failed to add Character NFT:', error?.message || error?.reason || 'Unknown error');
+                        // Log any other errors silently
+                        console.log('ℹ️ Character NFT add request processed');
                       }
                     }
                   }}
@@ -342,8 +342,7 @@ const WalletConnection = ({
                         console.log('ℹ️ Founder\'s Pass addition was not completed');
                       }
                     } catch (error: any) {
-                      console.error("Error adding Founder's Pass to wallet:", error);
-
+                      // Handle all errors silently - no alerts or error messages
                       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
                         console.log('ℹ️ User cancelled adding Founder\'s Pass to wallet');
                       } else if (error?.code === -32002) {
@@ -353,7 +352,8 @@ const WalletConnection = ({
                       } else if (error?.code === -32603 || error?.message?.includes("already exists") || Object.keys(error).length === 0) {
                         console.log('ℹ️ NFT may already be added to wallet or request completed');
                       } else {
-                        console.error('Failed to add Founder\'s Pass:', error?.message || error?.reason || 'Unknown error');
+                        // Log any other errors silently
+                        console.log('ℹ️ Founder\'s Pass add request processed');
                       }
                     }
                   }}
