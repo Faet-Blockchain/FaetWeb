@@ -165,42 +165,53 @@ const WalletConnection = ({
                     }
 
                     try {
-                      console.log("📝 Requesting to add Test Character NFT to MetaMask...");
+                      console.log("📝 Attempting to add Test Character NFTs to MetaMask...");
                       
-                      const wasAdded = await window.ethereum.request({
-                        method: 'wallet_watchAsset',
-                        params: {
-                          type: 'ERC721',
-                          options: {
-                            address: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
-                            tokenId: '1',
-                          },
-                        },
-                      });
+                      let successCount = 0;
+                      let totalAttempts = 0;
+                      
+                      // Try to add multiple token IDs (1-10) for Character NFTs
+                      for (let tokenId = 1; tokenId <= 10; tokenId++) {
+                        try {
+                          totalAttempts++;
+                          const wasAdded = await window.ethereum.request({
+                            method: 'wallet_watchAsset',
+                            params: {
+                              type: 'ERC721',
+                              options: {
+                                address: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
+                                tokenId: tokenId.toString(),
+                              },
+                            },
+                          });
 
-                      if (wasAdded) {
-                        console.log('✅ Test Character NFT successfully added to wallet');
-                      } else {
-                        console.log('ℹ️ Character NFT addition was not completed');
+                          if (wasAdded) {
+                            successCount++;
+                            console.log(`✅ Test Character NFT #${tokenId} successfully added to wallet`);
+                          }
+                          
+                          // Small delay between requests to avoid overwhelming MetaMask
+                          await new Promise(resolve => setTimeout(resolve, 100));
+                        } catch (error: any) {
+                          if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                            console.log(`ℹ️ User cancelled adding Character NFT #${tokenId}`);
+                            break; // Stop if user cancels
+                          } else if (error?.code === -32002) {
+                            console.log(`ℹ️ Request for Character NFT #${tokenId} already pending`);
+                          } else if (error?.code === -32603 || error?.message?.includes("already exists")) {
+                            console.log(`ℹ️ Character NFT #${tokenId} may already be in wallet`);
+                          }
+                        }
+                      }
+                      
+                      if (successCount === 0) {
                         setCharacterNftError("No new NFTs found");
+                      } else {
+                        console.log(`✅ Successfully added ${successCount} Character NFTs to wallet`);
                       }
                     } catch (error: any) {
-                      // Handle all errors silently - no alerts or error messages
-                      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
-                        console.log('ℹ️ User cancelled adding Character NFT to wallet');
-                      } else if (error?.code === -32002) {
-                        console.log('ℹ️ Request already pending in MetaMask');
-                      } else if (error?.code === -32601 || error?.message?.includes("not supported")) {
-                        console.log('ℹ️ MetaMask version doesn\'t support adding NFTs automatically');
-                        setCharacterNftError("No new NFTs found");
-                      } else if (error?.code === -32603 || error?.message?.includes("already exists") || Object.keys(error).length === 0) {
-                        console.log('ℹ️ NFT may already be added to wallet or request completed');
-                        setCharacterNftError("No new NFTs found");
-                      } else {
-                        // Log any other errors silently
-                        console.log('ℹ️ Character NFT add request processed');
-                        setCharacterNftError("No new NFTs found");
-                      }
+                      console.log('ℹ️ Character NFT add request completed');
+                      setCharacterNftError("No new NFTs found");
                     }
                   }}
                   disabled={!account}
@@ -336,42 +347,53 @@ const WalletConnection = ({
                     }
 
                     try {
-                      console.log("📝 Requesting to add Test Founder's Pass to MetaMask...");
+                      console.log("📝 Attempting to add Test Founder's Pass NFTs to MetaMask...");
                       
-                      const wasAdded = await window.ethereum.request({
-                        method: 'wallet_watchAsset',
-                        params: {
-                          type: 'ERC721',
-                          options: {
-                            address: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
-                            tokenId: '1',
-                          },
-                        },
-                      });
+                      let successCount = 0;
+                      let totalAttempts = 0;
+                      
+                      // Try to add multiple token IDs (1-150) for Founder's Pass
+                      for (let tokenId = 1; tokenId <= 150; tokenId++) {
+                        try {
+                          totalAttempts++;
+                          const wasAdded = await window.ethereum.request({
+                            method: 'wallet_watchAsset',
+                            params: {
+                              type: 'ERC721',
+                              options: {
+                                address: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
+                                tokenId: tokenId.toString(),
+                              },
+                            },
+                          });
 
-                      if (wasAdded) {
-                        console.log('✅ Test Founder\'s Pass successfully added to wallet');
-                      } else {
-                        console.log('ℹ️ Founder\'s Pass addition was not completed');
+                          if (wasAdded) {
+                            successCount++;
+                            console.log(`✅ Test Founder's Pass #${tokenId} successfully added to wallet`);
+                          }
+                          
+                          // Small delay between requests to avoid overwhelming MetaMask
+                          await new Promise(resolve => setTimeout(resolve, 100));
+                        } catch (error: any) {
+                          if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                            console.log(`ℹ️ User cancelled adding Founder's Pass #${tokenId}`);
+                            break; // Stop if user cancels
+                          } else if (error?.code === -32002) {
+                            console.log(`ℹ️ Request for Founder's Pass #${tokenId} already pending`);
+                          } else if (error?.code === -32603 || error?.message?.includes("already exists")) {
+                            console.log(`ℹ️ Founder's Pass #${tokenId} may already be in wallet`);
+                          }
+                        }
+                      }
+                      
+                      if (successCount === 0) {
                         setFoundersPassError("No new NFTs found");
+                      } else {
+                        console.log(`✅ Successfully added ${successCount} Founder's Pass NFTs to wallet`);
                       }
                     } catch (error: any) {
-                      // Handle all errors silently - no alerts or error messages
-                      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
-                        console.log('ℹ️ User cancelled adding Founder\'s Pass to wallet');
-                      } else if (error?.code === -32002) {
-                        console.log('ℹ️ Request already pending in MetaMask');
-                      } else if (error?.code === -32601 || error?.message?.includes("not supported")) {
-                        console.log('ℹ️ MetaMask version doesn\'t support adding NFTs automatically');
-                        setFoundersPassError("No new NFTs found");
-                      } else if (error?.code === -32603 || error?.message?.includes("already exists") || Object.keys(error).length === 0) {
-                        console.log('ℹ️ NFT may already be added to wallet or request completed');
-                        setFoundersPassError("No new NFTs found");
-                      } else {
-                        // Log any other errors silently
-                        console.log('ℹ️ Founder\'s Pass add request processed');
-                        setFoundersPassError("No new NFTs found");
-                      }
+                      console.log('ℹ️ Founder\'s Pass add request completed');
+                      setFoundersPassError("No new NFTs found");
                     }
                   }}
                   disabled={!account}
