@@ -248,10 +248,12 @@ const WalletConnection = ({
                       // FAET Token contract setup (where the claim functions are)
                       const faetTokenABI = [
                         "function claim(uint256 tokenId)",
-                        "function batchClaim(uint256[] tokenIds)",
+                        "function batchClaim(uint256[] calldata tokenIds)",
                         "function canClaim(address user, uint256 tokenId) view returns (bool)",
                         "function isClaimable(uint256 tokenId) view returns (bool)",
-                        "function claimed(uint256 tokenId) view returns (bool)"
+                        "function claimed(uint256 tokenId) view returns (bool)",
+                        "function foundersPassNFT() view returns (address)",
+                        "function PASS_COUNT() view returns (uint256)"
                       ];
 
                       const faetTokenContract = new ethers.Contract(
@@ -263,7 +265,8 @@ const WalletConnection = ({
                       // Founder's Pass NFT contract setup (to check ownership)
                       const foundersPassABI = [
                         "function balanceOf(address owner) view returns (uint256)",
-                        "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)"
+                        "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
+                        "function ownerOf(uint256 tokenId) view returns (address)"
                       ];
 
                       const foundersPassContract = new ethers.Contract(
@@ -274,47 +277,90 @@ const WalletConnection = ({
 
                       console.log("📋 Checking Founder's Pass NFT balance...");
 
+                      // Verify the contracts are connected properly
+                      const nftAddressFromContract = await faetTokenContract.foundersPassNFT();
+                      console.log("NFT address from FAET contract:", nftAddressFromContract);
+                      console.log("Expected NFT address:", "0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D");
+
                       // Check if user owns any Founder's Pass NFTs
                       const nftBalance = await foundersPassContract.balanceOf(account);
-                      console.log(`User owns ${nftBalance} Founder's Pass NFTs`);
+                      console.log(`User owns ${nftBalance.toString()} Founder's Pass NFTs`);
 
                       if (nftBalance === 0n) {
                         alert("❌ No Founder's Pass NFTs found in your wallet.\n\nYou need to own at least one Founder's Pass NFT to claim the airdrop.");
                         return;
                       }
 
-                      // Get all token IDs owned by user
+                      // Get all token IDs owned by user using tokenOfOwnerByIndex
                       const ownedTokenIds = [];
                       for (let i = 0; i < Number(nftBalance); i++) {
                         try {
                           const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
                           ownedTokenIds.push(Number(tokenId));
+                          console.log(`Found owned token ID: ${tokenId}`);
                         } catch (error) {
                           console.log(`Could not get token at index ${i}:`, error);
+                          // If tokenOfOwnerByIndex fails, try alternative method
+                          // Check tokens 0-149 individually
+                          const passCount = await faetTokenContract.PASS_COUNT();
+                          for (let tokenId = 0; tokenId < Number(passCount); tokenId++) {
+                            try {
+                              const owner = await foundersPassContract.ownerOf(tokenId);
+                              if (owner.toLowerCase() === account.toLowerCase()) {
+                                ownedTokenIds.push(tokenId);
+                                console.log(`Found owned token ID via direct check: ${tokenId}`);
+                              }
+                            } catch (ownerError) {
+                              // Token doesn't exist or other error, continue
+                            }
+                          }
+                          break; // Exit the tokenOfOwnerByIndex loop since it's not working
                         }
                       }
 
-                      console.log("Owned Founder's Pass token IDs:", ownedTokenIds);
+                      console.log("All owned Founder's Pass token IDs:", ownedTokenIds);
 
-                      // Check which of the owned tokens are claimable via the FAET token contract
+                      if (ownedTokenIds.length === 0) {
+                        alert("❌ Could not retrieve your Founder's Pass NFT token IDs.\n\nPlease try again or contact support.");
+                        return;
+                      }
+
+                      // Check which of the owned tokens are claimable
                       const claimableTokens = [];
+                      const alreadyClaimedTokens = [];
+                      
                       for (const tokenId of ownedTokenIds) {
                         try {
+                          // Check if already claimed
+                          const isClaimed = await faetTokenContract.claimed(tokenId);
+                          if (isClaimed) {
+                            alreadyClaimedTokens.push(tokenId);
+                            continue;
+                          }
+
+                          // Check if claimable
                           const canClaim = await faetTokenContract.canClaim(account, tokenId);
+                          console.log(`Token ${tokenId}: canClaim = ${canClaim}, claimed = ${isClaimed}`);
+                          
                           if (canClaim) {
                             claimableTokens.push(tokenId);
                           }
                         } catch (error) {
-                          console.log(`Could not check claimability for token ${tokenId}:`, error);
+                          console.log(`Error checking claimability for token ${tokenId}:`, error);
                         }
                       }
 
+                      console.log(`Claimable tokens: ${claimableTokens}`);
+                      console.log(`Already claimed tokens: ${alreadyClaimedTokens}`);
+
                       if (claimableTokens.length === 0) {
-                        alert("❌ No claimable airdrop tokens found.\n\nYou need to own a Founder's Pass NFT with unclaimed tokens to use this feature.");
+                        if (alreadyClaimedTokens.length > 0) {
+                          alert(`❌ All your Founder's Pass NFTs have already been claimed.\n\nAlready claimed token IDs: ${alreadyClaimedTokens.join(', ')}`);
+                        } else {
+                          alert("❌ No claimable airdrop tokens found.\n\nThis could mean:\n- The tokens have already been claimed\n- There's an issue with the contract\n- The claiming period has ended");
+                        }
                         return;
                       }
-
-                      console.log(`Found ${claimableTokens.length} claimable tokens:`, claimableTokens);
 
                       // Use batch claim if multiple tokens, single claim if one
                       let tx;
@@ -322,33 +368,39 @@ const WalletConnection = ({
                         console.log(`Claiming single token ID: ${claimableTokens[0]}`);
                         tx = await faetTokenContract.claim(claimableTokens[0]);
                       } else {
-                        console.log(`Batch claiming ${claimableTokens.length} tokens`);
+                        console.log(`Batch claiming ${claimableTokens.length} tokens:`, claimableTokens);
                         tx = await faetTokenContract.batchClaim(claimableTokens);
                       }
 
                       console.log("Transaction submitted:", tx.hash);
-                      alert(`🔄 Transaction submitted!\n\nHash: ${tx.hash}\n\nWaiting for confirmation...`);
+                      alert(`🔄 Transaction submitted!\n\nHash: ${tx.hash}\n\nClaiming ${claimableTokens.length} Founder's Pass token(s)\nWaiting for confirmation...`);
 
                       // Wait for transaction confirmation
                       const receipt = await tx.wait();
                       console.log("Transaction confirmed:", receipt);
 
                       // Show success message
-                      alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.length}\nTransaction: ${tx.hash}`);
+                      alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.length}\nToken IDs: ${claimableTokens.join(', ')}\nTransaction: ${tx.hash}`);
 
                     } catch (error: any) {
                       console.error("Error claiming airdrop:", error);
 
                       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
                         console.log('ℹ️ User cancelled airdrop claim transaction');
+                        alert("ℹ️ Transaction cancelled by user.");
                       } else if (error?.code === -32002) {
                         alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
-                      } else if (error?.reason?.includes("Not claimable") || error?.message?.includes("Not claimable")) {
-                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid");
+                      } else if (error?.reason?.includes("Not claimable") || error?.message?.includes("Not claimable") || error?.message?.includes("FAET: Not claimable")) {
+                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid\n- The contract is paused");
                       } else if (error?.reason?.includes("paused") || error?.message?.includes("paused")) {
                         alert("❌ Airdrop claiming is currently paused by the contract administrators.");
+                      } else if (error?.message?.includes("insufficient funds")) {
+                        alert("❌ Insufficient funds for gas fees. Please add more ETH to your wallet.");
+                      } else if (error?.code === -32603) {
+                        alert("❌ Internal JSON-RPC error. This might be a network issue. Please try again.");
                       } else {
-                        alert(`❌ Failed to claim airdrop:\n\n${error?.reason || error?.message || "Unknown error occurred"}`);
+                        const errorMsg = error?.reason || error?.message || "Unknown error occurred";
+                        alert(`❌ Failed to claim airdrop:\n\n${errorMsg}\n\nPlease check the console for more details.`);
                       }
                     }
                   }}
