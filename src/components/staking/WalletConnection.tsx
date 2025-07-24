@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
@@ -203,6 +202,100 @@ const WalletConnection = ({
                   Claim your exclusive founder rewards
                 </p>
                 <button
+                  onClick={async () => {
+                    if (!account || typeof window.ethereum === "undefined") return;
+
+                    try {
+                      console.log("🎁 Attempting to claim founder's airdrop...");
+
+                      // Initialize web3 provider and signer
+                      const { ethers } = await import('ethers');
+                      const provider = new ethers.BrowserProvider(window.ethereum);
+                      const signer = await provider.getSigner();
+
+                      // FAET Token contract address and ABI
+                      const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
+                      const FAET_TOKEN_ABI = [
+                        "function claim(uint256 tokenId)",
+                        "function batchClaim(uint256[] calldata tokenIds)",
+                        "function isClaimable(uint256 tokenId) view returns (bool)",
+                        "function canClaim(address user, uint256 tokenId) view returns (bool)",
+                        "function claimed(uint256 tokenId) view returns (bool)",
+                        "function balanceOf(address owner) view returns (uint256)",
+                        "event PassClaimed(address indexed claimer, uint256 indexed tokenId)"
+                      ];
+
+                      // Create contract instance
+                      const faetContract = new ethers.Contract(FAET_TOKEN_ADDRESS, FAET_TOKEN_ABI, signer);
+
+                      // Check user's balance before claim
+                      const balanceBefore = await faetContract.balanceOf(account);
+                      console.log("Balance before claim:", ethers.formatEther(balanceBefore), "FAET");
+
+                      // Try to find claimable tokens (checking first 150 token IDs for Founder's Pass)
+                      const claimableTokens = [];
+                      for (let tokenId = 0; tokenId < 150; tokenId++) {
+                        try {
+                          const canClaim = await faetContract.canClaim(account, tokenId);
+                          if (canClaim) {
+                            claimableTokens.push(tokenId);
+                          }
+                        } catch (error) {
+                          // Skip tokens that can't be checked
+                          continue;
+                        }
+                      }
+
+                      if (claimableTokens.length === 0) {
+                        alert("❌ No claimable airdrop tokens found.\n\nYou need to own a Founder's Pass NFT with unclaimed tokens to use this feature.");
+                        return;
+                      }
+
+                      console.log(`Found ${claimableTokens.length} claimable tokens:`, claimableTokens);
+
+                      // Use batch claim if multiple tokens, single claim if one
+                      let tx;
+                      if (claimableTokens.length === 1) {
+                        console.log(`Claiming single token ID: ${claimableTokens[0]}`);
+                        tx = await faetContract.claim(claimableTokens[0]);
+                      } else {
+                        console.log(`Batch claiming ${claimableTokens.length} tokens`);
+                        tx = await faetContract.batchClaim(claimableTokens);
+                      }
+
+                      console.log("Transaction submitted:", tx.hash);
+                      alert(`🔄 Transaction submitted!\n\nHash: ${tx.hash}\n\nWaiting for confirmation...`);
+
+                      // Wait for transaction confirmation
+                      const receipt = await tx.wait();
+                      console.log("Transaction confirmed:", receipt);
+
+                      // Check balance after claim
+                      const balanceAfter = await faetContract.balanceOf(account);
+                      const tokensReceived = balanceAfter - balanceBefore;
+
+                      console.log("Balance after claim:", ethers.formatEther(balanceAfter), "FAET");
+                      console.log("Tokens received:", ethers.formatEther(tokensReceived), "FAET");
+
+                      // Show success message
+                      alert(`🎉 Airdrop claimed successfully!\n\nTokens claimed: ${claimableTokens.length} Founder's Pass(es)\nFAET received: ${ethers.formatEther(tokensReceived)}\n\nTransaction: ${tx.hash}`);
+
+                    } catch (error: any) {
+                      console.error("❌ Error claiming airdrop:", error);
+
+                      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                        console.log('ℹ️ User cancelled airdrop claim transaction');
+                      } else if (error?.code === -32002) {
+                        alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
+                      } else if (error?.reason?.includes("Not claimable") || error?.message?.includes("Not claimable")) {
+                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid");
+                      } else if (error?.reason?.includes("paused") || error?.message?.includes("paused")) {
+                        alert("❌ Airdrop claiming is currently paused by the contract administrators.");
+                      } else {
+                        alert(`❌ Failed to claim airdrop:\n\n${error?.reason || error?.message || "Unknown error occurred"}`);
+                      }
+                    }
+                  }}
                   disabled={!account}
                   className={`font-bold py-2 px-6 rounded-lg transition-colors mb-2 ${
                     !account
