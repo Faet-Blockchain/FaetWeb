@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 
@@ -34,7 +33,9 @@ const StakingForm = ({
 }: StakingFormProps) => {
   return (
     <div className="bg-gray-800 p-6 rounded-lg mb-6">
-      <h3 className="text-xl font-nocturne-serif-bold mb-4">Stake FAET Tokens</h3>
+      <h3 className="text-xl font-nocturne-serif-bold mb-4">
+        Stake FAET Tokens
+      </h3>
 
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">
@@ -50,7 +51,7 @@ const StakingForm = ({
             onChange={(e) => onSelectedDaysChange(parseInt(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
             style={{
-              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`
+              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`,
             }}
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -78,9 +79,7 @@ const StakingForm = ({
 
       <div className="flex flex-col gap-4">
         <div className="flex justify-between">
-          <label className="block text-sm font-medium">
-            Amount to Stake
-          </label>
+          <label className="block text-sm font-medium">Amount to Stake</label>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
@@ -134,8 +133,7 @@ const StakingForm = ({
         </div>
       </div>
       <p className="text-gray-400 text-sm mt-2">
-        Reward rate: 1.0 FAET per block, 2-second blocks. Higher
-        multipliers = more rewards!
+        Staking weights increase with lock time, up to 20x for 730 days.
       </p>
 
       {txHash && (
