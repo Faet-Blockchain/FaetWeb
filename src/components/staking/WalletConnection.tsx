@@ -122,7 +122,7 @@ const WalletConnection = ({
               )}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
               <div className="bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-4">Token Staking</h3>
                 <p className="text-gray-300 mb-4">
@@ -153,6 +153,23 @@ const WalletConnection = ({
                   className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg transition-colors"
                 >
                   Coming Soon
+                </button>
+              </div>
+
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4">Claim Founder's Airdrop</h3>
+                <p className="text-gray-300 mb-4">
+                  Claim your exclusive founder rewards
+                </p>
+                <button
+                  disabled={!account}
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                    !account
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700 text-white"
+                  }`}
+                >
+                  Claim Airdrop
                 </button>
               </div>
             </div>
