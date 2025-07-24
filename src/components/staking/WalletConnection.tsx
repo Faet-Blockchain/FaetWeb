@@ -245,36 +245,55 @@ const WalletConnection = ({
                       const provider = new ethers.BrowserProvider(window.ethereum);
                       const signer = await provider.getSigner();
 
-                      // FAET Token contract address and ABI
-                      const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
-                      const FAET_TOKEN_ABI = [
+                      // Founder's Pass contract address and ABI
+                      const FOUNDERS_PASS_ADDRESS = "0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D";
+                      const FOUNDERS_PASS_ABI = [
                         "function claim(uint256 tokenId)",
                         "function batchClaim(uint256[] calldata tokenIds)",
                         "function isClaimable(uint256 tokenId) view returns (bool)",
                         "function canClaim(address user, uint256 tokenId) view returns (bool)",
                         "function claimed(uint256 tokenId) view returns (bool)",
                         "function balanceOf(address owner) view returns (uint256)",
+                        "function ownerOf(uint256 tokenId) view returns (address)",
+                        "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
                         "event PassClaimed(address indexed claimer, uint256 indexed tokenId)"
                       ];
 
                       // Create contract instance
-                      const faetContract = new ethers.Contract(FAET_TOKEN_ADDRESS, FAET_TOKEN_ABI, signer);
+                      const foundersPassContract = new ethers.Contract(FOUNDERS_PASS_ADDRESS, FOUNDERS_PASS_ABI, signer);
 
-                      // Check user's balance before claim
-                      const balanceBefore = await faetContract.balanceOf(account);
-                      console.log("Balance before claim:", ethers.formatEther(balanceBefore), "FAET");
+                      // Get user's Founder's Pass NFTs
+                      const nftBalance = await foundersPassContract.balanceOf(account);
+                      console.log("User owns", nftBalance.toString(), "Founder's Pass NFTs");
 
-                      // Try to find claimable tokens (checking first 150 token IDs for Founder's Pass)
-                      const claimableTokens = [];
-                      for (let tokenId = 0; tokenId < 150; tokenId++) {
+                      if (nftBalance === 0n) {
+                        alert("❌ No Founder's Pass NFTs found in your wallet.\n\nYou need to own at least one Founder's Pass NFT to claim the airdrop.");
+                        return;
+                      }
+
+                      // Get all token IDs owned by user
+                      const ownedTokenIds = [];
+                      for (let i = 0; i < Number(nftBalance); i++) {
                         try {
-                          const canClaim = await faetContract.canClaim(account, tokenId);
+                          const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
+                          ownedTokenIds.push(Number(tokenId));
+                        } catch (error) {
+                          console.log(`Could not get token at index ${i}:`, error);
+                        }
+                      }
+
+                      console.log("Owned Founder's Pass token IDs:", ownedTokenIds);
+
+                      // Check which of the owned tokens are claimable
+                      const claimableTokens = [];
+                      for (const tokenId of ownedTokenIds) {
+                        try {
+                          const canClaim = await foundersPassContract.canClaim(account, tokenId);
                           if (canClaim) {
                             claimableTokens.push(tokenId);
                           }
                         } catch (error) {
-                          // Skip tokens that can't be checked
-                          continue;
+                          console.log(`Could not check claimability for token ${tokenId}:`, error);
                         }
                       }
 
@@ -289,10 +308,10 @@ const WalletConnection = ({
                       let tx;
                       if (claimableTokens.length === 1) {
                         console.log(`Claiming single token ID: ${claimableTokens[0]}`);
-                        tx = await faetContract.claim(claimableTokens[0]);
+                        tx = await foundersPassContract.claim(claimableTokens[0]);
                       } else {
                         console.log(`Batch claiming ${claimableTokens.length} tokens`);
-                        tx = await faetContract.batchClaim(claimableTokens);
+                        tx = await foundersPassContract.batchClaim(claimableTokens);
                       }
 
                       console.log("Transaction submitted:", tx.hash);
@@ -302,15 +321,8 @@ const WalletConnection = ({
                       const receipt = await tx.wait();
                       console.log("Transaction confirmed:", receipt);
 
-                      // Check balance after claim
-                      const balanceAfter = await faetContract.balanceOf(account);
-                      const tokensReceived = balanceAfter - balanceBefore;
-
-                      console.log("Balance after claim:", ethers.formatEther(balanceAfter), "FAET");
-                      console.log("Tokens received:", ethers.formatEther(tokensReceived), "FAET");
-
                       // Show success message
-                      alert(`🎉 Airdrop claimed successfully!\n\nTokens claimed: ${claimableTokens.length} Founder's Pass(es)\nFAET received: ${ethers.formatEther(tokensReceived)}\n\nTransaction: ${tx.hash}`);
+                      alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.join(', ')}\n\nTransaction: ${tx.hash}`);
 
                     } catch (error: any) {
                       console.error("❌ Error claiming airdrop:", error);
