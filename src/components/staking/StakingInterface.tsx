@@ -63,9 +63,12 @@ const StakingInterface = ({
       className="bg-gray-900 p-8 rounded-lg border border-gray-700 mt-6"
     >
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-nocturne-serif-bold">
-          Token Staking (Testnet)
-        </h2>
+        <button
+          onClick={onBackToOverview}
+          className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+        >
+          ← Back to Overview
+        </button>
         <button
           onClick={async () => {
             if (typeof window.ethereum !== "undefined") {
@@ -110,6 +113,12 @@ const StakingInterface = ({
         >
           Add Test Token to Metamask
         </button>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-2xl font-nocturne-serif-bold">
+          Token Staking (Testnet)
+        </h2>
       </div>
 
       {/* Contract Addresses */}
@@ -174,14 +183,7 @@ const StakingInterface = ({
         onClaimRewards={onClaimRewards}
       />
 
-      <div className="mt-6 text-center">
-        <button
-          onClick={onBackToOverview}
-          className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
-        >
-          Back to Overview
-        </button>
-      </div>
+      
     </motion.div>
   );
 };

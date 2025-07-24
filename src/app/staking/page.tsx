@@ -944,7 +944,7 @@ export default function StakingPage() {
           />
         )}
 
-        <StakingFeatures />
+        {!showTokenStaking && <StakingFeatures />}
       </div>
     </div>
   );
