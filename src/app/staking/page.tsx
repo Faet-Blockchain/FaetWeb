@@ -906,19 +906,21 @@ export default function StakingPage() {
           staking on the FAET platform.
         </motion.p>
 
-        <WalletConnection
-          account={account}
-          isConnecting={isConnecting}
-          wrongNetwork={wrongNetwork}
-          currentChainId={currentChainId}
-          selectedNetwork={selectedNetwork}
-          canAccessStaking={canAccessStaking}
-          onConnect={connectMetaMask}
-          onDisconnect={disconnectWallet}
-          onSwitchNetwork={switchToLiskSepolia}
-          onGoToStaking={handleGoToStaking}
-          onNetworkChange={setSelectedNetwork}
-        />
+        {!showTokenStaking && (
+          <WalletConnection
+            account={account}
+            isConnecting={isConnecting}
+            wrongNetwork={wrongNetwork}
+            currentChainId={currentChainId}
+            selectedNetwork={selectedNetwork}
+            canAccessStaking={canAccessStaking}
+            onConnect={connectMetaMask}
+            onDisconnect={disconnectWallet}
+            onSwitchNetwork={switchToLiskSepolia}
+            onGoToStaking={handleGoToStaking}
+            onNetworkChange={setSelectedNetwork}
+          />
+        )}
 
         {showTokenStaking && canAccessStaking && (
           <StakingInterface
