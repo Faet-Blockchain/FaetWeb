@@ -158,7 +158,7 @@ const WalletConnection = ({
                 <button
                   onClick={async () => {
                     setCharacterNftError(""); // Clear previous error
-                    
+
                     if (typeof window.ethereum === "undefined") {
                       console.error("MetaMask not detected");
                       return;
@@ -166,10 +166,10 @@ const WalletConnection = ({
 
                     try {
                       console.log("📝 Attempting to add Test Character NFTs to MetaMask...");
-                      
+
                       let successCount = 0;
                       let totalAttempts = 0;
-                      
+
                       // Try to add multiple token IDs (1-10) for Character NFTs
                       for (let tokenId = 1; tokenId <= 10; tokenId++) {
                         try {
@@ -189,7 +189,7 @@ const WalletConnection = ({
                             successCount++;
                             console.log(`✅ Test Character NFT #${tokenId} successfully added to wallet`);
                           }
-                          
+
                           // Small delay between requests to avoid overwhelming MetaMask
                           await new Promise(resolve => setTimeout(resolve, 100));
                         } catch (error: any) {
@@ -203,7 +203,7 @@ const WalletConnection = ({
                           }
                         }
                       }
-                      
+
                       if (successCount === 0) {
                         setCharacterNftError("No new NFTs found");
                       } else {
@@ -245,29 +245,41 @@ const WalletConnection = ({
                       const provider = new ethers.BrowserProvider(window.ethereum);
                       const signer = await provider.getSigner();
 
-                      // Founder's Pass contract address and ABI
-                      const FOUNDERS_PASS_ADDRESS = "0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D";
-                      const FOUNDERS_PASS_ABI = [
+                      // FAET Token contract setup (where the claim functions are)
+                      const faetTokenABI = [
                         "function claim(uint256 tokenId)",
-                        "function batchClaim(uint256[] calldata tokenIds)",
-                        "function isClaimable(uint256 tokenId) view returns (bool)",
+                        "function batchClaim(uint256[] tokenIds)",
                         "function canClaim(address user, uint256 tokenId) view returns (bool)",
-                        "function claimed(uint256 tokenId) view returns (bool)",
-                        "function balanceOf(address owner) view returns (uint256)",
-                        "function ownerOf(uint256 tokenId) view returns (address)",
-                        "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
-                        "event PassClaimed(address indexed claimer, uint256 indexed tokenId)"
+                        "function isClaimable(uint256 tokenId) view returns (bool)",
+                        "function claimed(uint256 tokenId) view returns (bool)"
                       ];
 
-                      // Create contract instance
-                      const foundersPassContract = new ethers.Contract(FOUNDERS_PASS_ADDRESS, FOUNDERS_PASS_ABI, signer);
+                      const faetTokenContract = new ethers.Contract(
+                        "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394", // FAET Token contract
+                        faetTokenABI,
+                        signer
+                      );
 
-                      // Get user's Founder's Pass NFTs
-                      const nftBalance = await foundersPassContract.balanceOf(account);
-                      console.log("User owns", nftBalance.toString(), "Founder's Pass NFTs");
+                      // Test Character NFT contract setup (to check ownership)
+                      const testCharacterABI = [
+                        "function balanceOf(address owner) view returns (uint256)",
+                        "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)"
+                      ];
+
+                      const testCharacterContract = new ethers.Contract(
+                        "0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12", // Test Character NFT contract
+                        testCharacterABI,
+                        signer
+                      );
+
+                      console.log("📋 Checking Test Character NFT balance...");
+
+                      // Check if user owns any Test Character NFTs
+                      const nftBalance = await testCharacterContract.balanceOf(account);
+                      console.log(`User owns ${nftBalance} Test Character NFTs`);
 
                       if (nftBalance === 0n) {
-                        alert("❌ No Founder's Pass NFTs found in your wallet.\n\nYou need to own at least one Founder's Pass NFT to claim the airdrop.");
+                        alert("❌ No Test Character NFTs found in your wallet.\n\nYou need to own at least one Test Character NFT to claim the airdrop.");
                         return;
                       }
 
@@ -275,20 +287,20 @@ const WalletConnection = ({
                       const ownedTokenIds = [];
                       for (let i = 0; i < Number(nftBalance); i++) {
                         try {
-                          const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
+                          const tokenId = await testCharacterContract.tokenOfOwnerByIndex(account, i);
                           ownedTokenIds.push(Number(tokenId));
                         } catch (error) {
                           console.log(`Could not get token at index ${i}:`, error);
                         }
                       }
 
-                      console.log("Owned Founder's Pass token IDs:", ownedTokenIds);
+                      console.log("Owned Test Character token IDs:", ownedTokenIds);
 
-                      // Check which of the owned tokens are claimable
+                      // Check which of the owned tokens are claimable via the FAET token contract
                       const claimableTokens = [];
                       for (const tokenId of ownedTokenIds) {
                         try {
-                          const canClaim = await foundersPassContract.canClaim(account, tokenId);
+                          const canClaim = await faetTokenContract.canClaim(account, tokenId);
                           if (canClaim) {
                             claimableTokens.push(tokenId);
                           }
@@ -298,7 +310,7 @@ const WalletConnection = ({
                       }
 
                       if (claimableTokens.length === 0) {
-                        alert("❌ No claimable airdrop tokens found.\n\nYou need to own a Founder's Pass NFT with unclaimed tokens to use this feature.");
+                        alert("❌ No claimable airdrop tokens found.\n\nYou need to own a Test Character NFT with unclaimed tokens to use this feature.");
                         return;
                       }
 
@@ -308,10 +320,10 @@ const WalletConnection = ({
                       let tx;
                       if (claimableTokens.length === 1) {
                         console.log(`Claiming single token ID: ${claimableTokens[0]}`);
-                        tx = await foundersPassContract.claim(claimableTokens[0]);
+                        tx = await faetTokenContract.claim(claimableTokens[0]);
                       } else {
                         console.log(`Batch claiming ${claimableTokens.length} tokens`);
-                        tx = await foundersPassContract.batchClaim(claimableTokens);
+                        tx = await faetTokenContract.batchClaim(claimableTokens);
                       }
 
                       console.log("Transaction submitted:", tx.hash);
@@ -322,17 +334,17 @@ const WalletConnection = ({
                       console.log("Transaction confirmed:", receipt);
 
                       // Show success message
-                      alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.join(', ')}\n\nTransaction: ${tx.hash}`);
+                      alert(`🎉 Airdrop claimed successfully!\n\nTest Character tokens claimed: ${claimableTokens.length}\nTransaction: ${tx.hash}`);
 
                     } catch (error: any) {
-                      console.error("❌ Error claiming airdrop:", error);
+                      console.error("Error claiming airdrop:", error);
 
                       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
                         console.log('ℹ️ User cancelled airdrop claim transaction');
                       } else if (error?.code === -32002) {
                         alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
                       } else if (error?.reason?.includes("Not claimable") || error?.message?.includes("Not claimable")) {
-                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid");
+                        alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Test Character NFT\n- The token has already been claimed\n- The token ID is invalid");
                       } else if (error?.reason?.includes("paused") || error?.message?.includes("paused")) {
                         alert("❌ Airdrop claiming is currently paused by the contract administrators.");
                       } else {
@@ -352,7 +364,7 @@ const WalletConnection = ({
                 <button
                   onClick={async () => {
                     setFoundersPassError(""); // Clear previous error
-                    
+
                     if (typeof window.ethereum === "undefined") {
                       console.error("MetaMask not detected");
                       return;
@@ -360,10 +372,10 @@ const WalletConnection = ({
 
                     try {
                       console.log("📝 Attempting to add Test Founder's Pass NFTs to MetaMask...");
-                      
+
                       let successCount = 0;
                       let totalAttempts = 0;
-                      
+
                       // Try to add multiple token IDs (1-150) for Founder's Pass
                       for (let tokenId = 1; tokenId <= 150; tokenId++) {
                         try {
@@ -383,7 +395,7 @@ const WalletConnection = ({
                             successCount++;
                             console.log(`✅ Test Founder's Pass #${tokenId} successfully added to wallet`);
                           }
-                          
+
                           // Small delay between requests to avoid overwhelming MetaMask
                           await new Promise(resolve => setTimeout(resolve, 100));
                         } catch (error: any) {
@@ -397,7 +409,7 @@ const WalletConnection = ({
                           }
                         }
                       }
-                      
+
                       if (successCount === 0) {
                         setFoundersPassError("No new NFTs found");
                       } else {
