@@ -155,34 +155,45 @@ const WalletConnection = ({
                 </button>
                 <button
                   onClick={async () => {
-                    if (typeof window.ethereum !== "undefined") {
-                      try {
-                        const wasAdded = await window.ethereum.request({
-                          method: 'wallet_watchAsset',
-                          params: {
-                            type: 'ERC721',
-                            options: {
-                              address: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
-                              tokenId: '1',
-                            },
+                    if (typeof window.ethereum === "undefined") {
+                      alert("❌ MetaMask not detected. Please install MetaMask to add NFTs to your wallet.");
+                      return;
+                    }
+
+                    try {
+                      console.log("📝 Requesting to add Test Character NFT to MetaMask...");
+                      
+                      const wasAdded = await window.ethereum.request({
+                        method: 'wallet_watchAsset',
+                        params: {
+                          type: 'ERC721',
+                          options: {
+                            address: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
+                            tokenId: '1',
                           },
-                        });
-                        if (wasAdded) {
-                          console.log('✅ Test Character NFT successfully added to wallet');
-                        } else {
-                          console.log('ℹ️ NFT addition was not completed');
-                        }
-                      } catch (error: any) {
-                        if (error?.code === 4001) {
-                          console.log('ℹ️ User cancelled adding NFT to wallet');
-                        } else if (error?.code === -32002) {
-                          console.log('⚠️ Request already pending in MetaMask');
-                        } else {
-                          console.warn('⚠️ Error adding NFT to wallet:', error?.message || 'Unknown error');
-                        }
+                        },
+                      });
+
+                      if (wasAdded) {
+                        console.log('✅ Test Character NFT successfully added to wallet');
+                        alert("✅ Test Character NFT successfully added to your MetaMask wallet!");
+                      } else {
+                        console.log('ℹ️ Character NFT addition was not completed');
+                        // Don't show alert - user simply chose not to add it
                       }
-                    } else {
-                      console.warn('⚠️ MetaMask not detected');
+                    } catch (error: any) {
+                      console.error("Error adding Character NFT to wallet:", error);
+
+                      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                        console.log('ℹ️ User cancelled adding Character NFT to wallet');
+                        // Don't show alert for user cancellation - it's expected behavior
+                      } else if (error?.code === -32002) {
+                        alert("⚠️ Request already pending in MetaMask. Please check your wallet and complete the pending request.");
+                      } else if (error?.message?.includes("not supported")) {
+                        alert("❌ Your MetaMask version doesn't support adding NFTs automatically. You can manually add the NFT using contract address: 0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12");
+                      } else {
+                        alert(`❌ Failed to add Character NFT to wallet:\n\n${error?.message || "Unknown error occurred"}`);
+                      }
                     }
                   }}
                   disabled={!account}
@@ -307,34 +318,45 @@ const WalletConnection = ({
                 </button>
                 <button
                   onClick={async () => {
-                    if (typeof window.ethereum !== "undefined") {
-                      try {
-                        const wasAdded = await window.ethereum.request({
-                          method: 'wallet_watchAsset',
-                          params: {
-                            type: 'ERC721',
-                            options: {
-                              address: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
-                              tokenId: '1',
-                            },
+                    if (typeof window.ethereum === "undefined") {
+                      alert("❌ MetaMask not detected. Please install MetaMask to add NFTs to your wallet.");
+                      return;
+                    }
+
+                    try {
+                      console.log("📝 Requesting to add Test Founder's Pass to MetaMask...");
+                      
+                      const wasAdded = await window.ethereum.request({
+                        method: 'wallet_watchAsset',
+                        params: {
+                          type: 'ERC721',
+                          options: {
+                            address: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
+                            tokenId: '1',
                           },
-                        });
-                        if (wasAdded) {
-                          console.log('✅ Test Founder\'s Pass successfully added to wallet');
-                        } else {
-                          console.log('ℹ️ NFT addition was not completed');
-                        }
-                      } catch (error: any) {
-                        if (error?.code === 4001) {
-                          console.log('ℹ️ User cancelled adding NFT to wallet');
-                        } else if (error?.code === -32002) {
-                          console.log('⚠️ Request already pending in MetaMask');
-                        } else {
-                          console.warn('⚠️ Error adding NFT to wallet:', error?.message || 'Unknown error');
-                        }
+                        },
+                      });
+
+                      if (wasAdded) {
+                        console.log('✅ Test Founder\'s Pass successfully added to wallet');
+                        alert("✅ Test Founder's Pass successfully added to your MetaMask wallet!");
+                      } else {
+                        console.log('ℹ️ Founder\'s Pass addition was not completed');
+                        // Don't show alert - user simply chose not to add it
                       }
-                    } else {
-                      console.warn('⚠️ MetaMask not detected');
+                    } catch (error: any) {
+                      console.error("Error adding Founder's Pass to wallet:", error);
+
+                      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                        console.log('ℹ️ User cancelled adding Founder\'s Pass to wallet');
+                        // Don't show alert for user cancellation - it's expected behavior
+                      } else if (error?.code === -32002) {
+                        alert("⚠️ Request already pending in MetaMask. Please check your wallet and complete the pending request.");
+                      } else if (error?.message?.includes("not supported")) {
+                        alert("❌ Your MetaMask version doesn't support adding NFTs automatically. You can manually add the NFT using contract address: 0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D");
+                      } else {
+                        alert(`❌ Failed to add Founder's Pass to wallet:\n\n${error?.message || "Unknown error occurred"}`);
+                      }
                     }
                   }}
                   disabled={!account}
