@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 
 type WalletConnectionProps = {
@@ -29,6 +29,8 @@ const WalletConnection = ({
   onGoToStaking,
   onNetworkChange,
 }: WalletConnectionProps) => {
+  const [characterNftError, setCharacterNftError] = useState<string>("");
+  const [foundersPassError, setFoundersPassError] = useState<string>("");
   return (
     <>
       <motion.div
@@ -155,6 +157,8 @@ const WalletConnection = ({
                 </button>
                 <button
                   onClick={async () => {
+                    setCharacterNftError(""); // Clear previous error
+                    
                     if (typeof window.ethereum === "undefined") {
                       console.error("MetaMask not detected");
                       return;
@@ -178,6 +182,7 @@ const WalletConnection = ({
                         console.log('✅ Test Character NFT successfully added to wallet');
                       } else {
                         console.log('ℹ️ Character NFT addition was not completed');
+                        setCharacterNftError("No new NFTs found");
                       }
                     } catch (error: any) {
                       // Handle all errors silently - no alerts or error messages
@@ -187,11 +192,14 @@ const WalletConnection = ({
                         console.log('ℹ️ Request already pending in MetaMask');
                       } else if (error?.code === -32601 || error?.message?.includes("not supported")) {
                         console.log('ℹ️ MetaMask version doesn\'t support adding NFTs automatically');
+                        setCharacterNftError("No new NFTs found");
                       } else if (error?.code === -32603 || error?.message?.includes("already exists") || Object.keys(error).length === 0) {
                         console.log('ℹ️ NFT may already be added to wallet or request completed');
+                        setCharacterNftError("No new NFTs found");
                       } else {
                         // Log any other errors silently
                         console.log('ℹ️ Character NFT add request processed');
+                        setCharacterNftError("No new NFTs found");
                       }
                     }
                   }}
@@ -204,6 +212,9 @@ const WalletConnection = ({
                 >
                   Add Test Character NFT to Metamask
                 </button>
+                {characterNftError && (
+                  <p className="text-red-500 text-xs mt-2">{characterNftError}</p>
+                )}
               </div>
 
               <div className="bg-gray-800 p-6 rounded-lg">
@@ -317,6 +328,8 @@ const WalletConnection = ({
                 </button>
                 <button
                   onClick={async () => {
+                    setFoundersPassError(""); // Clear previous error
+                    
                     if (typeof window.ethereum === "undefined") {
                       console.error("MetaMask not detected");
                       return;
@@ -340,6 +353,7 @@ const WalletConnection = ({
                         console.log('✅ Test Founder\'s Pass successfully added to wallet');
                       } else {
                         console.log('ℹ️ Founder\'s Pass addition was not completed');
+                        setFoundersPassError("No new NFTs found");
                       }
                     } catch (error: any) {
                       // Handle all errors silently - no alerts or error messages
@@ -349,11 +363,14 @@ const WalletConnection = ({
                         console.log('ℹ️ Request already pending in MetaMask');
                       } else if (error?.code === -32601 || error?.message?.includes("not supported")) {
                         console.log('ℹ️ MetaMask version doesn\'t support adding NFTs automatically');
+                        setFoundersPassError("No new NFTs found");
                       } else if (error?.code === -32603 || error?.message?.includes("already exists") || Object.keys(error).length === 0) {
                         console.log('ℹ️ NFT may already be added to wallet or request completed');
+                        setFoundersPassError("No new NFTs found");
                       } else {
                         // Log any other errors silently
                         console.log('ℹ️ Founder\'s Pass add request processed');
+                        setFoundersPassError("No new NFTs found");
                       }
                     }
                   }}
@@ -366,6 +383,9 @@ const WalletConnection = ({
                 >
                   Add Test Founder's Pass to Metamask
                 </button>
+                {foundersPassError && (
+                  <p className="text-red-500 text-xs mt-2">{foundersPassError}</p>
+                )}
               </div>
             </div>
 
