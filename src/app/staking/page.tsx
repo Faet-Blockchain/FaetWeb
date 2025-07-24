@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ethers } from "ethers";
-import WalletConnection from "@/components/staking/WalletConnection";
-import TokenStaking from "@/components/staking/TokenStaking";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 declare global {
   interface Window {
@@ -22,6 +21,14 @@ declare global {
 // Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
 const FAET_STAKING_ADDRESS = "0x9E9444d4dD359666De79B46e6fADF1E97B5c116E";
+
+// Calculate multiplier based on days - linear from 1x to 20x over 730 days
+const calculateMultiplier = (days: number): number => {
+  if (days === 0) return 1.0;
+  if (days >= 730) return 20.0;
+  // Linear interpolation: 1 + (days * 19) / 730
+  return 1 + (days * 19) / 730;
+};
 
 // Simplified ABI for the functions we need
 const FAET_TOKEN_ABI = [
@@ -257,30 +264,30 @@ export default function StakingPage() {
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {
       console.log("Loading real blockchain staking data...");
-
+      
       // Get all Stake events to find unique stakers
       const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
-
+      
       console.log("Fetching Stake events from blockchain...");
       const stakeEvents = await staking.queryFilter(
         staking.filters.Staked(),
         fromBlock,
         'latest'
       );
-
+      
       console.log(`Found ${stakeEvents.length} stake events`);
-
+      
       // Get unique staker addresses from events
       const uniqueStakers = [...new Set(stakeEvents.map(event => event.args?.[0]).filter(Boolean))];
       console.log(`Found ${uniqueStakers.length} unique stakers`);
-
+      
       if (uniqueStakers.length === 0) {
         console.log("No stakers found, using empty data");
         setTopStakers([]);
         setStakingRanges([]);
         return;
       }
-
+      
       // Get current active weight for each staker
       console.log("Fetching current weights for all stakers...");
       const stakerWeights = await Promise.all(
@@ -302,7 +309,7 @@ export default function StakingPage() {
           }
         })
       );
-
+      
       // Filter out zero balances and sort by weight (highest first), take top 10
       const activeStakers = stakerWeights.filter(staker => parseFloat(staker.weight) > 0);
       const sortedStakers = activeStakers
@@ -327,9 +334,9 @@ export default function StakingPage() {
           const weight = parseFloat(staker.weight);
           return weight >= range.min && weight < range.max;
         });
-
+        
         const totalWeight = stakersInRange.reduce((sum, staker) => sum + parseFloat(staker.weight), 0);
-
+        
         return {
           range: range.label,
           count: stakersInRange.length,
@@ -848,7 +855,7 @@ export default function StakingPage() {
         } catch (error) {
           console.error("Error checking existing connection:", error);
           await checkNetwork();
-        }        }
+        }
       }
     };
 
@@ -929,6 +936,27 @@ export default function StakingPage() {
     }
   };
 
+  const copyToClipboard = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      console.log('✅ Address copied to clipboard:', address);
+    } catch (error) {
+      console.warn('⚠️ Failed to copy address to clipboard:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = address;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+  };
+
+  const formatAddress = (address: string): string => {
+    if (!address || address.length < 8) return address;
+    return `${address.slice(0, 5)}...${address.slice(-4)}`;
+  };
+
   return (
     <div className="min-h-screen bg-black text-white pt-20">
       <div className="max-w-6xl mx-auto px-4 py-16">
@@ -952,48 +980,675 @@ export default function StakingPage() {
           staking on the FAET platform.
         </motion.p>
 
-        {!showTokenStaking && (
-          <WalletConnection
-            account={account}
-            isConnecting={isConnecting}
-            wrongNetwork={wrongNetwork}
-            currentChainId={currentChainId}
-            selectedNetwork={selectedNetwork}
-            canAccessStaking={canAccessStaking}
-            onConnect={connectMetaMask}
-            onSwitchNetwork={switchToLiskSepolia}
-            onGoToStaking={handleGoToStaking}
-            onDisconnect={disconnectWallet}
-            onNetworkChange={setSelectedNetwork}
-          />
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: "easeInOut", delay: 0.15 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <label className="text-sm font-medium">Network:</label>
+            <div className="flex bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setSelectedNetwork('mainnet')}
+                disabled={true}
+                className="px-4 py-2 rounded-md text-sm font-medium text-gray-600 cursor-not-allowed"
+              >
+                Mainnet
+              </button>
+              <button
+                onClick={() => setSelectedNetwork('testnet')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  selectedNetwork === 'testnet'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Testnet
+              </button>
+            </div>
+          </div>
+          <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-4">
+            <p className="text-yellow-300 text-sm">
+              ⚠️ <strong>Testnet Only:</strong> Currently, only testnet staking is available. 
+              Mainnet functionality will be enabled in a future update.
+            </p>
+          </div>
+        </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{
+            opacity: showTokenStaking ? 0 : 1,
+            y: showTokenStaking ? -20 : 0,
+            height: showTokenStaking ? 0 : "auto",
+          }}
+          transition={{
+            duration: 0.5,
+            ease: "easeInOut",
+            delay: showTokenStaking ? 0 : 0.2,
+          }}
+          className={`bg-gray-900 p-8 rounded-lg border border-gray-700 overflow-hidden ${showTokenStaking ? "mb-0" : "mb-0"}`}
+          style={{ display: showTokenStaking ? "none" : "block" }}
+        >
+          <h2 className="text-2xl font-nocturne-serif-bold mb-6">
+            Wallet Connection
+          </h2>
+
+          {!account ? (
+            <div className="text-center">
+              <p className="mb-6 text-gray-300">
+                Connect your MetaMask wallet to access staking features
+              </p>
+              <button
+                onClick={connectMetaMask}
+                disabled={isConnecting}
+                className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 flex items-center gap-3 mx-auto"
+              >
+                {isConnecting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <img
+                      src="/images/metamask-icon.png"
+                      alt="MetaMask"
+                      className="w-6 h-6"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                    Connect MetaMask
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="text-center">
+              <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-6">
+                <p className="text-green-300 mb-2">✅ Wallet Connected</p>
+                <p className="text-white font-mono text-sm break-all">
+                  {account}
+                </p>
+                {currentChainId && (
+                  <p className="text-gray-300 text-xs mt-2">
+                    Chain ID: {currentChainId}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-gray-800 p-6 rounded-lg">
+                  <h3 className="text-xl font-bold mb-4">Token Staking</h3>
+                  <p className="text-gray-300 mb-4">
+                    Stake your FAET tokens to earn rewards
+                  </p>
+                  <button
+                    onClick={wrongNetwork ? switchToLiskSepolia : handleGoToStaking}
+                    disabled={!account}
+                    className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                      wrongNetwork
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : canAccessStaking
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    {wrongNetwork ? "Switch Network" : "Go to Staking"}
+                  </button>
+                </div>
+
+                <div className="bg-gray-800 p-6 rounded-lg">
+                  <h3 className="text-xl font-bold mb-4">NFT Staking</h3>
+                  <p className="text-gray-300 mb-4">
+                    Lock your NFTs for exclusive benefits
+                  </p>
+                  <button
+                    disabled={true}
+                    className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg transition-colors"
+                  >
+                    Coming Soon
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={disconnectWallet}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              >
+                Disconnect Wallet
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Token Staking Container - Only show on correct network */}
         {showTokenStaking && canAccessStaking && (
-          <TokenStaking
-            account={account}
-            tokenBalance={tokenBalance}
-            stakedBalance={stakedBalance}
-            pendingRewards={pendingRewards}
-            approvedAmount={approvedAmount}
-            approvalAmount={approvalAmount}
-            stakeAmount={stakeAmount}
-            selectedDays={selectedDays}
-            userStakes={userStakes}
-            totalRewardsFunded={totalRewardsFunded}
-            topStakers={topStakers}
-            stakingRanges={stakingRanges}
-            isLoading={isLoading}
-            wrongNetwork={wrongNetwork}
-            txHash={txHash}
-            onApprovalAmountChange={setApprovalAmount}
-            onApprove={handleApprove}
-            onStakeAmountChange={setStakeAmount}
-            onSelectedDaysChange={setSelectedDays}
-            onStake={handleStake}
-            onWithdraw={handleWithdraw}
-            onClaimRewards={handleClaimRewards}
-            onBackToOverview={() => setShowTokenStaking(false)}
-          />
+          <motion.div
+            id="token-staking"
+            initial={{ opacity: 0, y: 20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="bg-gray-900 p-8 rounded-lg border border-gray-700 mt-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-nocturne-serif-bold">
+                Token Staking (Testnet)
+              </h2>
+              <button
+                onClick={async () => {
+                  if (typeof window.ethereum !== "undefined") {
+                    try {
+                      const wasAdded = await window.ethereum.request({
+                        method: 'wallet_watchAsset',
+                        params: {
+                          type: 'ERC20',
+                          options: {
+                            address: FAET_TOKEN_ADDRESS,
+                            symbol: 'FAET',
+                            decimals: 18,
+                            image: 'https://your-domain.com/faet-token-icon.png',
+                          },
+                        },
+                      });
+
+                      if (wasAdded) {
+                        console.log('✅ FAET token successfully added to wallet');
+                        // You could add a success toast notification here
+                      } else {
+                        console.log('ℹ️ Token addition was not completed');
+                      }
+                    } catch (error: any) {
+                      // Handle different types of errors gracefully
+                      if (error?.code === 4001) {
+                        console.log('ℹ️ User cancelled adding token to wallet');
+                      } else if (error?.code === -32002) {
+                        console.log('⚠️ Request already pending in MetaMask');
+                      } else {
+                        console.warn('⚠️ Error adding token to wallet:', error?.message || 'Unknown error');
+                      }
+                      // Don't show error for user cancellation - it's expected behavior
+                    }
+                  } else {
+                    console.warn('⚠️ MetaMask not detected');
+                  }
+                }}
+                disabled={!account || wrongNetwork}
+                className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
+                  !account || wrongNetwork
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
+              >
+                Add Test Token to Metamask
+              </button>
+            </div>
+
+            {/* Contract Addresses */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-semibold text-purple-400 mb-2">Token Contract</h4>
+                <a
+                  href={`https://sepolia-blockscout.lisk.com/address/${FAET_TOKEN_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300 font-mono text-xs break-all"
+                >
+                  {FAET_TOKEN_ADDRESS}
+                </a>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-semibold text-green-400 mb-2">Staking Contract</h4>
+                <a
+                  href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-400 hover:text-green-300 font-mono text-xs break-all"
+                >
+                  {FAET_STAKING_ADDRESS}
+                </a>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-purple-400">
+                  Available Balance
+                </h3>
+                <p className="text-3xl font-bold mb-2">
+                  {parseFloat(tokenBalance).toFixed(2)} FAET
+                </p>
+                <p className="text-gray-400 text-sm">Your wallet balance</p>
+              </div>
+
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-bold mb-4 text-green-400">
+                  Active Staking Weight
+                </h3>
+                <p className="text-3xl font-bold mb-2">
+                  {parseFloat(stakedBalance).toFixed(2)} FAET
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {userStakes.length} active stakes
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold mb-4">Token Approval</h3>
+
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-300">Current Approved Amount:</span>
+                  <span className="text-lg font-bold text-green-400">
+                    {parseFloat(approvedAmount).toFixed(2)} FAET
+                  </span>
+                </div>
+                <p className="text-xs text-gray-400 mb-4">
+                  This is the amount the staking contract can spend on your behalf. You need approval before staking.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="Amount to approve"
+                        value={approvalAmount}
+                        onChange={(e) => setApprovalAmount(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setApprovalAmount(tokenBalance)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+                      >
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex">
+                    <button
+                      onClick={handleApprove}
+                      disabled={
+                        !approvalAmount ||
+                        isLoading ||
+                        wrongNetwork ||
+                        parseFloat(approvalAmount) <= 0 ||
+                        parseFloat(approvalAmount) > parseFloat(tokenBalance)
+                      }
+                      className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[100px] h-10 ${
+                        !approvalAmount ||
+                        isLoading ||
+                        wrongNetwork ||
+                        parseFloat(approvalAmount) <= 0 ||
+                        parseFloat(approvalAmount) > parseFloat(tokenBalance)
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                          : "bg-green-600 hover:bg-green-700 text-white"
+                      }`}
+                    >
+                      {isLoading ? "Processing..." : "Approve"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-nocturne-serif-bold mb-4">Stake FAET Tokens</h3>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">
+                  Lock Duration: {selectedDays} days
+                </label>
+                <div className="mb-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="730"
+                    step="1"
+                    value={selectedDays}
+                    onChange={(e) => setSelectedDays(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>0 days (1.00x)</span>
+                    <span>180 days ({calculateMultiplier(180).toFixed(2)}x)</span>
+                    <span>365 days ({calculateMultiplier(365).toFixed(2)}x)</span>
+                    <span>730 days (20.00x)</span>
+                  </div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-300">Multiplier:</span>
+                    <span className="text-lg font-bold text-purple-400">
+                      {calculateMultiplier(selectedDays).toFixed(2)}x
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-sm text-gray-300">Lock Period:</span>
+                    <span className="text-sm text-blue-400">
+                      {selectedDays === 0 ? "No Lock" : `${selectedDays} days`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between">
+                  <label className="block text-sm font-medium">
+                    Amount to Stake
+                  </label>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0.0"
+                        value={stakeAmount}
+                        onChange={(e) => setStakeAmount(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setStakeAmount(tokenBalance)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
+                      >
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <button
+                      onClick={handleStake}
+                      disabled={
+                        !stakeAmount ||
+                        isLoading ||
+                        wrongNetwork ||
+                        parseFloat(stakeAmount) <= 0 ||
+                        parseFloat(stakeAmount) > parseFloat(tokenBalance)
+                      }
+                      className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] h-10 ${
+                        !stakeAmount ||
+                        isLoading ||
+                        wrongNetwork ||
+                        parseFloat(stakeAmount) <= 0 ||
+                        parseFloat(stakeAmount) > parseFloat(tokenBalance)
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}
+                    >
+                      {isLoading ? "Processing..." : "Stake Tokens"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex justify-start">
+                  <p className="text-gray-400 text-xs">
+                    Available: {parseFloat(tokenBalance).toFixed(2)} FAET
+                  </p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm mt-2">
+                Reward rate: 1.0 FAET per block, 2-second blocks. Higher
+                multipliers = more rewards!
+              </p>
+
+              {txHash && (
+                <div className="mt-4 p-3 bg-blue-900 border border-blue-600 rounded-lg">
+                  <p className="text-blue-300 text-sm">Transaction Hash:</p>
+                  <a
+                    href={`https://sepolia-blockscout.lisk.com/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 text-sm font-mono break-all"
+                  >
+                    {txHash}
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-gray-800 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold mb-4">Your Stakes</h3>
+
+              {userStakes.length === 0 ? (
+                <p className="text-gray-400">No active stakes found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {userStakes.map((stake, index) => (
+                    <div key={index} className="bg-gray-700 p-4 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-400">Amount</p>
+                          <p className="font-bold">
+                            {parseFloat(stake.amount).toFixed(2)} FAET
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Multiplier</p>
+                          <p className="font-bold text-purple-400">
+                            {stake.multiplier.toFixed(2)}x
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Status</p>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-2 h-2 rounded-full ${stake.isUnlocked ? "bg-green-400" : "bg-red-400"}`}
+                            ></div>
+                            <p
+                              className={`font-bold text-sm ${stake.isUnlocked ? "text-green-400" : "text-red-400"}`}
+                            >
+                              {stake.isUnlocked ? "Unlocked" : "Locked"}
+                            </p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-400">Lock Info</p>
+                          {stake.lockEndBlock === 0 ? (
+                            <p className="font-bold text-green-400 text-sm">
+                              No Lock
+                            </p>
+                          ) : stake.isUnlocked ? (
+                            <p className="font-bold text-green-400 text-sm">
+                              Ready
+                            </p>
+                          ) : (
+                            <div>
+                              <p className="font-bold text-red-400 text-sm">
+                                ~{Math.ceil(stake.blocksRemaining / 43200)} days left
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                ({stake.blocksRemaining.toLocaleString()} blocks)
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => handleWithdraw(stake.index)}
+                            disabled={
+                              !stake.isUnlocked || isLoading || wrongNetwork
+                            }
+                            className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors min-w-[100px] ${
+                              !stake.isUnlocked || isLoading || wrongNetwork
+                                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                : "bg-red-600 hover:bg-red-700 text-white"
+                            }`}
+                          >
+                            {isLoading
+                              ? "Processing..."
+                              : stake.isUnlocked
+                                ? "Withdraw"
+                                : "Locked"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            
+
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h3 className="text-xl font-bold mb-4 text-yellow-400">
+                Rewards
+              </h3>
+
+              {/* Reward Pool Status */}
+              <div className="mb-4 p-3 rounded-lg bg-gray-700">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-400">Reward Pool:</span>
+                  <span className={`text-sm font-bold ${
+                    parseFloat(totalRewardsFunded) > 0 ? "text-green-400" : "text-red-400"
+                  }`}>
+                    {parseFloat(totalRewardsFunded).toFixed(2)} FAET
+                  </span>
+                </div>
+                {parseFloat(totalRewardsFunded) === 0 && (
+                  <p className="text-xs text-red-400 mt-1">
+                    ⚠️ Reward pool is empty. Claims are not possible until refunded.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <p className="text-sm text-gray-400">Pending Rewards</p>
+                  <p className="text-2xl font-bold">
+                    {parseFloat(pendingRewards).toFixed(6)} FAET
+                  </p>
+                  <p className="text-xs text-blue-400 mt-1">
+                    Next block: +{stakedBalance && parseFloat(stakedBalance) > 0 ? (parseFloat(stakedBalance) * 1.0 / Math.max(1, parseFloat(stakedBalance))).toFixed(6) : "0.000000"} FAET
+                  </p>
+                </div>
+                <button
+                  onClick={handleClaimRewards}
+                  disabled={
+                    parseFloat(pendingRewards) === 0 ||
+                    parseFloat(totalRewardsFunded) === 0 ||
+                    isLoading ||
+                    wrongNetwork
+                  }
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                    parseFloat(pendingRewards) === 0 ||
+                    parseFloat(totalRewardsFunded) === 0 ||
+                    isLoading ||
+                    wrongNetwork
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-yellow-600 hover:bg-yellow-700 text-white"
+                  }`}
+                  title={
+                    parseFloat(totalRewardsFunded) === 0 
+                      ? "Reward pool is empty - cannot claim rewards"
+                      : parseFloat(pendingRewards) === 0
+                        ? "No rewards available to claim"
+                        : "Claim your pending rewards"
+                  }
+                >
+                  {isLoading ? "Processing..." : "Claim Rewards"}
+                </button>
+              </div>
+              <p className="text-gray-400 text-sm mb-6">
+                Rate: 1.0 FAET per block (~2s), UI updates every 2s
+              </p>
+
+              {/* Staking Distribution Chart */}
+              <div className="bg-gray-700 p-6 rounded-lg">
+                <h4 className="font-semibold text-purple-400 mb-4">Staking Distribution by Amount Range</h4>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={stakingRanges.map((range, index) => ({
+                            name: `${range.range} (${range.count} addresses)`,
+                            value: parseFloat(range.totalWeight),
+                            fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="value"
+                          label={({name, percent}) => percent > 5 ? `${(percent * 100).toFixed(1)}%` : ''}
+                          labelLine={false}
+                        />
+                        <Tooltip 
+                          formatter={(value: number, name: string) => [
+                            `${value.toLocaleString()} FAET`,
+                            name
+                          ]}
+                          contentStyle={{ 
+                            backgroundColor: '#374151', 
+                            border: '1px solid #4b5563',
+                            borderRadius: '8px',
+                            color: '#fff'
+                          }}
+                        />
+                        <Legend 
+                          wrapperStyle={{ color: '#fff', fontSize: '12px' }}
+                          iconSize={8}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-gray-600 p-4 rounded-lg">
+                      <h5 className="font-semibold text-purple-400 mb-2">Top 10 Stakers</h5>
+                      <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
+                        {topStakers.length === 0 ? (
+                          <div className="text-gray-400 text-center py-4">
+                            Loading stakers data...
+                          </div>
+                        ) : (
+                          topStakers.map((staker, index) => (
+                            <div key={staker.address} className="flex justify-between items-center">
+                              <span className="text-gray-300 min-w-[25px]">{index + 1}.</span>
+                              <button
+                                onClick={() => copyToClipboard(staker.address)}
+                                className="font-mono text-blue-400 hover:text-blue-300 transition-colors cursor-pointer text-xs flex-1 text-center"
+                                title={`Click to copy: ${staker.address}`}
+                              >
+                                {formatAddress(staker.address)}
+                              </button>
+                              <span className="font-mono text-purple-400 text-xs min-w-[80px] text-right">
+                                {parseFloat(staker.weight).toLocaleString(undefined, {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 2
+                                })} FAET
+                              </span>
+                            </div>
+                          ))
+                        )}
+                        <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-500">
+                          * Click addresses to copy to clipboard
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setShowTokenStaking(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              >
+                Back to Overview
+              </button>
+            </div>
+          </motion.div>
         )}
 
         <motion.div
