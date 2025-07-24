@@ -31,6 +31,9 @@ const WalletConnection = ({
 }: WalletConnectionProps) => {
   const [characterNftError, setCharacterNftError] = useState<string>("");
   const [foundersPassError, setFoundersPassError] = useState<string>("");
+  const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
+  const [isAddingCharacterNft, setIsAddingCharacterNft] = useState<boolean>(false);
+  const [isAddingFoundersPass, setIsAddingFoundersPass] = useState<boolean>(false);
   return (
     <>
       <motion.div
@@ -158,9 +161,11 @@ const WalletConnection = ({
                 <button
                   onClick={async () => {
                     setCharacterNftError(""); // Clear previous error
+                    setIsAddingCharacterNft(true);
 
                     if (typeof window.ethereum === "undefined") {
                       console.error("MetaMask not detected");
+                      setIsAddingCharacterNft(false);
                       return;
                     }
 
@@ -212,16 +217,25 @@ const WalletConnection = ({
                     } catch (error: any) {
                       console.log('ℹ️ Character NFT add request completed');
                       setCharacterNftError("No new NFTs found");
+                    } finally {
+                      setIsAddingCharacterNft(false);
                     }
                   }}
-                  disabled={!account}
-                  className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors w-full ${
-                    !account
+                  disabled={!account || isAddingCharacterNft}
+                  className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors w-full flex items-center gap-2 justify-center ${
+                    !account || isAddingCharacterNft
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
                 >
-                  Add Test Character NFT to Metamask
+                  {isAddingCharacterNft ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    "Add Test Character NFT to Metamask"
+                  )}
                 </button>
                 {characterNftError && (
                   <p className="text-red-500 text-xs mt-2">{characterNftError}</p>
@@ -236,6 +250,8 @@ const WalletConnection = ({
                 <button
                   onClick={async () => {
                     if (!account || typeof window.ethereum === "undefined") return;
+
+                    setIsClaimingAirdrop(true);
 
                     try {
                       console.log("🎁 Attempting to claim founder's airdrop...");
@@ -402,23 +418,34 @@ const WalletConnection = ({
                         const errorMsg = error?.reason || error?.message || "Unknown error occurred";
                         alert(`❌ Failed to claim airdrop:\n\n${errorMsg}\n\nPlease check the console for more details.`);
                       }
+                    } finally {
+                      setIsClaimingAirdrop(false);
                     }
                   }}
-                  disabled={!account}
-                  className={`font-bold py-2 px-6 rounded-lg transition-colors mb-2 ${
-                    !account
+                  disabled={!account || isClaimingAirdrop}
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors mb-2 flex items-center gap-2 justify-center ${
+                    !account || isClaimingAirdrop
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-purple-600 hover:bg-purple-700 text-white"
                   }`}
                 >
-                  Claim Airdrop
+                  {isClaimingAirdrop ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    "Claim Airdrop"
+                  )}
                 </button>
                 <button
                   onClick={async () => {
                     setFoundersPassError(""); // Clear previous error
+                    setIsAddingFoundersPass(true);
 
                     if (typeof window.ethereum === "undefined") {
                       console.error("MetaMask not detected");
+                      setIsAddingFoundersPass(false);
                       return;
                     }
 
@@ -470,16 +497,25 @@ const WalletConnection = ({
                     } catch (error: any) {
                       console.log('ℹ️ Founder\'s Pass add request completed');
                       setFoundersPassError("No new NFTs found");
+                    } finally {
+                      setIsAddingFoundersPass(false);
                     }
                   }}
-                  disabled={!account}
-                  className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors w-full ${
-                    !account
+                  disabled={!account || isAddingFoundersPass}
+                  className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors w-full flex items-center gap-2 justify-center ${
+                    !account || isAddingFoundersPass
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-green-600 hover:bg-green-700 text-white"
                   }`}
                 >
-                  Add Test Founder's Pass to Metamask
+                  {isAddingFoundersPass ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    "Add Test Founder's Pass to Metamask"
+                  )}
                 </button>
                 {foundersPassError && (
                   <p className="text-red-500 text-xs mt-2">{foundersPassError}</p>
