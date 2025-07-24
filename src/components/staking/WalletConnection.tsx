@@ -150,9 +150,50 @@ const WalletConnection = ({
                 </p>
                 <button
                   disabled={true}
-                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg transition-colors"
+                  className="bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-6 rounded-lg transition-colors mb-2"
                 >
                   Coming Soon
+                </button>
+                <button
+                  onClick={async () => {
+                    if (typeof window.ethereum !== "undefined") {
+                      try {
+                        const wasAdded = await window.ethereum.request({
+                          method: 'wallet_watchAsset',
+                          params: {
+                            type: 'ERC721',
+                            options: {
+                              address: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
+                              tokenId: '1',
+                            },
+                          },
+                        });
+                        if (wasAdded) {
+                          console.log('✅ Test Character NFT successfully added to wallet');
+                        } else {
+                          console.log('ℹ️ NFT addition was not completed');
+                        }
+                      } catch (error: any) {
+                        if (error?.code === 4001) {
+                          console.log('ℹ️ User cancelled adding NFT to wallet');
+                        } else if (error?.code === -32002) {
+                          console.log('⚠️ Request already pending in MetaMask');
+                        } else {
+                          console.warn('⚠️ Error adding NFT to wallet:', error?.message || 'Unknown error');
+                        }
+                      }
+                    } else {
+                      console.warn('⚠️ MetaMask not detected');
+                    }
+                  }}
+                  disabled={!account}
+                  className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors w-full ${
+                    !account
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700 text-white"
+                  }`}
+                >
+                  Add Test Character NFT to Metamask
                 </button>
               </div>
 
@@ -163,13 +204,54 @@ const WalletConnection = ({
                 </p>
                 <button
                   disabled={!account}
-                  className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                  className={`font-bold py-2 px-6 rounded-lg transition-colors mb-2 ${
                     !account
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : "bg-purple-600 hover:bg-purple-700 text-white"
                   }`}
                 >
                   Claim Airdrop
+                </button>
+                <button
+                  onClick={async () => {
+                    if (typeof window.ethereum !== "undefined") {
+                      try {
+                        const wasAdded = await window.ethereum.request({
+                          method: 'wallet_watchAsset',
+                          params: {
+                            type: 'ERC721',
+                            options: {
+                              address: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
+                              tokenId: '1',
+                            },
+                          },
+                        });
+                        if (wasAdded) {
+                          console.log('✅ Test Founder\'s Pass successfully added to wallet');
+                        } else {
+                          console.log('ℹ️ NFT addition was not completed');
+                        }
+                      } catch (error: any) {
+                        if (error?.code === 4001) {
+                          console.log('ℹ️ User cancelled adding NFT to wallet');
+                        } else if (error?.code === -32002) {
+                          console.log('⚠️ Request already pending in MetaMask');
+                        } else {
+                          console.warn('⚠️ Error adding NFT to wallet:', error?.message || 'Unknown error');
+                        }
+                      }
+                    } else {
+                      console.warn('⚠️ MetaMask not detected');
+                    }
+                  }}
+                  disabled={!account}
+                  className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors w-full ${
+                    !account
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-green-600 hover:bg-green-700 text-white"
+                  }`}
+                >
+                  Add Test Founder's Pass to Metamask
                 </button>
               </div>
             </div>
