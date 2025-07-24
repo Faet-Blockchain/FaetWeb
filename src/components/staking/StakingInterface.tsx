@@ -2,7 +2,6 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { ethers } from "ethers";
 import UserBalance from "./UserBalance";
 import StakingForm from "./StakingForm";
 import UserStakes from "./UserStakes";
@@ -30,6 +29,7 @@ type StakingInterfaceProps = {
   onBackToOverview: () => void;
 };
 
+// Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
 const FAET_STAKING_ADDRESS = "0x9E9444d4dD359666De79B46e6fADF1E97B5c116E";
 
