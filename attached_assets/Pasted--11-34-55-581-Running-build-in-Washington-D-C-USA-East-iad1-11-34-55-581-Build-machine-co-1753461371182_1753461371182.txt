@@ -1,0 +1,71 @@
+[11:34:55.581] Running build in Washington, D.C., USA (East) – iad1
+[11:34:55.581] Build machine configuration: 4 cores, 8 GB
+[11:34:55.605] Cloning github.com/Faet-Blockchain/FaetWeb (Branch: main, Commit: 898248e)
+[11:34:56.705] Cloning completed: 1.100s
+[11:34:57.573] Restored build cache from previous deployment (H7pi47RV26jAHF4dtXKqoq9gwo6y)
+[11:34:59.985] Running "vercel build"
+[11:35:00.487] Vercel CLI 44.5.0
+[11:35:00.811] Installing dependencies...
+[11:35:03.668] 
+[11:35:03.668] added 45 packages in 3s
+[11:35:03.669] 
+[11:35:03.669] 150 packages are looking for funding
+[11:35:03.669]   run `npm fund` for details
+[11:35:03.708] Detected Next.js version: 15.3.3
+[11:35:03.712] Running "npm run build"
+[11:35:03.834] 
+[11:35:03.834] > faet-brand-website@0.1.0 build
+[11:35:03.835] > next build
+[11:35:03.835] 
+[11:35:04.786]    ▲ Next.js 15.3.3
+[11:35:04.787] 
+[11:35:04.814]    Creating an optimized production build ...
+[11:35:24.972]  ✓ Compiled successfully in 16.0s
+[11:35:24.976]    Linting and checking validity of types ...
+[11:35:28.726] 
+[11:35:28.727] Failed to compile.
+[11:35:28.727] 
+[11:35:28.727] ./src/app/staking/page.tsx
+[11:35:28.728] 17:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.728] 18:60  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.728] 65:10  Error: 'signer' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+[11:35:28.728] 75:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.728] 111:9  Warning: The 'checkNetwork' function makes the dependencies of useEffect Hook (at line 764) change on every render. To fix this, wrap the definition of 'checkNetwork' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+[11:35:28.728] 171:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.729] 188:9  Warning: The 'initializeWeb3' function makes the dependencies of useEffect Hook (at line 764) change on every render. To fix this, wrap the definition of 'initializeWeb3' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+[11:35:28.729] 188:9  Warning: The 'initializeWeb3' function makes the dependencies of useEffect Hook (at line 877) change on every render. To fix this, wrap the definition of 'initializeWeb3' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+[11:35:28.729] 394:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.729] 668:9  Warning: The 'disconnectWallet' function makes the dependencies of useEffect Hook (at line 764) change on every render. To fix this, wrap the definition of 'disconnectWallet' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+[11:35:28.729] 782:6  Warning: React Hook useEffect has a missing dependency: 'checkNetwork'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+[11:35:28.729] 811:6  Warning: React Hook useEffect has a missing dependency: 'checkNetwork'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+[11:35:28.730] 
+[11:35:28.730] ./src/components/home/infinite-moving-cards.tsx
+[11:35:28.730] 28:8  Warning: React Hook useEffect has missing dependencies: 'getDirection' and 'getSpeed'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+[11:35:28.730] 
+[11:35:28.730] ./src/components/staking/RewardsSection.tsx
+[11:35:28.730] 146:29  Error: 'name' is defined but never used.  @typescript-eslint/no-unused-vars
+[11:35:28.730] 
+[11:35:28.730] ./src/components/staking/WalletConnection.tsx
+[11:35:28.730] 102:19  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+[11:35:28.731] 204:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.731] 206:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.731] 206:83  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.731] 246:69  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+[11:35:28.731] 408:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.731] 410:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.731] 410:99  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.731] 410:153  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.732] 412:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.732] 412:92  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.732] 414:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.732] 416:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.732] 419:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.735] 419:80  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.735] 486:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.735] 488:48  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.735] 488:83  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+[11:35:28.735] 
+[11:35:28.735] info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[11:35:28.755] Error: Command "npm run build" exited with 1
+[11:35:29.114] 
+[11:35:31.940] Exiting build container
