@@ -144,7 +144,7 @@ const RewardsSection = ({
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({ percent }) =>
+                  label={({ percent }: { percent?: number }) =>
                     percent && percent > 0.05 ? `${(percent * 100).toFixed(1)}%` : ""
                   }
                   labelLine={false}
