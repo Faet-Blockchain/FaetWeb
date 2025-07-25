@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ethers } from "ethers";
 import WalletConnection from "@/components/staking/WalletConnection";
@@ -114,7 +114,7 @@ export default function StakingPage() {
     setShowTokenStaking(false);
   };
 
-  const checkNetwork = async (): Promise<boolean> => {
+  const checkNetwork = useCallback(async (): Promise<boolean> => {
     if (typeof window.ethereum !== "undefined") {
       try {
         const chainId = (await window.ethereum.request({
@@ -165,7 +165,7 @@ export default function StakingPage() {
       clearWeb3State();
       return false;
     }
-  };
+  }, []);
 
   const switchToLiskSepolia = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -191,7 +191,7 @@ export default function StakingPage() {
     }
   };
 
-  const initializeWeb3 = async () => {
+  const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
       try {
         console.log("Initializing Web3 for account:", account);
@@ -254,8 +254,9 @@ export default function StakingPage() {
       }
     } else {
       console.log("Cannot initialize Web3: missing ethereum or account");
+      clearWeb3State();
     }
-  };
+  }, [account]);
 
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {
@@ -669,12 +670,12 @@ export default function StakingPage() {
 
 
 
-  const disconnectWallet = () => {
+  const disconnectWallet = useCallback(() => {
     setAccount(null);
     setWrongNetwork(false);
     setCurrentChainId(null);
     clearWeb3State();
-  };
+  }, []);
 
   const handleGoToStaking = async () => {
     // Only proceed if we're already on the correct network
@@ -783,7 +784,7 @@ export default function StakingPage() {
         clearInterval(networkCheckInterval);
       }
     };
-  }, [account]);
+  }, [account, checkNetwork]);
 
   // Initialize on mount and when account changes
   useEffect(() => {
@@ -812,7 +813,7 @@ export default function StakingPage() {
     };
 
     initialize();
-  }, []);
+  }, [checkNetwork]);
 
   // Update pending rewards every 30 seconds
   useEffect(() => {
@@ -863,7 +864,7 @@ export default function StakingPage() {
         console.log("Clearing rewards update interval");
         clearInterval(rewardsUpdateInterval);
       }
-    };  }, [stakingContract, account, wrongNetwork, provider]);
+    };  }, [stakingContract, account,wrongNetwork, provider]);
 
   // Only allow staking interface if connected to correct network
   const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
