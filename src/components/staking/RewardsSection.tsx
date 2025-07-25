@@ -70,7 +70,8 @@ const RewardsSection = ({
         </div>
         {parseFloat(totalRewardsFunded) === 0 && (
           <p className="text-xs text-red-400 mt-1">
-            ⚠️ Reward pool is empty. Claims are not possible until refunded.
+            ⚠️ Reward pool is empty. Claims are not possible until rewards are
+            funded.
           </p>
         )}
       </div>
