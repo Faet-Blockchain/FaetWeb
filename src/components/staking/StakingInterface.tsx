@@ -91,7 +91,7 @@ const StakingInterface = ({
                       image: 'https://your-domain.com/faet-token-icon.png',
                     },
                   },
-                });
+                } as any);
 
                 if (wasAdded) {
                   console.log('✅ FAET token successfully added to wallet');
