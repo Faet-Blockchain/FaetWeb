@@ -20,7 +20,7 @@ const Navbar = () => {
           {/* Desktop navigation */}
           <nav className="hidden md:flex items-center space-x-4">
             <NavLink href="/#home">Home</NavLink>
-            <NavLink href="/roadmap" target="_blank">Roadmap</NavLink>
+            <NavLink href="/roadmap">Roadmap</NavLink>
             <NavLink href="/staking">Staking</NavLink>
             <NavLink href="/whitepaper.pdf" target="_blank" rel="noopener noreferrer">
               Whitepaper
