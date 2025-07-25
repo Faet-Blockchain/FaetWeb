@@ -581,14 +581,14 @@ export default function StakingPage() {
       console.log("Staking successful!");
     } catch (error: unknown) {
       // Handle different types of errors gracefully
-      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+      if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled staking transaction');
-      } else if (error?.code === -32002) {
+      } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Staking request already pending in MetaMask');
-      } else if (error?.reason === "Insufficient funded rewards") {
+      } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards") {
         console.error("❌ Staking failed: Contract has insufficient rewards");
       } else {
-        console.error("Staking failed:", error?.reason || error?.message || "Unknown error");
+        console.error("Staking failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
       }
     } finally {
       setIsLoading(false);
@@ -617,12 +617,12 @@ export default function StakingPage() {
       console.log("Withdrawal successful!");
     } catch (error: unknown) {
       // Handle different types of errors gracefully
-      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+      if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled withdrawal transaction');
-      } else if (error?.code === -32002) {
+      } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Withdrawal request already pending in MetaMask');
       } else {
-        console.error("Withdrawal failed:", error?.reason || error?.message || "Unknown error");
+        console.error("Withdrawal failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
       }
     } finally {
       setIsLoading(false);
@@ -652,22 +652,22 @@ export default function StakingPage() {
       console.log("Rewards claimed successfully!");
     } catch (error: unknown) {
       // Handle different types of errors gracefully
-      if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+      if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled claim rewards transaction');
         // Don't show alert for user cancellation - it's expected behavior
-      } else if (error?.code === -32002) {
+      } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Claim request already pending in MetaMask');
-      } else if (error?.reason === "Insufficient funded rewards" || 
-                 error?.message?.includes("Insufficient funded rewards")) {
+      } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards" || 
+                 (error as { message?: string })?.message?.includes("Insufficient funded rewards")) {
         console.error("❌ Claim Failed: Insufficient funded rewards");
         alert("❌ Claim Failed: The reward pool is currently empty. Please wait for the pool to be refunded by the administrators.");
-      } else if (error?.reason === "No rewards" || 
-                 error?.message?.includes("No rewards")) {
+      } else if ((error as { reason?: string })?.reason === "No rewards" || 
+                 (error as { message?: string })?.message?.includes("No rewards")) {
         console.error("❌ Claim Failed: No rewards available");
         alert("❌ Claim Failed: You have no rewards to claim at this time.");
       } else {
-        console.error("Claim failed:", error?.reason || error?.message || "Unknown error");
-        alert(`❌ Claim Failed: ${error?.reason || error?.message || "Unknown error occurred"}`);
+        console.error("Claim failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
+        alert(`❌ Claim Failed: ${(error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error occurred"}`);
       }
     } finally {
       setIsLoading(false);
