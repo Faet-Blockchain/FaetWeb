@@ -697,7 +697,8 @@ export default function StakingPage() {
   // Network detection and event handling
   useEffect(() => {
     if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
-      const handleChainChanged = async (chainId: string) => {
+      const handleChainChanged = async (...args: unknown[]) => {
+        const chainId = args[0] as string;
         console.log("[handleChainChanged] Chain changed event fired");
         console.log("[handleChainChanged] Event chain ID:", chainId);
         console.log("[handleChainChanged] Type:", typeof chainId);
@@ -747,7 +748,8 @@ export default function StakingPage() {
         }, 500); // 500ms delay to let wallet update
       };
 
-      const handleAccountsChanged = async (accounts: string[]) => {
+      const handleAccountsChanged = async (...args: unknown[]) => {
+        const accounts = args[0] as string[];
         console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
           disconnectWallet();
