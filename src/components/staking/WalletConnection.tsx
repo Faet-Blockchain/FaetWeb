@@ -201,9 +201,9 @@ const WalletConnection = ({
                           if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
                             console.log(`ℹ️ User cancelled adding Character NFT #${tokenId}`);
                             break; // Stop if user cancels
-                          } else if ((error as any)?.code === -32002) {
+                          } else if ((error as { code?: number })?.code === -32002) {
                             console.log(`ℹ️ Request for Character NFT #${tokenId} already pending`);
-                          } else if ((error as any)?.code === -32603 || (error as any)?.message?.includes("already exists")) {
+                          } else if ((error as { code?: number; message?: string })?.code === -32603 || (error as { message?: string })?.message?.includes("already exists")) {
                             console.log(`ℹ️ Character NFT #${tokenId} may already be in wallet`);
                           }
                         }
@@ -481,9 +481,9 @@ const WalletConnection = ({
                           if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
                             console.log(`ℹ️ User cancelled adding Founder's Pass #${tokenId}`);
                             break; // Stop if user cancels
-                          } else if ((error as any)?.code === -32002) {
+                          } else if ((error as { code?: number })?.code === -32002) {
                             console.log(`ℹ️ Request for Founder's Pass #${tokenId} already pending`);
-                          } else if ((error as any)?.code === -32603 || (error as any)?.message?.includes("already exists")) {
+                          } else if ((error as { code?: number; message?: string })?.code === -32603 || (error as { message?: string })?.message?.includes("already exists")) {
                             console.log(`ℹ️ Founder's Pass #${tokenId} may already be in wallet`);
                           }
                         }
@@ -495,7 +495,7 @@ const WalletConnection = ({
                         console.log(`✅ Successfully added ${successCount} Founder's Pass NFTs to wallet`);
                       }
                     } catch {
-                      console.log('ℹ️ Founder\'s Pass add request completed');
+                      console.log('ℹ️ Founder&apos;s Pass add request completed');
                       setFoundersPassError("No new NFTs found");
                     } finally {
                       setIsAddingFoundersPass(false);
