@@ -160,7 +160,7 @@ const RewardsSection = ({
                   }}
                 />
                 <Legend
-                  wrapperStyle={{ color: "#fff", fontSize: 12 }} "12px" }}
+                  wrapperStyle={{ color: "#fff", fontSize: "12px" }}
                   iconSize={8}
                 />
               </PieChart>
