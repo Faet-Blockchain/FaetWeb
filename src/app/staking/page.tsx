@@ -191,73 +191,6 @@ export default function StakingPage() {
     }
   };
 
-  const initializeWeb3 = useCallback(async () => {
-    if (typeof window.ethereum !== "undefined" && account) {
-      try {
-        console.log("Initializing Web3 for account:", account);
-
-        const web3Provider = new ethers.BrowserProvider(window.ethereum);
-        setProvider(web3Provider);
-
-        const signer = await web3Provider.getSigner();
-        const signerAddress = await signer.getAddress();
-        console.log("Signer address:", signerAddress);
-
-        const token = new ethers.Contract(
-          FAET_TOKEN_ADDRESS,
-          FAET_TOKEN_ABI,
-          signer,
-        );
-        const staking = new ethers.Contract(
-          FAET_STAKING_ADDRESS,
-          FAET_STAKING_ABI,
-          signer,
-        );
-
-        setTokenContract(token);
-        setStakingContract(staking);
-
-        console.log("Token contract address:", FAET_TOKEN_ADDRESS);
-        console.log("Staking contract address:", FAET_STAKING_ADDRESS);
-        console.log("Current chain ID:", currentChainId);
-
-        // Validate contracts exist by checking if they have code
-        try {
-          const tokenCode = await web3Provider.getCode(FAET_TOKEN_ADDRESS);
-          const stakingCode = await web3Provider.getCode(FAET_STAKING_ADDRESS);
-
-          if (tokenCode === "0x") {
-            console.error("Token contract not found at address:", FAET_TOKEN_ADDRESS);
-          } else {
-            console.log("Token contract validated");
-          }
-
-          if (stakingCode === "0x") {
-            console.error("Staking contract not found at address:", FAET_STAKING_ADDRESS);
-          } else {
-            console.log("Staking contract validated");
-          }
-
-          if (tokenCode === "0x" || stakingCode === "0x") {
-            console.warn("One or more contracts not deployed on this network");
-          }
-        } catch (codeError) {
-          console.warn("Could not validate contract deployment:", codeError);
-        }
-
-        console.log("Contracts initialized, loading user data...");
-        await loadUserData(token, staking, account);
-        console.log("Web3 initialization complete");
-      } catch (error: unknown) {
-        console.error("Error initializing Web3:", error?.message || error);
-        clearWeb3State();
-      }
-    } else {
-      console.log("Cannot initialize Web3: missing ethereum or account");
-      clearWeb3State();
-    }
-  }, [account, currentChainId, loadUserData]);
-
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {
       console.log("Loading real blockchain staking data...");
@@ -496,6 +429,73 @@ export default function StakingPage() {
       setTotalRewardsFunded("0");
     }
   };
+
+  const initializeWeb3 = useCallback(async () => {
+    if (typeof window.ethereum !== "undefined" && account) {
+      try {
+        console.log("Initializing Web3 for account:", account);
+
+        const web3Provider = new ethers.BrowserProvider(window.ethereum);
+        setProvider(web3Provider);
+
+        const signer = await web3Provider.getSigner();
+        const signerAddress = await signer.getAddress();
+        console.log("Signer address:", signerAddress);
+
+        const token = new ethers.Contract(
+          FAET_TOKEN_ADDRESS,
+          FAET_TOKEN_ABI,
+          signer,
+        );
+        const staking = new ethers.Contract(
+          FAET_STAKING_ADDRESS,
+          FAET_STAKING_ABI,
+          signer,
+        );
+
+        setTokenContract(token);
+        setStakingContract(staking);
+
+        console.log("Token contract address:", FAET_TOKEN_ADDRESS);
+        console.log("Staking contract address:", FAET_STAKING_ADDRESS);
+        console.log("Current chain ID:", currentChainId);
+
+        // Validate contracts exist by checking if they have code
+        try {
+          const tokenCode = await web3Provider.getCode(FAET_TOKEN_ADDRESS);
+          const stakingCode = await web3Provider.getCode(FAET_STAKING_ADDRESS);
+
+          if (tokenCode === "0x") {
+            console.error("Token contract not found at address:", FAET_TOKEN_ADDRESS);
+          } else {
+            console.log("Token contract validated");
+          }
+
+          if (stakingCode === "0x") {
+            console.error("Staking contract not found at address:", FAET_STAKING_ADDRESS);
+          } else {
+            console.log("Staking contract validated");
+          }
+
+          if (tokenCode === "0x" || stakingCode === "0x") {
+            console.warn("One or more contracts not deployed on this network");
+          }
+        } catch (codeError) {
+          console.warn("Could not validate contract deployment:", codeError);
+        }
+
+        console.log("Contracts initialized, loading user data...");
+        await loadUserData(token, staking, account);
+        console.log("Web3 initialization complete");
+      } catch (error: unknown) {
+        console.error("Error initializing Web3:", error?.message || error);
+        clearWeb3State();
+      }
+    } else {
+      console.log("Cannot initialize Web3: missing ethereum or account");
+      clearWeb3State();
+    }
+  }, [account, currentChainId]);
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== "undefined") {
