@@ -99,12 +99,14 @@ const StakingInterface = ({
                   console.log('ℹ️ Token addition was not completed');
                 }
               } catch (error: unknown) {
-                if (error?.code === 4001) {
+                const errorObj = error as { code?: number; message?: string };
+                if (errorObj?.code === 4001) {
                   console.log('ℹ️ User cancelled adding token to wallet');
-                } else if (error?.code === -32002) {
+                } else if (errorObj?.code === -32002) {
                   console.log('⚠️ Request already pending in MetaMask');
                 } else {
-                  console.warn('⚠️ Error adding token to wallet:', error?.message || 'Unknown error');
+                  const errorObj = error as { message?: string };
+                  console.warn('⚠️ Error adding token to wallet:', errorObj?.message || 'Unknown error');
                 }
               }
             } else {
