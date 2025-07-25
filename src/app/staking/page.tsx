@@ -6,20 +6,6 @@ import WalletConnection from "@/components/staking/WalletConnection";
 import StakingInterface from "@/components/staking/StakingInterface";
 import StakingFeatures from "@/components/staking/StakingFeatures";
 
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: {
-        method: string;
-        params?: unknown[];
-      }) => Promise<unknown>;
-      isMetaMask?: boolean;
-      on?: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener?: (event: string, callback: (...args: unknown[]) => void) => void;
-    } & EventTarget;
-  }
-}
-
 // Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
 const FAET_STAKING_ADDRESS = "0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472";
