@@ -732,7 +732,7 @@ export default function StakingPage() {
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
           console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
 
-          setIsCorrectNetwork(!isCorrectNetwork);
+          setWrongNetwork(!isCorrectNetwork);
 
           if (!isCorrectNetwork) {
             console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
@@ -870,7 +870,7 @@ export default function StakingPage() {
         console.log("Clearing rewards update interval");
         clearInterval(rewardsUpdateInterval);
       }
-    };  }, [stakingContract, account,wrongNetwork, provider]);
+    };  }, [stakingContract, account, wrongNetwork, provider]);
 
   // Only allow staking interface if connected to correct network
   const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';

@@ -49,7 +49,7 @@ export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="my-3 text-lg">Quests don’t necessarily have to be completed in sequential order after the 1st Quest.</motion.p>
+            className="my-3 text-lg">Quests don&apos;t necessarily have to be completed in sequential order after the 1st Quest.</motion.p>
       </div>
 
       <div ref={ref} className="relative max-w-7xl mx-auto pb-20">
