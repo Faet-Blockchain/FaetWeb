@@ -1,6 +1,5 @@
 "use client";
-import React, { useState } from "react";
-import { ethers } from "ethers";
+import React from "react";
 import { motion } from "framer-motion";
 import UserBalance from "./UserBalance";
 import StakingForm from "./StakingForm";
@@ -14,7 +13,15 @@ type StakingInterfaceProps = {
   pendingRewards: string;
   stakeAmount: string;
   selectedDays: number;
-  userStakes: any[];
+  userStakes: Array<{
+    index: number;
+    amount: string;
+    weightedAmount: string;
+    multiplier: number;
+    lockEndBlock: number;
+    isUnlocked: boolean;
+    blocksRemaining: number;
+  }>;
   isLoading: boolean;
   txHash: string;
   wrongNetwork: boolean;
@@ -91,7 +98,7 @@ const StakingInterface = ({
                 } else {
                   console.log('ℹ️ Token addition was not completed');
                 }
-              } catch (error: any) {
+              } catch (error: unknown) {
                 if (error?.code === 4001) {
                   console.log('ℹ️ User cancelled adding token to wallet');
                 } else if (error?.code === -32002) {

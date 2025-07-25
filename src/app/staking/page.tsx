@@ -568,7 +568,7 @@ export default function StakingPage() {
       }
       setStakeAmount("");
       console.log("Staking successful!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle different types of errors gracefully
       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled staking transaction');
@@ -604,7 +604,7 @@ export default function StakingPage() {
         await loadUserData(tokenContract!, stakingContract, account);
       }
       console.log("Withdrawal successful!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle different types of errors gracefully
       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled withdrawal transaction');
@@ -639,7 +639,7 @@ export default function StakingPage() {
         await loadUserData(tokenContract!, stakingContract, account);
       }
       console.log("Rewards claimed successfully!");
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Handle different types of errors gracefully
       if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled claim rewards transaction');

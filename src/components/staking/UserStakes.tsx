@@ -2,7 +2,15 @@
 import React from "react";
 
 type UserStakesProps = {
-  userStakes: any[];
+  userStakes: Array<{
+    index: number;
+    amount: string;
+    weightedAmount: string;
+    multiplier: number;
+    lockEndBlock: number;
+    isUnlocked: boolean;
+    blocksRemaining: number;
+  }>;
   isLoading: boolean;
   wrongNetwork: boolean;
   onWithdraw: (stakeIndex: number) => void;

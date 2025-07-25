@@ -3,7 +3,6 @@ import React from "react";
 import {
   PieChart,
   Pie,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   Legend,
@@ -150,9 +149,8 @@ const RewardsSection = ({
                   labelLine={false}
                 />
                 <Tooltip
-                  formatter={(value: number, name: string) => [
+                  formatter={(value: number) => [
                     `${value.toLocaleString()} FAET`,
-                    name,
                   ]}
                   contentStyle={{
                     backgroundColor: "#374151",

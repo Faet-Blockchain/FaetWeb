@@ -198,7 +198,7 @@ const WalletConnection = ({
                           // Small delay between requests to avoid overwhelming MetaMask
                           await new Promise(resolve => setTimeout(resolve, 100));
                         } catch (error: unknown) {
-                          if ((error as any)?.code === 4001 || (error as any)?.code === "ACTION_REJECTED") {
+                          if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
                             console.log(`ℹ️ User cancelled adding Character NFT #${tokenId}`);
                             break; // Stop if user cancels
                           } else if ((error as any)?.code === -32002) {
@@ -214,7 +214,7 @@ const WalletConnection = ({
                       } else {
                         console.log(`✅ Successfully added ${successCount} Character NFTs to wallet`);
                       }
-                    } catch (error: unknown) {
+                    } catch {
                       console.log('ℹ️ Character NFT add request completed');
                       setCharacterNftError("No new NFTs found");
                     } finally {
@@ -402,7 +402,7 @@ const WalletConnection = ({
                       } catch (error: unknown) {
                         console.error("Error claiming airdrop:", error);
 
-                        if ((error as any)?.code === 4001 || (error as any)?.code === "ACTION_REJECTED") {
+                        if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
                           console.log('ℹ️ User cancelled airdrop claim transaction');
                           alert("ℹ️ Transaction cancelled by user.");
                         } else if ((error as any)?.code === -32002) {
@@ -480,7 +480,7 @@ const WalletConnection = ({
                           // Small delay between requests to avoid overwhelming MetaMask
                           await new Promise(resolve => setTimeout(resolve, 100));
                         } catch (error: unknown) {
-                          if ((error as any)?.code === 4001 || (error as any)?.code === "ACTION_REJECTED") {
+                          if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
                             console.log(`ℹ️ User cancelled adding Founder's Pass #${tokenId}`);
                             break; // Stop if user cancels
                           } else if ((error as any)?.code === -32002) {
@@ -496,7 +496,7 @@ const WalletConnection = ({
                       } else {
                         console.log(`✅ Successfully added ${successCount} Founder's Pass NFTs to wallet`);
                       }
-                    } catch (error: unknown) {
+                    } catch {
                       console.log('ℹ️ Founder\'s Pass add request completed');
                       setFoundersPassError("No new NFTs found");
                     } finally {
