@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/components/lib/utils";
 
 export const InfiniteMovingCards = ({
@@ -25,9 +25,31 @@ export const InfiniteMovingCards = ({
         addAnimation();
         getDirection();
         getSpeed();
-    }, [direction, speed]);
+    }, [direction, speed, addAnimation, getDirection, getSpeed]);
 
-    function addAnimation() {
+    const getDirection = useCallback(() => {
+        if (containerRef.current) {
+            if (direction === "left") {
+                containerRef.current.style.setProperty("--animation-direction", "normal");
+            } else {
+                containerRef.current.style.setProperty("--animation-direction", "reverse");
+            }
+        }
+    }, [direction]);
+
+    const getSpeed = useCallback(() => {
+        if (containerRef.current) {
+            if (speed === "fast") {
+                containerRef.current.style.setProperty("--animation-duration", "20s");
+            } else if (speed === "normal") {
+                containerRef.current.style.setProperty("--animation-duration", "40s");
+            } else {
+                containerRef.current.style.setProperty("--animation-duration", "100s");
+            }
+        }
+    }, [speed]);
+
+    const addAnimation = useCallback(() => {
         if (containerRef.current && scrollerRef.current) {
             const scrollerContent = Array.from(scrollerRef.current.children);
 
@@ -42,29 +64,7 @@ export const InfiniteMovingCards = ({
             getSpeed();
             setStart(true);
         }
-    }
-
-    const getDirection = () => {
-        if (containerRef.current) {
-            if (direction === "left") {
-                containerRef.current.style.setProperty("--animation-direction", "normal");
-            } else {
-                containerRef.current.style.setProperty("--animation-direction", "reverse");
-            }
-        }
-    };
-
-    const getSpeed = () => {
-        if (containerRef.current) {
-            if (speed === "fast") {
-                containerRef.current.style.setProperty("--animation-duration", "20s");
-            } else if (speed === "normal") {
-                containerRef.current.style.setProperty("--animation-duration", "40s");
-            } else {
-                containerRef.current.style.setProperty("--animation-duration", "100s");
-            }
-        }
-    };
+    }, [getDirection, getSpeed]);
 
     return (
         <>

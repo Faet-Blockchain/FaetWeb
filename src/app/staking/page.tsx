@@ -598,7 +598,7 @@ export default function StakingPage() {
       await withdrawTx.wait();
 
       if (account) {
-        await loadUserData(tokenContract!, stakingContract, account);
+        await loadUserDataCallback(tokenContract!, stakingContract, account);
       }
       console.log("Withdrawal successful!");
     } catch (error: unknown) {
@@ -633,7 +633,7 @@ export default function StakingPage() {
       await claimTx.wait();
 
       if (account) {
-        await loadUserData(tokenContract!, stakingContract, account);
+        await loadUserDataCallback(tokenContract!, stakingContract, account);
       }
       console.log("Rewards claimed successfully!");
     } catch (error: unknown) {
@@ -881,6 +881,8 @@ export default function StakingPage() {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  const loadUserDataCallback = useCallback(loadUserData, [loadUserData]);
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
