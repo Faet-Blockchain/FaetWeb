@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ethers } from "ethers";
 import WalletConnection from "@/components/staking/WalletConnection";
@@ -193,21 +193,21 @@ export default function StakingPage() {
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
         setProvider(web3Provider);
 
-        const web3Signer = await web3Provider.getSigner();
-        const signerAddress = await web3Signer.getAddress();
+        await web3Provider.getSigner();
+        const signerAddress = await web3Provider.getSigner().getAddress();
         console.log("Signer address:", signerAddress);
 
-        setSigner(web3Signer);
+        setSigner(await web3Provider.getSigner());
 
         const token = new ethers.Contract(
           FAET_TOKEN_ADDRESS,
           FAET_TOKEN_ABI,
-          web3Signer,
+          await web3Provider.getSigner(),
         );
         const staking = new ethers.Contract(
           FAET_STAKING_ADDRESS,
           FAET_STAKING_ABI,
-          web3Signer,
+          await web3Provider.getSigner(),
         );
 
         setTokenContract(token);
@@ -244,7 +244,7 @@ export default function StakingPage() {
         console.log("Contracts initialized, loading user data...");
         await loadUserData(token, staking, account);
         console.log("Web3 initialization complete");
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error initializing Web3:", error?.message || error);
         clearWeb3State();
       }
@@ -373,7 +373,7 @@ export default function StakingPage() {
       try {
         const balance = await token.balanceOf(userAddress);
         setTokenBalance(ethers.formatEther(balance));
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Error fetching token balance:", error);
         setTokenBalance("0");
       }
@@ -384,7 +384,7 @@ export default function StakingPage() {
         const activeWeight = await staking.getActiveWeight(userAddress);
         setStakedBalance(ethers.formatEther(activeWeight));
         console.log("Successfully fetched active weight:", ethers.formatEther(activeWeight));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Error fetching active weight:", error?.code || error?.message);
         // Try weightedBalances as fallback
         try {
@@ -402,7 +402,7 @@ export default function StakingPage() {
         const earned = await staking.earned(userAddress);
         setPendingRewards(ethers.formatEther(earned));
         console.log("Successfully fetched earnings:", ethers.formatEther(earned));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Error fetching earnings (contract may not exist or wrong network):", error?.code || error?.message);
         setPendingRewards("0");
       }
@@ -414,7 +414,7 @@ export default function StakingPage() {
         const totalFunded = await staking.totalRewardsFunded();
         setTotalRewardsFunded(ethers.formatEther(totalFunded));
         console.log("Successfully fetched total rewards funded:", ethers.formatEther(totalFunded));
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Error fetching total rewards funded:", error?.code || error?.message);
         setTotalRewardsFunded("0");
       }
@@ -470,14 +470,14 @@ export default function StakingPage() {
         }
         setUserStakes(stakes);
         console.log("Successfully loaded", stakes.length, "stakes");
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.warn("Error loading stakes (contract may not exist or wrong network):", error?.code || error?.message);
         setUserStakes([]);
       }
 
       // Load top stakers data
       await loadTopStakersData(staking);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Critical error loading user data:", error?.message || error);
       if (error?.code === "BAD_DATA") {
         console.warn("Contract decode error - likely wrong network or contract not deployed");
@@ -517,8 +517,8 @@ export default function StakingPage() {
         } else {
           console.error("No accounts returned from MetaMask");
         }
-      } catch (error) {
-        console.error("Error connecting to MetaMask:", error);
+      } catch (error: unknown) {
+        console.error("Error connecting wallet:", error);
       } finally {
         setIsConnecting(false);
       }
@@ -721,7 +721,7 @@ export default function StakingPage() {
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
           console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
 
-          setWrongNetwork(!isCorrectNetwork);
+          setIsCorrectNetwork(!isCorrectNetwork);
 
           if (!isCorrectNetwork) {
             console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
@@ -761,7 +761,7 @@ export default function StakingPage() {
         }
       };
     }
-  }, [account]);
+  }, [account, checkNetwork, disconnectWallet, initializeWeb3]);
 
   // Continuous network monitoring when user is connected
   useEffect(() => {
@@ -800,7 +800,7 @@ export default function StakingPage() {
             // No accounts connected, still check network for UI state
             await checkNetwork();
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error("Error checking existing connection:", error);
           await checkNetwork();
         }
@@ -835,7 +835,7 @@ export default function StakingPage() {
           const formattedEarned = ethers.formatEther(earned);
           console.log(`[${timestamp}] New pending rewards:`, formattedEarned, `(block: ${currentBlock})`);
           setPendingRewards(formattedEarned);
-        } catch (error) {
+        } catch (error: unknown) {
           console.warn("Error updating pending rewards:", error);
         }
       };
@@ -859,7 +859,7 @@ export default function StakingPage() {
         console.log("Clearing rewards update interval");
         clearInterval(rewardsUpdateInterval);
       }
-    };  }, [stakingContract, account, wrongNetwork]);
+    };  }, [stakingContract, account, wrongNetwork, provider]);
 
   // Only allow staking interface if connected to correct network
   const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
@@ -874,7 +874,7 @@ export default function StakingPage() {
     };
 
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainIdNumber]);
+  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

@@ -1,6 +1,6 @@
-
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { ethers } from "ethers";
 import { motion } from "framer-motion";
 import UserBalance from "./UserBalance";
 import StakingForm from "./StakingForm";
@@ -183,7 +183,7 @@ const StakingInterface = ({
         onClaimRewards={onClaimRewards}
       />
 
-      
+
     </motion.div>
   );
 };

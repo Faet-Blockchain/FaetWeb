@@ -173,12 +173,12 @@ const WalletConnection = ({
                       console.log("📝 Attempting to add Test Character NFTs to MetaMask...");
 
                       let successCount = 0;
-                      let totalAttempts = 0;
+                      // let totalAttempts = 0;
 
                       // Try to add multiple token IDs (1-10) for Character NFTs
                       for (let tokenId = 1; tokenId <= 10; tokenId++) {
                         try {
-                          totalAttempts++;
+                          // totalAttempts++;
                           const wasAdded = await window.ethereum.request({
                             method: 'wallet_watchAsset',
                             params: {
@@ -197,13 +197,13 @@ const WalletConnection = ({
 
                           // Small delay between requests to avoid overwhelming MetaMask
                           await new Promise(resolve => setTimeout(resolve, 100));
-                        } catch (error: any) {
-                          if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                        } catch (error: unknown) {
+                          if ((error as any)?.code === 4001 || (error as any)?.code === "ACTION_REJECTED") {
                             console.log(`ℹ️ User cancelled adding Character NFT #${tokenId}`);
                             break; // Stop if user cancels
-                          } else if (error?.code === -32002) {
+                          } else if ((error as any)?.code === -32002) {
                             console.log(`ℹ️ Request for Character NFT #${tokenId} already pending`);
-                          } else if (error?.code === -32603 || error?.message?.includes("already exists")) {
+                          } else if ((error as any)?.code === -32603 || (error as any)?.message?.includes("already exists")) {
                             console.log(`ℹ️ Character NFT #${tokenId} may already be in wallet`);
                           }
                         }
@@ -214,7 +214,7 @@ const WalletConnection = ({
                       } else {
                         console.log(`✅ Successfully added ${successCount} Character NFTs to wallet`);
                       }
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                       console.log('ℹ️ Character NFT add request completed');
                       setCharacterNftError("No new NFTs found");
                     } finally {
@@ -327,7 +327,7 @@ const WalletConnection = ({
                                   ownedTokenIds.push(tokenId);
                                   console.log(`Found owned token ID via direct check: ${tokenId}`);
                                 }
-                              } catch (ownerError) {
+                              } catch {
                                 // Token doesn't exist or other error, continue
                               }
                             }
@@ -345,7 +345,7 @@ const WalletConnection = ({
                         // Check which of the owned tokens are claimable
                         const claimableTokens = [];
                         const alreadyClaimedTokens = [];
-                        
+
                         for (const tokenId of ownedTokenIds) {
                           try {
                             // Check if already claimed
@@ -358,7 +358,7 @@ const WalletConnection = ({
                             // Check if claimable
                             const canClaim = await faetTokenContract.canClaim(account, tokenId);
                             console.log(`Token ${tokenId}: canClaim = ${canClaim}, claimed = ${isClaimed}`);
-                            
+
                             if (canClaim) {
                               claimableTokens.push(tokenId);
                             }
@@ -399,24 +399,24 @@ const WalletConnection = ({
                         // Show success message
                         alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.length}\nToken IDs: ${claimableTokens.join(', ')}\nTransaction: ${tx.hash}`);
 
-                      } catch (error: any) {
+                      } catch (error: unknown) {
                         console.error("Error claiming airdrop:", error);
 
-                        if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                        if ((error as any)?.code === 4001 || (error as any)?.code === "ACTION_REJECTED") {
                           console.log('ℹ️ User cancelled airdrop claim transaction');
                           alert("ℹ️ Transaction cancelled by user.");
-                        } else if (error?.code === -32002) {
+                        } else if ((error as any)?.code === -32002) {
                           alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
-                        } else if (error?.reason?.includes("Not claimable") || error?.message?.includes("Not claimable") || error?.message?.includes("FAET: Not claimable")) {
-                          alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid\n- The contract is paused");
-                        } else if (error?.reason?.includes("paused") || error?.message?.includes("paused")) {
+                        } else if ((error as any)?.reason?.includes("Not claimable") || (error as any)?.message?.includes("Not claimable") || (error as any)?.message?.includes("FAET: Not claimable")) {
+                          alert("❌ Token not claimable.\n\nThis could mean:\n- You don&apos;t own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid\n- The contract is paused");
+                        } else if ((error as any)?.reason?.includes("paused") || (error as any)?.message?.includes("paused")) {
                           alert("❌ Airdrop claiming is currently paused by the contract administrators.");
-                        } else if (error?.message?.includes("insufficient funds")) {
+                        } else if ((error as any)?.message?.includes("insufficient funds")) {
                           alert("❌ Insufficient funds for gas fees. Please add more ETH to your wallet.");
-                        } else if (error?.code === -32603) {
+                        } else if ((error as any)?.code === -32603) {
                           alert("❌ Internal JSON-RPC error. This might be a network issue. Please try again.");
                         } else {
-                          const errorMsg = error?.reason || error?.message || "Unknown error occurred";
+                          const errorMsg = (error as any)?.reason || (error as any)?.message || "Unknown error occurred";
                           alert(`❌ Failed to claim airdrop:\n\n${errorMsg}\n\nPlease check the console for more details.`);
                         }
                       } finally {
@@ -455,12 +455,12 @@ const WalletConnection = ({
                       console.log("📝 Attempting to add Test Founder's Pass NFTs to MetaMask...");
 
                       let successCount = 0;
-                      let totalAttempts = 0;
+                      // let totalAttempts = 0;
 
                       // Try to add multiple token IDs (1-150) for Founder's Pass
                       for (let tokenId = 1; tokenId <= 150; tokenId++) {
                         try {
-                          totalAttempts++;
+                          // totalAttempts++;
                           const wasAdded = await window.ethereum.request({
                             method: 'wallet_watchAsset',
                             params: {
@@ -479,13 +479,13 @@ const WalletConnection = ({
 
                           // Small delay between requests to avoid overwhelming MetaMask
                           await new Promise(resolve => setTimeout(resolve, 100));
-                        } catch (error: any) {
-                          if (error?.code === 4001 || error?.code === "ACTION_REJECTED") {
+                        } catch (error: unknown) {
+                          if ((error as any)?.code === 4001 || (error as any)?.code === "ACTION_REJECTED") {
                             console.log(`ℹ️ User cancelled adding Founder's Pass #${tokenId}`);
                             break; // Stop if user cancels
-                          } else if (error?.code === -32002) {
+                          } else if ((error as any)?.code === -32002) {
                             console.log(`ℹ️ Request for Founder's Pass #${tokenId} already pending`);
-                          } else if (error?.code === -32603 || error?.message?.includes("already exists")) {
+                          } else if ((error as any)?.code === -32603 || (error as any)?.message?.includes("already exists")) {
                             console.log(`ℹ️ Founder's Pass #${tokenId} may already be in wallet`);
                           }
                         }
@@ -496,7 +496,7 @@ const WalletConnection = ({
                       } else {
                         console.log(`✅ Successfully added ${successCount} Founder's Pass NFTs to wallet`);
                       }
-                    } catch (error: any) {
+                    } catch (error: unknown) {
                       console.log('ℹ️ Founder\'s Pass add request completed');
                       setFoundersPassError("No new NFTs found");
                     } finally {
