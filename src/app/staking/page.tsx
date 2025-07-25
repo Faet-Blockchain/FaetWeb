@@ -14,8 +14,8 @@ declare global {
         params?: unknown[];
       }) => Promise<unknown>;
       isMetaMask?: boolean;
-      on?: (event: string, callback: (...args: any[]) => void) => void;
-      removeListener?: (event: string, callback: (...args: any[]) => void) => void;
+      on?: (event: string, callback: (...args: unknown[]) => void) => void;
+      removeListener?: (event: string, callback: (...args: unknown[]) => void) => void;
     };
   }
 }
@@ -62,7 +62,6 @@ export default function StakingPage() {
 
   // Web3 state
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(null);
   const [stakingContract, setStakingContract] = useState<ethers.Contract | null>(null);
 
@@ -72,7 +71,15 @@ export default function StakingPage() {
   const [pendingRewards, setPendingRewards] = useState<string>("0");
   const [stakeAmount, setStakeAmount] = useState<string>("");
   const [selectedDays, setSelectedDays] = useState<number>(0);
-  const [userStakes, setUserStakes] = useState<any[]>([]);
+  const [userStakes, setUserStakes] = useState<Array<{
+    index: number;
+    amount: string;
+    weightedAmount: string;
+    multiplier: number;
+    lockEndBlock: number;
+    isUnlocked: boolean;
+    blocksRemaining: number;
+  }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState<string>("");
 
@@ -96,7 +103,6 @@ export default function StakingPage() {
 
   const clearWeb3State = () => {
     setProvider(null);
-    setSigner(null);
     setTokenContract(null);
     setStakingContract(null);
     setTokenBalance("0");
@@ -168,7 +174,7 @@ export default function StakingPage() {
           method: "wallet_switchEthereumChain",
           params: [{ chainId: LISK_SEPOLIA_CHAIN_ID }],
         });
-      } catch (switchError: any) {
+      } catch (switchError: unknown) {
         if (switchError.code === 4902) {
           try {
             await window.ethereum.request({
@@ -193,21 +199,19 @@ export default function StakingPage() {
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
         setProvider(web3Provider);
 
-        await web3Provider.getSigner();
-        const signerAddress = await web3Provider.getSigner().getAddress();
+        const signer = await web3Provider.getSigner();
+        const signerAddress = await signer.getAddress();
         console.log("Signer address:", signerAddress);
-
-        setSigner(await web3Provider.getSigner());
 
         const token = new ethers.Contract(
           FAET_TOKEN_ADDRESS,
           FAET_TOKEN_ABI,
-          await web3Provider.getSigner(),
+          signer,
         );
         const staking = new ethers.Contract(
           FAET_STAKING_ADDRESS,
           FAET_STAKING_ABI,
-          await web3Provider.getSigner(),
+          signer,
         );
 
         setTokenContract(token);
@@ -391,7 +395,7 @@ export default function StakingPage() {
           const weighted = await staking.weightedBalances(userAddress);
           setStakedBalance(ethers.formatEther(weighted));
           console.log("Successfully fetched weighted balance:", ethers.formatEther(weighted));
-        } catch (fallbackError: any) {
+        } catch (fallbackError: unknown) {
           console.warn("Error fetching weighted balances:", fallbackError?.code || fallbackError?.message);
           setStakedBalance("0");
         }

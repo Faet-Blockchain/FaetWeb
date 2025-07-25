@@ -400,26 +400,24 @@ const WalletConnection = ({
                         alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.length}\nToken IDs: ${claimableTokens.join(', ')}\nTransaction: ${tx.hash}`);
 
                       } catch (error: unknown) {
-                        console.error("Error claiming airdrop:", error);
-
-                        if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
-                          console.log('ℹ️ User cancelled airdrop claim transaction');
-                          alert("ℹ️ Transaction cancelled by user.");
-                        } else if ((error as any)?.code === -32002) {
-                          alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
-                        } else if ((error as any)?.reason?.includes("Not claimable") || (error as any)?.message?.includes("Not claimable") || (error as any)?.message?.includes("FAET: Not claimable")) {
-                          alert("❌ Token not claimable.\n\nThis could mean:\n- You don&apos;t own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid\n- The contract is paused");
-                        } else if ((error as any)?.reason?.includes("paused") || (error as any)?.message?.includes("paused")) {
-                          alert("❌ Airdrop claiming is currently paused by the contract administrators.");
-                        } else if ((error as any)?.message?.includes("insufficient funds")) {
-                          alert("❌ Insufficient funds for gas fees. Please add more ETH to your wallet.");
-                        } else if ((error as any)?.code === -32603) {
-                          alert("❌ Internal JSON-RPC error. This might be a network issue. Please try again.");
-                        } else {
-                          const errorMsg = (error as any)?.reason || (error as any)?.message || "Unknown error occurred";
-                          alert(`❌ Failed to claim airdrop:\n\n${errorMsg}\n\nPlease check the console for more details.`);
-                        }
-                      } finally {
+                          if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
+                            console.log('ℹ️ User cancelled airdrop claim transaction');
+                            alert("ℹ️ Transaction cancelled by user.");
+                          } else if ((error as { code?: number })?.code === -32002) {
+                            alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
+                          } else if ((error as { reason?: string; message?: string })?.reason?.includes("Not claimable") || (error as { message?: string })?.message?.includes("Not claimable") || (error as { message?: string })?.message?.includes("FAET: Not claimable")) {
+                            alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid\n- The contract is paused");
+                          } else if ((error as { reason?: string; message?: string })?.reason?.includes("paused") || (error as { message?: string })?.message?.includes("paused")) {
+                            alert("❌ Airdrop claiming is currently paused by the contract administrators.");
+                          } else if ((error as { message?: string })?.message?.includes("insufficient funds")) {
+                            alert("❌ Insufficient funds for gas fees. Please add more ETH to your wallet.");
+                          } else if ((error as { code?: number })?.code === -32603) {
+                            alert("❌ Internal JSON-RPC error. This might be a network issue. Please try again.");
+                          } else {
+                            const errorMsg = (error as { reason?: string; message?: string })?.reason || (error as { message?: string })?.message || "Unknown error occurred";
+                            alert(`❌ Failed to claim airdrop:\n\n${errorMsg}\n\nPlease check the console for more details.`);
+                          }
+                        } finally {
                         setIsClaimingAirdrop(false);
                       }
                     }}
