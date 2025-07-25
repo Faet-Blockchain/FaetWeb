@@ -21,12 +21,6 @@ export const InfiniteMovingCards = ({
 
     const [start, setStart] = useState(false);
 
-    useEffect(() => {
-        addAnimation();
-        getDirection();
-        getSpeed();
-    }, [direction, speed, addAnimation, getDirection, getSpeed]);
-
     const getDirection = useCallback(() => {
         if (containerRef.current) {
             if (direction === "left") {
@@ -65,6 +59,12 @@ export const InfiniteMovingCards = ({
             setStart(true);
         }
     }, [getDirection, getSpeed]);
+
+    useEffect(() => {
+        addAnimation();
+        getDirection();
+        getSpeed();
+    }, [direction, speed, addAnimation, getDirection, getSpeed]);
 
     return (
         <>
