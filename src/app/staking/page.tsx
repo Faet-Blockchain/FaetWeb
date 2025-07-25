@@ -208,7 +208,13 @@ export default function StakingPage() {
       console.log(`Found ${stakeEvents.length} stake events`);
 
       // Get unique staker addresses from events
-      const uniqueStakers = [...new Set(stakeEvents.map(event => event.args?.[0]).filter(Boolean))];
+      const uniqueStakers = [...new Set(stakeEvents.map(event => {
+        // Type guard to check if event is EventLog (has args property)
+        if ('args' in event && event.args && event.args[0]) {
+          return event.args[0];
+        }
+        return null;
+      }).filter(Boolean))];
       console.log(`Found ${uniqueStakers.length} unique stakers`);
 
       if (uniqueStakers.length === 0) {
