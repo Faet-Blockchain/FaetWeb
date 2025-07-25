@@ -875,7 +875,7 @@ export default function StakingPage() {
     };  }, [stakingContract, account, wrongNetwork, provider]);
 
   // Only allow staking interface if connected to correct network
-  const canAccessStaking = account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet';
+  const canAccessStaking = Boolean(account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet');
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
