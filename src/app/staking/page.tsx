@@ -175,7 +175,7 @@ export default function StakingPage() {
           params: [{ chainId: LISK_SEPOLIA_CHAIN_ID }],
         });
       } catch (switchError: unknown) {
-        if (switchError.code === 4902) {
+        if ((switchError as { code?: number })?.code === 4902) {
           try {
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
