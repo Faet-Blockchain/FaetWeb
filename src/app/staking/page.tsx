@@ -22,7 +22,7 @@ declare global {
 
 // Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
-const FAET_STAKING_ADDRESS = "0x9E9444d4dD359666De79B46e6fADF1E97B5c116E";
+const FAET_STAKING_ADDRESS = "0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472";
 
 // Simplified ABI for the functions we need
 const FAET_TOKEN_ABI = [
