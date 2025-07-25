@@ -329,14 +329,14 @@ export default function StakingPage() {
         setStakedBalance(ethers.formatEther(activeWeight));
         console.log("Successfully fetched active weight:", ethers.formatEther(activeWeight));
       } catch (error: unknown) {
-        console.warn("Error fetching active weight:", error?.code || error?.message);
+        console.warn("Error fetching active weight:", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         // Try weightedBalances as fallback
         try {
           const weighted = await staking.weightedBalances(userAddress);
           setStakedBalance(ethers.formatEther(weighted));
           console.log("Successfully fetched weighted balance:", ethers.formatEther(weighted));
         } catch (fallbackError: unknown) {
-          console.warn("Error fetching weighted balances:", fallbackError?.code || fallbackError?.message);
+          console.warn("Error fetching weighted balances:", (fallbackError as { code?: string | number; message?: string })?.code || (fallbackError as { message?: string })?.message);
           setStakedBalance("0");
         }
       }
@@ -347,7 +347,7 @@ export default function StakingPage() {
         setPendingRewards(ethers.formatEther(earned));
         console.log("Successfully fetched earnings:", ethers.formatEther(earned));
       } catch (error: unknown) {
-        console.warn("Error fetching earnings (contract may not exist or wrong network):", error?.code || error?.message);
+        console.warn("Error fetching earnings (contract may not exist or wrong network):", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setPendingRewards("0");
       }
 
@@ -359,7 +359,7 @@ export default function StakingPage() {
         setTotalRewardsFunded(ethers.formatEther(totalFunded));
         console.log("Successfully fetched total rewards funded:", ethers.formatEther(totalFunded));
       } catch (error: unknown) {
-        console.warn("Error fetching total rewards funded:", error?.code || error?.message);
+        console.warn("Error fetching total rewards funded:", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setTotalRewardsFunded("0");
       }
 
@@ -415,15 +415,15 @@ export default function StakingPage() {
         setUserStakes(stakes);
         console.log("Successfully loaded", stakes.length, "stakes");
       } catch (error: unknown) {
-        console.warn("Error loading stakes (contract may not exist or wrong network):", error?.code || error?.message);
+        console.warn("Error loading stakes (contract may not exist or wrong network):", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setUserStakes([]);
       }
 
       // Load top stakers data
       await loadTopStakersData(staking);
     } catch (error: unknown) {
-      console.error("Critical error loading user data:", error?.message || error);
-      if (error?.code === "BAD_DATA") {
+      console.error("Critical error loading user data:", (error as { message?: string })?.message || error);
+      if ((error as { code?: string })?.code === "BAD_DATA") {
         console.warn("Contract decode error - likely wrong network or contract not deployed");
       }
       // Set fallback values
@@ -494,7 +494,7 @@ export default function StakingPage() {
         await loadUserData(token, staking, account);
         console.log("Web3 initialization complete");
       } catch (error: unknown) {
-        console.error("Error initializing Web3:", error?.message || error);
+        console.error("Error initializing Web3:", (error as { message?: string })?.message || error);
         clearWeb3State();
       }
     } else {
