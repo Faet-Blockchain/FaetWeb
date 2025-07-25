@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 type WalletConnectionProps = {
   account: string | null;
@@ -99,13 +100,12 @@ const WalletConnection = ({
                 </>
               ) : (
                 <>
-                  <img
+                  <Image
                     src="/images/metamask-icon.png"
                     alt="MetaMask"
+                    width={24}
+                    height={24}
                     className="w-6 h-6"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
                   />
                   Connect MetaMask
                 </>
@@ -243,7 +243,7 @@ const WalletConnection = ({
               </div>
 
               <div className="bg-gray-800 p-6 rounded-lg">
-                <h3 className="text-xl font-bold mb-4">Claim Founder's Airdrop</h3>
+                <h3 className="text-xl font-bold mb-4">Claim Founder&apos;s Airdrop</h3>
                 <p className="text-gray-300 mb-4">
                   Claim your exclusive founder rewards
                 </p>
