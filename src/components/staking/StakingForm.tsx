@@ -13,11 +13,11 @@ type StakingFormProps = {
   onStake: () => void;
 };
 
-// Calculate multiplier based on days - linear from 1x to 20x over 730 days
+// Calculate multiplier based on days - linear from 1x to 10x over 1095 days (3 years)
 const calculateMultiplier = (days: number): number => {
   if (days === 0) return 1.0;
-  if (days >= 730) return 20.0;
-  return 1 + (days * 19) / 730;
+  if (days >= 1095) return 10.0;
+  return 1 + (days * 9) / 1095;
 };
 
 const StakingForm = ({
@@ -45,20 +45,20 @@ const StakingForm = ({
           <input
             type="range"
             min="0"
-            max="730"
+            max="1095"
             step="1"
             value={selectedDays}
             onChange={(e) => onSelectedDaysChange(parseInt(e.target.value))}
             className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
             style={{
-              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 730) * 100}%, #374151 ${(selectedDays / 730) * 100}%, #374151 100%)`,
+              background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(selectedDays / 1095) * 100}%, #374151 ${(selectedDays / 1095) * 100}%, #374151 100%)`,
             }}
           />
           <div className="flex justify-between text-xs text-gray-400 mt-1">
             <span>0 days (1.00x)</span>
-            <span>180 days ({calculateMultiplier(180).toFixed(2)}x)</span>
             <span>365 days ({calculateMultiplier(365).toFixed(2)}x)</span>
-            <span>730 days (20.00x)</span>
+            <span>730 days ({calculateMultiplier(730).toFixed(2)}x)</span>
+            <span>1095 days (10.00x)</span>
           </div>
         </div>
         <div className="bg-gray-700 p-3 rounded-lg">
@@ -133,7 +133,7 @@ const StakingForm = ({
         </div>
       </div>
       <p className="text-gray-400 text-sm mt-2">
-        Staking weights increase with lock time, up to 20x for 730 days.
+        Staking weights increase with lock time, up to 10x for 1095 days (3 years).
       </p>
 
       {txHash && (
