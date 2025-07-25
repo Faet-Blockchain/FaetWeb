@@ -256,7 +256,7 @@ export default function StakingPage() {
       console.log("Cannot initialize Web3: missing ethereum or account");
       clearWeb3State();
     }
-  }, [account]);
+  }, [account, currentChainId, loadUserData]);
 
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {

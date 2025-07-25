@@ -495,7 +495,7 @@ const WalletConnection = ({
                         console.log(`✅ Successfully added ${successCount} Founder's Pass NFTs to wallet`);
                       }
                     } catch {
-                      console.log('ℹ️ Founder&apos;s Pass add request completed');
+                      console.log('ℹ️ Founder\'s Pass add request completed');
                       setFoundersPassError("No new NFTs found");
                     } finally {
                       setIsAddingFoundersPass(false);

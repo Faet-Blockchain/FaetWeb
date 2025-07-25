@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/components/lib/utils";
 
 export const InfiniteMovingCards = ({
@@ -25,7 +25,7 @@ export const InfiniteMovingCards = ({
         addAnimation();
         getDirection();
         getSpeed();
-    }, [direction, speed, addAnimation]);
+    }, [direction, speed]);
 
     function addAnimation() {
         if (containerRef.current && scrollerRef.current) {
