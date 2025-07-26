@@ -62,9 +62,7 @@ export const InfiniteMovingCards = ({
 
     useEffect(() => {
         addAnimation();
-        getDirection();
-        getSpeed();
-    }, [direction, speed, addAnimation, getDirection, getSpeed]);
+    }, [addAnimation]);
 
     return (
         <>
