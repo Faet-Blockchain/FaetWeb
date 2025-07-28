@@ -882,7 +882,7 @@ export default function StakingPage() {
     }
   };
 
-  const loadUserDataCallback = useCallback(loadUserData, [loadUserData]);
+  const loadUserDataCallback = useCallback(loadUserData, [provider]);
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
