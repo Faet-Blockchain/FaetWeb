@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 import {
@@ -125,99 +124,84 @@ const RewardsSection = ({
         on their weighted staked amount.
       </p>
 
-      {/* Staking Distribution Chart */}
-      <div className="bg-gray-700 p-6 rounded-lg">
-        <h4 className="font-semibold text-purple-400 mb-4">
-          Staking Distribution by Amount Range
-        </h4>
-        {stakingRanges.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <div className="animate-pulse">Loading staking distribution data...</div>
-            <div className="text-xs mt-2">Fetching data from blockchain...</div>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={stakingRanges.map((range, index) => ({
-                      name: `${range.range} (${range.count} addresses)`,
-                      value: parseFloat(range.totalWeight),
-                      fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
-                    }))}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ percent }: { percent?: number }) =>
-                      percent && percent > 0.05 ? `${(percent * 100).toFixed(1)}%` : ""
-                    }
-                    labelLine={false}
-                  />
-                  <Tooltip
-                    formatter={(value: number) => [
-                      `${value.toLocaleString()} FAET`,
-                    ]}
-                    contentStyle={{
-                      backgroundColor: "#374151",
-                      border: "1px solid #4b5563",
-                      borderRadius: "8px",
-                      color: "#fff",
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ color: "#fff", fontSize: "12px" }}
-                    iconSize={8}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+      {/* Staking Distribution Chart - Hidden for now */}
+      {false && (
+        <div className="bg-gray-700 p-6 rounded-lg">
+          <h4 className="font-semibold text-purple-400 mb-4">
+            Staking Distribution by Amount Range
+          </h4>
+          {stakingRanges.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <div className="animate-pulse">Loading staking distribution data...</div>
+              <div className="text-xs mt-2">Fetching data from blockchain...</div>
             </div>
-            <div className="space-y-4">
-              <div className="bg-gray-600 p-4 rounded-lg">
-                <h5 className="font-semibold text-purple-400 mb-2">
-                  Top 10 Stakers
-                </h5>
-                <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
-                  {topStakers.length === 0 ? (
-                    <div className="text-gray-400 text-center py-4">
-                      Loading stakers data...
-                    </div>
-                  ) : (
-                    topStakers.map((staker, index) => (
-                      <div
-                        key={staker.address}
-                        className="flex justify-between items-center"
-                      >
-                        <span className="text-gray-300 min-w-[25px]">
-                          {index + 1}.
-                        </span>
-                        <button
-                          onClick={() => copyToClipboard(staker.address)}
-                          className="font-mono text-blue-400 hover:text-blue-300 transition-colors cursor-pointer text-xs flex-1 text-center"
-                          title={`Click to copy: ${staker.address}`}
-                        >
-                          {formatAddress(staker.address)}
-                        </button>
-                        <span className="font-mono text-purple-400 text-xs min-w-[80px] text-right">
-                          {parseFloat(staker.weight).toLocaleString(undefined, {
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stakingRanges.map((range, index) => ({
+                        name: `${range.range} (${range.count} addresses)`,
+                        value: parseFloat(range.totalWeight),
+                        fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="value"
+                      label={({ percent }: { percent?: number }) =>
+                        percent && percent > 0.05 ? `${(percent * 100).toFixed(1)}%` : ""
+                      }
+                      labelLine={false}
+                    />
+                    <Tooltip
+                      formatter={(value: number) => [
+                        `${value.toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 2,
+                        })} FAET`,
+                        "Total Weight",
+                      ]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div>
+                <h5 className="font-medium text-gray-300 mb-3">Range Breakdown</h5>
+                <div className="space-y-2">
+                  {stakingRanges.map((range, index) => (
+                    <div
+                      key={range.range}
+                      className="flex justify-between items-center text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
+                          }}
+                        ></div>
+                        <span className="text-gray-300">{range.range}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-gray-300">{range.count} addresses</div>
+                        <div className="text-purple-400 font-mono text-xs">
+                          {parseFloat(range.totalWeight).toLocaleString(undefined, {
                             minimumFractionDigits: 0,
                             maximumFractionDigits: 2,
                           })}{" "}
                           FAET
-                        </span>
+                        </div>
                       </div>
-                    ))
-                  )}
-                  <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-500">
-                    * Click addresses to copy to clipboard
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
