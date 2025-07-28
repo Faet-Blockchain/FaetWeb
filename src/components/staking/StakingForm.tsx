@@ -103,7 +103,17 @@ const StakingForm = ({
           </div>
           <div className="flex flex-col justify-center">
             <button
-              onClick={onStake}
+              onClick={() => {
+                console.log("🔘 Stake button clicked with:", {
+                  stakeAmount,
+                  isLoading,
+                  wrongNetwork,
+                  tokenBalance,
+                  isValidAmount: parseFloat(stakeAmount) > 0,
+                  hasBalance: parseFloat(stakeAmount) <= parseFloat(tokenBalance)
+                });
+                onStake();
+              }}
               disabled={
                 !stakeAmount ||
                 isLoading ||

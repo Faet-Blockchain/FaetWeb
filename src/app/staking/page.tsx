@@ -597,8 +597,8 @@ export default function StakingPage() {
       setTxHash(withdrawTx.hash);
       await withdrawTx.wait();
 
-      if (account) {
-        await loadUserDataCallback(tokenContract!, stakingContract, account);
+      if (account && tokenContract && stakingContract) {
+        await loadUserData(tokenContract, stakingContract, account);
       }
       console.log("Withdrawal successful!");
     } catch (error: unknown) {
@@ -632,8 +632,8 @@ export default function StakingPage() {
       setTxHash(claimTx.hash);
       await claimTx.wait();
 
-      if (account) {
-        await loadUserDataCallback(tokenContract!, stakingContract, account);
+      if (account && tokenContract && stakingContract) {
+        await loadUserData(tokenContract, stakingContract, account);
       }
       console.log("Rewards claimed successfully!");
     } catch (error: unknown) {
