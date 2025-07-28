@@ -1,3 +1,4 @@
+
 "use client";
 import React from "react";
 import {
@@ -171,51 +172,51 @@ const RewardsSection = ({
                   />
                 </PieChart>
               </ResponsiveContainer>
-            </div></div>
-        )}
-          <div className="space-y-4">
-            <div className="bg-gray-600 p-4 rounded-lg">
-              <h5 className="font-semibold text-purple-400 mb-2">
-                Top 10 Stakers
-              </h5>
-              <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
-                {topStakers.length === 0 ? (
-                  <div className="text-gray-400 text-center py-4">
-                    Loading stakers data...
-                  </div>
-                ) : (
-                  topStakers.map((staker, index) => (
-                    <div
-                      key={staker.address}
-                      className="flex justify-between items-center"
-                    >
-                      <span className="text-gray-300 min-w-[25px]">
-                        {index + 1}.
-                      </span>
-                      <button
-                        onClick={() => copyToClipboard(staker.address)}
-                        className="font-mono text-blue-400 hover:text-blue-300 transition-colors cursor-pointer text-xs flex-1 text-center"
-                        title={`Click to copy: ${staker.address}`}
-                      >
-                        {formatAddress(staker.address)}
-                      </button>
-                      <span className="font-mono text-purple-400 text-xs min-w-[80px] text-right">
-                        {parseFloat(staker.weight).toLocaleString(undefined, {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        FAET
-                      </span>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-gray-600 p-4 rounded-lg">
+                <h5 className="font-semibold text-purple-400 mb-2">
+                  Top 10 Stakers
+                </h5>
+                <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
+                  {topStakers.length === 0 ? (
+                    <div className="text-gray-400 text-center py-4">
+                      Loading stakers data...
                     </div>
-                  ))
-                )}
-                <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-500">
-                  * Click addresses to copy to clipboard
+                  ) : (
+                    topStakers.map((staker, index) => (
+                      <div
+                        key={staker.address}
+                        className="flex justify-between items-center"
+                      >
+                        <span className="text-gray-300 min-w-[25px]">
+                          {index + 1}.
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(staker.address)}
+                          className="font-mono text-blue-400 hover:text-blue-300 transition-colors cursor-pointer text-xs flex-1 text-center"
+                          title={`Click to copy: ${staker.address}`}
+                        >
+                          {formatAddress(staker.address)}
+                        </button>
+                        <span className="font-mono text-purple-400 text-xs min-w-[80px] text-right">
+                          {parseFloat(staker.weight).toLocaleString(undefined, {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          FAET
+                        </span>
+                      </div>
+                    ))
+                  )}
+                  <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-500">
+                    * Click addresses to copy to clipboard
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
