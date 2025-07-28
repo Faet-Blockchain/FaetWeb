@@ -927,7 +927,7 @@ export default function StakingPage() {
     };
 
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3]);
+  }, [account, wrongNetwork, currentChainIdNumber]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
