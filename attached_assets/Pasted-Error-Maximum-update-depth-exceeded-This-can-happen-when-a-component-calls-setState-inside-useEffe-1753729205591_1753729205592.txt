@@ -1,0 +1,11 @@
+Error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at createConsoleError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:882:71)
+    at handleConsoleError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1058:54)
+    at console.error (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1223:57)
+    at getRootForUpdatedFiber (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:4741:143)
+    at enqueueConcurrentHookUpdate (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:4724:16)
+    at dispatchSetStateInternal (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:7189:22)
+    at dispatchSetState (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:7161:9)
+    at StakingPage.useCallback[initializeWeb3] (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/src_1592a393._.js:2600:21)
+    at StakingPage.useEffect.initWeb3IfReady (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/src_1592a393._.js:3032:31)
+    at StakingPage.useEffect (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/src_1592a393._.js:3036:13)
