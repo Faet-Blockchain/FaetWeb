@@ -449,20 +449,53 @@ const WalletConnection = ({
                                 tokenIdNumber <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
                               ownedTokenIds.push(tokenIdNumber);
                             }
+                            
+                            // Add delay between requests to prevent rate limiting
+                            if (i < maxTokensToCheck - 1) {
+                              await new Promise(resolve => setTimeout(resolve, 50));
+                            }
                           } catch (error) {
                             console.log(`Could not get token at index ${i}:`, sanitizeError(error));
-                            break;
+                            // If we get an error, try to continue with remaining tokens
+                            continue;
+                          }
+                        }
+
+                        // If we couldn't get tokens using tokenOfOwnerByIndex, try a fallback method
+                        if (ownedTokenIds.length === 0) {
+                          console.log("Trying fallback method to find owned tokens...");
+                          
+                          // Fallback: Check ownership of all possible token IDs
+                          for (let tokenId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min; 
+                               tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max; 
+                               tokenId++) {
+                            try {
+                              const owner = await foundersPassContract.ownerOf(tokenId);
+                              if (owner.toLowerCase() === account.toLowerCase()) {
+                                ownedTokenIds.push(tokenId);
+                              }
+                              
+                              // Rate limiting
+                              await new Promise(resolve => setTimeout(resolve, 25));
+                            } catch (error) {
+                              // Token doesn't exist or other error, continue
+                              continue;
+                            }
                           }
                         }
 
                         if (ownedTokenIds.length === 0) {
-                          alert("❌ Could not retrieve your Founder's Pass NFT token IDs.");
+                          alert("❌ Could not retrieve your Founder's Pass NFT token IDs. You may not own any NFTs from this collection.");
                           return;
                         }
+
+                        console.log(`Found ${ownedTokenIds.length} owned token IDs:`, ownedTokenIds);
 
                         // Check claimability with rate limiting
                         const claimableTokens: number[] = [];
                         const alreadyClaimedTokens: number[] = [];
+
+                        console.log(`Checking claimability for ${ownedTokenIds.length} tokens...`);
 
                         for (const tokenId of ownedTokenIds) {
                           try {
@@ -471,13 +504,18 @@ const WalletConnection = ({
                               await new Promise(resolve => setTimeout(resolve, 100));
                             }
 
+                            console.log(`Checking token ${tokenId}...`);
+
                             const isClaimed = await faetTokenContract.claimed(tokenId);
                             if (isClaimed) {
+                              console.log(`Token ${tokenId} already claimed`);
                               alreadyClaimedTokens.push(tokenId);
                               continue;
                             }
 
                             const canClaim = await faetTokenContract.canClaim(account, tokenId);
+                            console.log(`Token ${tokenId} can claim:`, canClaim);
+                            
                             if (canClaim) {
                               claimableTokens.push(tokenId);
                             }
@@ -485,6 +523,9 @@ const WalletConnection = ({
                             console.log(`Error checking token ${tokenId}:`, sanitizeError(error));
                           }
                         }
+
+                        console.log(`Found ${claimableTokens.length} claimable tokens:`, claimableTokens);
+                        console.log(`Found ${alreadyClaimedTokens.length} already claimed tokens:`, alreadyClaimedTokens);
 
                         if (claimableTokens.length === 0) {
                           if (alreadyClaimedTokens.length > 0) {
