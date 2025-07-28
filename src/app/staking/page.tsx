@@ -87,7 +87,7 @@ export default function StakingPage() {
     blockExplorerUrls: ["https://sepolia-blockscout.lisk.com"],
   };
 
-  const clearWeb3State = () => {
+  const clearWeb3State = useCallback(() => {
     setProvider(null);
     setTokenContract(null);
     setStakingContract(null);
@@ -98,7 +98,7 @@ export default function StakingPage() {
 
     setTotalRewardsFunded("0");
     setShowTokenStaking(false);
-  };
+  }, []);
 
   const checkNetwork = useCallback(async (): Promise<boolean> => {
     if (typeof window.ethereum !== "undefined") {
@@ -927,7 +927,7 @@ export default function StakingPage() {
     };
 
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainIdNumber]);
+  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

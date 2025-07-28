@@ -5,7 +5,6 @@ import {
   Pie,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
 
 type RewardsSectionProps = {
@@ -25,29 +24,9 @@ const RewardsSection = ({
   stakedBalance,
   isLoading,
   wrongNetwork,
-  topStakers,
   stakingRanges,
   onClaimRewards,
 }: RewardsSectionProps) => {
-  const copyToClipboard = async (address: string) => {
-    try {
-      await navigator.clipboard.writeText(address);
-      console.log("✅ Address copied to clipboard:", address);
-    } catch (error) {
-      console.warn("⚠️ Failed to copy address to clipboard:", error);
-      const textArea = document.createElement("textarea");
-      textArea.value = address;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-    }
-  };
-
-  const formatAddress = (address: string): string => {
-    if (!address || address.length < 8) return address;
-    return `${address.slice(0, 5)}...${address.slice(-4)}`;
-  };
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg">
