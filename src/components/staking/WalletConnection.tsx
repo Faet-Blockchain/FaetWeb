@@ -449,7 +449,7 @@ const WalletConnection = ({
                                 tokenIdNumber <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
                               ownedTokenIds.push(tokenIdNumber);
                             }
-                            
+
                             // Add delay between requests to prevent rate limiting
                             if (i < maxTokensToCheck - 1) {
                               await new Promise(resolve => setTimeout(resolve, 50));
@@ -464,7 +464,7 @@ const WalletConnection = ({
                         // If we couldn't get tokens using tokenOfOwnerByIndex, try a fallback method
                         if (ownedTokenIds.length === 0) {
                           console.log("Trying fallback method to find owned tokens...");
-                          
+
                           // Fallback: Check ownership of all possible token IDs
                           for (let tokenId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min; 
                                tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max; 
@@ -474,7 +474,7 @@ const WalletConnection = ({
                               if (owner.toLowerCase() === account.toLowerCase()) {
                                 ownedTokenIds.push(tokenId);
                               }
-                              
+
                               // Rate limiting
                               await new Promise(resolve => setTimeout(resolve, 25));
                             } catch (error) {
@@ -515,7 +515,7 @@ const WalletConnection = ({
 
                             const canClaim = await faetTokenContract.canClaim(account, tokenId);
                             console.log(`Token ${tokenId} can claim:`, canClaim);
-                            
+
                             if (canClaim) {
                               claimableTokens.push(tokenId);
                             }
@@ -642,6 +642,7 @@ const WalletConnection = ({
                             console.log(`User cancelled adding Founder's Pass #${tokenId}`);
                             break; // Stop if user cancels
                           }
+                          console.log(`Error adding Founder's Pass #${tokenId}:`, sanitizeError(error));
                           // Continue with other tokens on other errors
                         }
                       }
