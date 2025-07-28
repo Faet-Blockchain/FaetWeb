@@ -1,0 +1,23 @@
+Error: ./src/app/staking/page.tsx:788:60
+Parsing ecmascript source code failed
+[0m [90m 786 |[39m       }[33m;[39m[0m
+[0m [90m 787 |[39m[0m
+[0m[31m[1m>[22m[39m[90m 788 |[39m       [36mconst[39m handleAccountsChanged [33m=[39m [36masync[39m ([33m...[39margs[33m<[39m[33munknown[39m[]) [33m=>[39m {[0m
+[0m [90m     |[39m                                                            [31m[1m^[22m[39m[0m
+[0m [90m 789 |[39m         [36mconst[39m accounts [33m=[39m args[[35m0[39m] [36mas[39m string[][33m;[39m[0m
+[0m [90m 790 |[39m         console[33m.[39mlog([32m"Accounts changed:"[39m[33m,[39m accounts)[33m;[39m[0m
+[0m [90m 791 |[39m         [36mif[39m (accounts[33m.[39mlength [33m===[39m [35m0[39m) {[0m
+
+Expression expected
+    at BuildError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/%5Broot-of-the-server%5D__e2c08166._.js:17395:41)
+    at renderWithHooks (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:13260:28)
+    at updateFunctionComponent (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:16760:40)
+    at beginWork (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:18388:32)
+    at beginWork$1 (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:23101:28)
+    at performUnitOfWork (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:22402:24)
+    at workLoopSync (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:22331:17)
+    at renderRootSync (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:22308:21)
+    at performConcurrentWorkOnRoot (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_react-dom_cjs_react-dom_development_ab7e073c.js:21732:84)
+    at workLoop (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_3bfdc6a4._.js:291:48)
+    at flushWork (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_3bfdc6a4._.js:270:28)
+    at MessagePort.performWorkUntilDeadline (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_3bfdc6a4._.js:498:35)
