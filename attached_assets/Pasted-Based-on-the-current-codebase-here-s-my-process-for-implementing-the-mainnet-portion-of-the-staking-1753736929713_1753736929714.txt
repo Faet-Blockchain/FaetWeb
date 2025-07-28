@@ -1,0 +1,61 @@
+Based on the current codebase, here's my process for implementing the mainnet portion of the staking page:
+
+Current Architecture Analysis
+The staking system is currently designed with a clear separation between testnet and mainnet configurations. Looking at the code, I can see:
+
+Network Selection UI: There's already a network toggle in WalletConnection.tsx with mainnet disabled
+Contract Addresses: Hardcoded testnet addresses in StakingInterface.tsx
+Chain Configuration: Lisk Sepolia testnet configuration in the main staking page
+State Management: Network selection state (selectedNetwork) is already tracked
+Implementation Process
+1. Smart Contract Deployment Strategy
+Deploy the same FaetTestStaking and FaetTestToken contracts to Lisk mainnet
+Ensure proper role assignments (DEFAULT_ADMIN_ROLE, EMERGENCY_ADMIN_ROLE)
+Fund the mainnet staking contract with appropriate reward tokens
+Verify contracts on Lisk mainnet block explorer
+2. Configuration Management
+Create a configuration object that maps network types to their respective:
+Chain IDs (testnet: 0x106a, mainnet: would need Lisk mainnet chain ID)
+Contract addresses (token and staking contracts)
+Block explorer URLs
+RPC endpoints
+Network metadata for wallet addition
+3. Code Modifications Required
+Constants and Configuration:
+
+Replace hardcoded contract addresses with dynamic configuration based on selectedNetwork
+Add mainnet chain configuration similar to LISK_SEPOLIA_CONFIG
+Update network switching logic to handle both networks
+State Management:
+
+Modify contract initialization to use network-specific addresses
+Update the loadWeb3Contracts function to instantiate contracts based on selected network
+Ensure all blockchain interactions respect the current network selection
+UI Updates:
+
+Enable the mainnet button in the network selector
+Add network-specific indicators throughout the UI
+Update contract address displays to show current network's contracts
+Modify block explorer links to point to appropriate explorers
+4. Security Considerations
+Implement network validation to ensure user is on correct chain before transactions
+Add confirmation dialogs when switching between networks with active stakes
+Validate that contract addresses exist on the target network before interactions
+Implement proper error handling for network-specific failures
+5. User Experience Flow
+When user selects mainnet, automatically prompt wallet to switch networks
+Clear any cached testnet data when switching networks
+Reload balances, stakes, and rewards data for the new network
+Show appropriate warnings about mainnet vs testnet token values
+6. Testing Strategy
+Verify contract deployments on mainnet
+Test network switching functionality
+Ensure all staking operations work correctly on mainnet
+Validate proper data isolation between networks
+The key architectural decision would be whether to maintain separate contract instances per network or use a unified configuration system. Given the current structure, a configuration-based approach that dynamically sets contract addresses and network parameters based on selectedNetwork would be the most maintainable solution.
+
+let's start implementing this in preparation. just copy testnet values for now. Even the wallet connection page, once the wallet is connected, need to be switched to the new mainnet network. this is because the add nft buttons and the airdrops are on that page.
+
+Make sure these constants are easily accessible.
+
+Do this now.
