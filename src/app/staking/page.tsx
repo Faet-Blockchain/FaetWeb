@@ -322,10 +322,8 @@ export default function StakingPage() {
 
       // Get current block number from the provider
       let currentBlock = 0;
-      if (provider) {
-        currentBlock = await provider.getBlockNumber();
-      } else if (typeof window.ethereum !== "undefined") {
-        // Fallback: create a temporary provider to get block number
+      if (typeof window.ethereum !== "undefined") {
+        // Always create a fresh provider to get block number to avoid dependency issues
         const tempProvider = new ethers.BrowserProvider(window.ethereum);
         currentBlock = await tempProvider.getBlockNumber();
       }
@@ -460,7 +458,7 @@ export default function StakingPage() {
       setUserStakes([]);
       setTotalRewardsFunded("0");
     }
-  }, [provider]);
+  }, []);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
@@ -468,8 +466,7 @@ export default function StakingPage() {
         console.log("Initializing Web3 for account:", account);
 
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
-        setProvider(web3Provider);
-
+        
         const signer = await web3Provider.getSigner();
         const signerAddress = await signer.getAddress();
         console.log("Signer address:", signerAddress);
@@ -486,6 +483,9 @@ export default function StakingPage() {
         );
 
         console.log("🔄 [initializeWeb3] Setting contracts in state...");
+        
+        // Set provider and contracts together to prevent multiple re-renders
+        setProvider(web3Provider);
         setTokenContract(token);
         setStakingContract(staking);
 
@@ -867,21 +867,22 @@ export default function StakingPage() {
   useEffect(() => {
     let rewardsUpdateInterval: NodeJS.Timeout;
 
-    if (stakingContract && account && !wrongNetwork && provider) {
+    if (stakingContract && account && !wrongNetwork && typeof window.ethereum !== "undefined") {
       const updatePendingRewards = async () => {
         try {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`[${timestamp}] Updating pending rewards...`);
 
-          // Get current block number first
-          const currentBlock = await provider.getBlockNumber();
+          // Create a fresh provider for each update to avoid stale references
+          const freshProvider = new ethers.BrowserProvider(window.ethereum);
+          const currentBlock = await freshProvider.getBlockNumber();
           console.log(`[${timestamp}] Current block:`, currentBlock);
 
           // Create a fresh read-only contract instance to bypass any caching
           const freshContract = new ethers.Contract(
             FAET_STAKING_ADDRESS,
             ["function earned(address account) view returns (uint256)"],
-            provider
+            freshProvider
           );
 
           const earned = await freshContract.earned(account);
@@ -912,7 +913,8 @@ export default function StakingPage() {
         console.log("Clearing rewards update interval");
         clearInterval(rewardsUpdateInterval);
       }
-    };  }, [stakingContract, account, wrongNetwork, provider]);
+    };
+  }, [stakingContract, account, wrongNetwork]);
 
   // Only allow staking interface if connected to correct network
   const canAccessStaking = Boolean(account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet');
