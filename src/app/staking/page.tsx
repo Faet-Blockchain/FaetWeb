@@ -197,89 +197,111 @@ export default function StakingPage() {
 
       console.log(`Found ${stakeEvents.length} stake events`);
 
-      // Get unique staker addresses from events
-      const uniqueStakers = [...new Set(stakeEvents.map(event => {
-        // Type guard to check if event is EventLog (has args property)
-        if ('args' in event && event.args && event.args[0]) {
-          return event.args[0];
-        }
-        return null;
-      }).filter(Boolean))];
-      console.log(`Found ${uniqueStakers.length} unique stakers`);
+      // Get unique stakers and their current active weights
+      const uniqueStakers = new Set<string>();
+      console.log("🔄 [loadTopStakersData] Processing stake events...");
 
-      if (uniqueStakers.length === 0) {
-        console.log("No stakers found, using placeholder data");
-        setTopStakers([]);
-        setStakingRanges([{
-          range: "No Data",
-          count: 0,
-          totalWeight: "0"
-        }]);
-        return;
+      for (const event of stakeEvents) {
+        const userAddress = event.args?.user || '';
+        if (userAddress) {
+          uniqueStakers.add(userAddress);
+          console.log(`📝 [loadTopStakersData] Found staker: ${userAddress}`);
+        }
       }
 
-      // Get current active weight for each staker
-      console.log("Fetching current weights for all stakers...");
-      const stakerWeights = await Promise.all(
-        uniqueStakers.map(async (stakerAddress) => {
-          try {
-            const activeWeight = await staking.getActiveWeight(stakerAddress);
-            const weightStr = ethers.formatEther(activeWeight);
-            console.log(`Staker ${stakerAddress}: ${weightStr} FAET`);
-            return {
-              address: stakerAddress,
-              weight: weightStr
-            };
-          } catch (error) {
-            console.warn(`Failed to get weight for ${stakerAddress}:`, error);
-            return {
-              address: stakerAddress,
-              weight: "0"
-            };
+      console.log(`✅ [loadTopStakersData] Found ${uniqueStakers.size} unique stakers`);
+
+      // Calculate current active weights for each staker
+      const stakersWithWeights: Array<{ address: string; weight: string }> = [];
+
+      console.log("🔄 [loadTopStakersData] Calculating active weights for each staker...");
+      for (const staker of uniqueStakers) {
+        if (!staker || staker === '') continue;
+
+        try {
+          console.log(`🔄 [loadTopStakersData] Getting active weight for ${staker}...`);
+          const activeWeight = await staking.getActiveWeight(staker);
+          const weightInEther = ethers.formatEther(activeWeight);
+
+          console.log(`📊 [loadTopStakersData] ${staker}: ${weightInEther} FAET active weight`);
+
+          if (parseFloat(weightInEther) > 0) {
+            stakersWithWeights.push({
+              address: staker,
+              weight: weightInEther
+            });
+            console.log(`✅ [loadTopStakersData] Added ${staker} with weight ${weightInEther}`);
+          } else {
+            console.log(`⚠️ [loadTopStakersData] Skipping ${staker} - zero active weight`);
           }
-        })
-      );
+        } catch (error: unknown) {
+          const errorMsg = (error as { message?: string })?.message || 'Unknown error';
+          console.warn(`❌ [loadTopStakersData] Error getting active weight for ${staker}:`, errorMsg);
+        }
+      }
 
-      // Filter out zero balances and sort by weight (highest first), take top 10
-      const activeStakers = stakerWeights.filter(staker => parseFloat(staker.weight) > 0);
-      const sortedStakers = activeStakers
-        .sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))
-        .slice(0, 10);
+      // Sort by weight (highest first) and take top 10
+      console.log("🔄 [loadTopStakersData] Sorting stakers by weight...");
+      stakersWithWeights.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
+      const top10 = stakersWithWeights.slice(0, 10);
 
-      console.log(`Found ${activeStakers.length} active stakers, showing top ${sortedStakers.length}`);
-      setTopStakers(sortedStakers);
+      console.log(`✅ [loadTopStakersData] Top 10 stakers:`, top10);
 
-      // Create 5 distribution ranges with real data
+      // Create staking ranges
+      console.log("🔄 [loadTopStakersData] Creating staking ranges...");
       const ranges = [
-        { min: 0, max: 10000, label: "0-10K" },
-        { min: 10000, max: 100000, label: "10K-100K" },
-        { min: 100000, max: 500000, label: "100K-500K" },
-        { min: 500000, max: 1000000, label: "500K-1M" },
-        { min: 1000000, max: Infinity, label: "1M+" }
+        { min: 0, max: 1000, range: "0 - 1K FAET" },
+        { min: 1000, max: 10000, range: "1K - 10K FAET" },
+        { min: 10000, max: 100000, range: "10K - 100K FAET" },
+        { min: 100000, max: 1000000, range: "100K - 1M FAET" },
+        { min: 1000000, max: Infinity, range: "1M+ FAET" }
       ];
 
-      // Categorize actual stakers into ranges
-      const distributionData = ranges.map(range => {
-        const stakersInRange = activeStakers.filter(staker => {
+      const stakingRangesData = ranges.map(rangeConfig => {
+        const stakersInRange = stakersWithWeights.filter(staker => {
           const weight = parseFloat(staker.weight);
-          return weight >= range.min && weight < range.max;
+          return weight >= rangeConfig.min && weight < rangeConfig.max;
         });
 
-        const totalWeight = stakersInRange.reduce((sum, staker) => sum + parseFloat(staker.weight), 0);
+        const totalWeight = stakersInRange.reduce((sum, staker) => {
+          return sum + parseFloat(staker.weight);
+        }, 0);
+
+        console.log(`📊 [loadTopStakersData] Range ${rangeConfig.range}: ${stakersInRange.length} stakers, ${totalWeight} total weight`);
 
         return {
-          range: range.label,
+          range: rangeConfig.range,
           count: stakersInRange.length,
-          totalWeight: totalWeight.toFixed(2)
+          totalWeight: totalWeight.toString()
         };
-      }).filter(item => item.count > 0); // Only show ranges with stakers
+      }).filter(range => range.count > 0); // Only include ranges with stakers
 
-      console.log("Distribution data:", distributionData);
-      setStakingRanges(distributionData);
+      console.log("✅ [loadTopStakersData] Final staking ranges:", stakingRangesData);
+      console.log("✅ [loadTopStakersData] Final top 10 stakers:", top10);
 
-    } catch (error) {
-      console.error("Error loading top stakers data:", error);
-      // Set empty data on error
+      // Update state
+      console.log("🔄 [loadTopStakersData] Updating React state...");
+      setTopStakers(top10);
+      setStakingRanges(stakingRangesData);
+
+      console.log("✅ [loadTopStakersData] Successfully completed staking data load!");
+    } catch (error: unknown) {
+      const errorMsg = (error as { message?: string })?.message || 'Unknown error';
+      const errorCode = (error as { code?: string | number })?.code;
+      console.error("❌ [loadTopStakersData] Error loading top stakers data:", errorMsg);
+      console.error("❌ [loadTopStakersData] Error code:", errorCode);
+      console.error("❌ [loadTopStakersData] Full error object:", error);
+
+      // More specific error handling
+      if (errorCode === 'NETWORK_ERROR' || errorMsg.includes('network')) {
+        console.error("❌ [loadTopStakersData] Network error - check connection and network");
+      } else if (errorCode === 'CALL_EXCEPTION' || errorMsg.includes('call exception')) {
+        console.error("❌ [loadTopStakersData] Contract call exception - check contract deployment and ABI");
+      } else if (errorMsg.includes('timeout') || errorMsg.includes('timeout')) {
+        console.error("❌ [loadTopStakersData] Request timeout - blockchain might be slow");
+      }
+
+      // Set empty data as fallback
       setTopStakers([]);
       setStakingRanges([]);
     }
@@ -460,6 +482,7 @@ export default function StakingPage() {
           signer,
         );
 
+        console.log("🔄 [initializeWeb3] Setting contracts in state...");
         setTokenContract(token);
         setStakingContract(staking);
 
@@ -491,9 +514,13 @@ export default function StakingPage() {
           console.warn("Could not validate contract deployment:", codeError);
         }
 
-        console.log("Contracts initialized, loading user data...");
-        await loadUserData(token, staking, account);
-        
+        console.log("✅ [initializeWeb3] Web3 initialized successfully");
+
+        // Load user data immediately after successful initialization
+        console.log("🔄 [initializeWeb3] Loading user data for:", signerAddress);
+        await loadUserData(token, staking, signerAddress);
+        console.log("✅ [initializeWeb3] User data loading initiated");
+
         // Also load top stakers data independently in case it fails in loadUserData
         try {
           console.log("Loading top stakers data independently...");
@@ -501,7 +528,7 @@ export default function StakingPage() {
         } catch (stakersError) {
           console.warn("Independent top stakers data load failed:", stakersError);
         }
-        
+
         console.log("Web3 initialization complete");
       } catch (error: unknown) {
         console.error("Error initializing Web3:", (error as { message?: string })?.message || error);
@@ -758,7 +785,7 @@ export default function StakingPage() {
         }, 500); // 500ms delay to let wallet update
       };
 
-      const handleAccountsChanged = async (...args: unknown[]) => {
+      const handleAccountsChanged = async (...args<unknown[]) => {
         const accounts = args[0] as string[];
         console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
@@ -906,7 +933,17 @@ export default function StakingPage() {
     }
   };
 
-  const loadUserDataCallback = useCallback(loadUserData, [provider]);
+  const loadUserDataCallback = useCallback(
+    (token: ethers.Contract, staking: ethers.Contract, userAddress: string) => {
+      console.log("🔄 [loadUserDataCallback] Called with:", { 
+        userAddress, 
+        hasToken: !!token, 
+        hasStaking: !!staking 
+      });
+      loadUserData(token, staking, userAddress);
+    },
+    [loadUserData]
+  );
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
