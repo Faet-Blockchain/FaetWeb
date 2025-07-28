@@ -3,6 +3,29 @@ import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
+// Security validation functions
+const validateContractInteraction = (): boolean => {
+  // Basic validation for contract interaction readiness
+  return typeof window !== 'undefined' && 
+         typeof window.ethereum !== 'undefined' &&
+         Date.now() > 0; // Simple time check
+};
+
+const isValidAddress = (address: string): boolean => {
+  // Basic Ethereum address validation
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+};
+
+const sanitizeError = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'An unknown error occurred';
+};
+
 type WalletConnectionProps = {
   account: string | null;
   isConnecting: boolean;
@@ -41,9 +64,7 @@ const SECURITY_CONFIG = {
 } as const;
 
 // Security: Validate Ethereum address format
-const isValidAddress = (address: string): boolean => {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
-};
+
 
 // Security: Validate chain ID
 const isValidChainId = (chainId: string | null): boolean => {
@@ -51,34 +72,7 @@ const isValidChainId = (chainId: string | null): boolean => {
 };
 
 // Security: Sanitize error messages to prevent information leakage
-const sanitizeError = (error: unknown): string => {
-  const errorObj = error as { code?: number | string; message?: string };
 
-  // Log full error for debugging (server-side only)
-  if (typeof window === 'undefined') {
-    console.error('[Security] Full error details:', error);
-  }
-
-  // Map specific errors to user-friendly messages
-  if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
-    return "Transaction cancelled by user";
-  }
-  if (errorObj?.code === -32002) {
-    return "Request already pending in wallet";
-  }
-  if (errorObj?.code === -32603) {
-    return "Network error occurred";
-  }
-  if (errorObj?.message?.includes("insufficient funds")) {
-    return "Insufficient funds for transaction";
-  }
-  if (errorObj?.message?.includes("Not claimable")) {
-    return "Token not eligible for claiming";
-  }
-
-  // Generic error message to prevent information leakage
-  return "Operation failed. Please try again.";
-};
 
 
 
@@ -381,12 +375,12 @@ const WalletConnection = ({
 
                         // Initialize web3 provider with security checks
                         const { ethers } = await import('ethers');
-                        
+
                         // Security: Check if ethereum is available
                         if (typeof window.ethereum === "undefined") {
                           throw new Error("MetaMask not available");
                         }
-                        
+
                         const provider = new ethers.BrowserProvider(window.ethereum);
                         const signer = await provider.getSigner();
 

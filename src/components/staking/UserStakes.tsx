@@ -76,7 +76,20 @@ const UserStakes = ({ userStakes, isLoading, wrongNetwork, onWithdraw }: UserSta
                 </div>
                 <div className="flex justify-end">
                   <button
-                    onClick={() => onWithdraw(stake.index)}
+                    onClick={() => {
+                      console.log("💸 Withdraw button clicked for stake:", {
+                        stakeIndex: stake.index,
+                        isUnlocked: stake.isUnlocked,
+                        isLoading,
+                        wrongNetwork
+                      });
+                      
+                      try {
+                        onWithdraw(stake.index);
+                      } catch (error) {
+                        console.error("Error during withdraw:", error);
+                      }
+                    }}
                     disabled={
                       !stake.isUnlocked || isLoading || wrongNetwork
                     }

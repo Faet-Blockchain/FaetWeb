@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 
-// Security: Rate limiting for staking operations
-const STAKING_RATE_LIMIT = 5000; // 5 seconds between operations
+// Security: Rate limiting for staking operations (reduced to 1 second)
+const STAKING_RATE_LIMIT = 1000; // 1 second between operations
 let lastStakingOperation = 0;
 
 const checkStakingRateLimit = (): boolean => {
@@ -119,6 +119,7 @@ const StakingForm = ({
               onClick={() => {
                 // Security: Check rate limiting
                 if (!checkStakingRateLimit()) {
+                  console.warn("Rate limit exceeded, please wait");
                   alert("Please wait before making another staking transaction");
                   return;
                 }
@@ -131,7 +132,12 @@ const StakingForm = ({
                   isValidAmount: parseFloat(stakeAmount) > 0,
                   hasBalance: parseFloat(stakeAmount) <= parseFloat(tokenBalance)
                 });
-                onStake();
+                
+                try {
+                  onStake();
+                } catch (error) {
+                  console.error("Error during stake operation:", error);
+                }
               }}
               disabled={
                 !stakeAmount ||

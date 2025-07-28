@@ -72,7 +72,21 @@ const RewardsSection = ({
           </p>
         </div>
         <button
-          onClick={onClaimRewards}
+          onClick={() => {
+            console.log("🎁 Claim Rewards button clicked with:", {
+              pendingRewards,
+              totalRewardsFunded,
+              isLoading,
+              wrongNetwork,
+              canClaim: parseFloat(pendingRewards) > 0 && parseFloat(totalRewardsFunded) > 0
+            });
+            
+            try {
+              onClaimRewards();
+            } catch (error) {
+              console.error("Error during claim rewards:", error);
+            }
+          }}
           disabled={
             parseFloat(pendingRewards) === 0 ||
             parseFloat(totalRewardsFunded) === 0 ||
