@@ -785,7 +785,7 @@ export default function StakingPage() {
         }, 500); // 500ms delay to let wallet update
       };
 
-      const handleAccountsChanged = async (...args<unknown[]) => {
+      const handleAccountsChanged = async (...args: unknown[]) => {
         const accounts = args[0] as string[];
         console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
