@@ -541,7 +541,7 @@ export default function StakingPage() {
       console.log("Cannot initialize Web3: missing ethereum or account");
       clearWeb3State();
     }
-  }, [account, currentChainId, loadUserData]);
+  }, [account, currentChainId, loadUserData, clearWeb3State]);
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== "undefined") {
