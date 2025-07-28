@@ -72,3 +72,8 @@ html {
   background: #374151;
   border: none;
 }
+
+/* Fix for scroll offset calculations */
+.scroll-container {
+  position: relative;
+}

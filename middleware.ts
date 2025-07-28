@@ -6,10 +6,10 @@ export function middleware(request: NextRequest) {
   // Security: Force HTTPS in production
   if (
     process.env.NODE_ENV === 'production' &&
-    !request.headers.get('x-forwarded-proto')?.includes('https')
+    request.headers.get('x-forwarded-proto') !== 'https'
   ) {
     return NextResponse.redirect(
-      `https://${request.headers.get('host')}${request.nextUrl.pathname}`,
+      `https://${request.headers.get('host')}${request.nextUrl.pathname}${request.nextUrl.search}`,
       301
     );
   }
