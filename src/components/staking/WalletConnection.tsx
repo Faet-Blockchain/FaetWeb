@@ -381,6 +381,12 @@ const WalletConnection = ({
 
                         // Initialize web3 provider with security checks
                         const { ethers } = await import('ethers');
+                        
+                        // Security: Check if ethereum is available
+                        if (typeof window.ethereum === "undefined") {
+                          throw new Error("MetaMask not available");
+                        }
+                        
                         const provider = new ethers.BrowserProvider(window.ethereum);
                         const signer = await provider.getSigner();
 
