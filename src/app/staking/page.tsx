@@ -202,10 +202,13 @@ export default function StakingPage() {
       console.log("🔄 [loadTopStakersData] Processing stake events...");
 
       for (const event of stakeEvents) {
-        const userAddress = event.args?.user || '';
-        if (userAddress) {
-          uniqueStakers.add(userAddress);
-          console.log(`📝 [loadTopStakersData] Found staker: ${userAddress}`);
+        // Type guard to check if event is EventLog (has args property)
+        if ('args' in event && event.args) {
+          const userAddress = event.args.user || '';
+          if (userAddress) {
+            uniqueStakers.add(userAddress);
+            console.log(`📝 [loadTopStakersData] Found staker: ${userAddress}`);
+          }
         }
       }
 
