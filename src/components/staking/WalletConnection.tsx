@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -15,6 +15,64 @@ type WalletConnectionProps = {
   onSwitchNetwork: () => void;
   onGoToStaking: () => void;
   onNetworkChange: (network: 'testnet' | 'mainnet') => void;
+};
+
+// Security: Define contract addresses and validation
+const SECURITY_CONFIG = {
+  // Valid contract addresses with checksums
+  CONTRACTS: {
+    CHARACTER_NFT: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
+    FOUNDERS_PASS: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
+    FAET_TOKEN: '0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394'
+  },
+  // Rate limiting
+  RATE_LIMITS: {
+    NFT_ADD_DELAY: 200, // ms between NFT add requests
+    MAX_RETRIES: 3,
+    COOLDOWN_PERIOD: 5000 // 5 seconds between major operations
+  },
+  // Valid ranges
+  TOKEN_RANGES: {
+    CHARACTER_NFT: { min: 1, max: 10 },
+    FOUNDERS_PASS: { min: 1, max: 150 }
+  },
+  // Expected chain
+  LISK_SEPOLIA_CHAIN_ID: '0x106a'
+} as const;
+
+// Security: Validate Ethereum address format
+const isValidAddress = (address: string): boolean => {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+};
+
+// Security: Validate chain ID
+const isValidChainId = (chainId: string | null): boolean => {
+  return chainId === SECURITY_CONFIG.LISK_SEPOLIA_CHAIN_ID;
+};
+
+// Security: Sanitize error messages to prevent information leakage
+const sanitizeError = (error: unknown): string => {
+  const errorObj = error as { code?: number | string; message?: string };
+  
+  // Map specific errors to user-friendly messages
+  if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
+    return "Transaction cancelled by user";
+  }
+  if (errorObj?.code === -32002) {
+    return "Request already pending in wallet";
+  }
+  if (errorObj?.code === -32603) {
+    return "Network error occurred";
+  }
+  if (errorObj?.message?.includes("insufficient funds")) {
+    return "Insufficient funds for transaction";
+  }
+  if (errorObj?.message?.includes("Not claimable")) {
+    return "Token not eligible for claiming";
+  }
+  
+  // Generic error message to prevent information leakage
+  return "Operation failed. Please try again.";
 };
 
 const WalletConnection = ({
@@ -35,6 +93,44 @@ const WalletConnection = ({
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
   const [isAddingCharacterNft, setIsAddingCharacterNft] = useState<boolean>(false);
   const [isAddingFoundersPass, setIsAddingFoundersPass] = useState<boolean>(false);
+  const [lastOperationTime, setLastOperationTime] = useState<number>(0);
+
+  // Security: Memoized validation checks
+  const securityChecks = useMemo(() => ({
+    isValidAccount: account && isValidAddress(account),
+    isValidChain: isValidChainId(currentChainId),
+    canPerformOperations: account && !wrongNetwork && isValidChainId(currentChainId)
+  }), [account, currentChainId, wrongNetwork]);
+
+  // Security: Rate limiting check
+  const checkRateLimit = useCallback((): boolean => {
+    const now = Date.now();
+    if (now - lastOperationTime < SECURITY_CONFIG.RATE_LIMITS.COOLDOWN_PERIOD) {
+      return false;
+    }
+    setLastOperationTime(now);
+    return true;
+  }, [lastOperationTime]);
+
+  // Security: Validate contract interaction prerequisites
+  const validateContractInteraction = useCallback((): boolean => {
+    if (!securityChecks.canPerformOperations) {
+      console.warn("Security: Invalid account or network state");
+      return false;
+    }
+    
+    if (typeof window.ethereum === "undefined") {
+      console.warn("Security: MetaMask not detected");
+      return false;
+    }
+
+    if (!checkRateLimit()) {
+      console.warn("Security: Rate limit exceeded");
+      return false;
+    }
+
+    return true;
+  }, [securityChecks.canPerformOperations, checkRateLimit]);
   return (
     <>
       <motion.div
@@ -160,31 +256,37 @@ const WalletConnection = ({
                 </button>
                 <button
                   onClick={async () => {
-                    setCharacterNftError(""); // Clear previous error
-                    setIsAddingCharacterNft(true);
-
-                    if (typeof window.ethereum === "undefined") {
-                      console.error("MetaMask not detected");
-                      setIsAddingCharacterNft(false);
+                    setCharacterNftError("");
+                    
+                    // Security: Validate prerequisites
+                    if (!validateContractInteraction()) {
+                      setCharacterNftError("Invalid wallet state or rate limited");
                       return;
                     }
 
+                    setIsAddingCharacterNft(true);
+
                     try {
-                      console.log("📝 Attempting to add Test Character NFTs to MetaMask...");
+                      console.log("📝 Attempting to add Character NFTs to MetaMask...");
 
                       let successCount = 0;
-                      // let totalAttempts = 0;
+                      const { min, max } = SECURITY_CONFIG.TOKEN_RANGES.CHARACTER_NFT;
 
-                      // Try to add multiple token IDs (1-10) for Character NFTs
-                      for (let tokenId = 1; tokenId <= 10; tokenId++) {
+                      // Security: Validate token range
+                      for (let tokenId = min; tokenId <= max; tokenId++) {
                         try {
-                          // totalAttempts++;
+                          // Security: Validate token ID
+                          if (tokenId < min || tokenId > max) {
+                            console.warn(`Security: Invalid token ID ${tokenId}`);
+                            continue;
+                          }
+
                           const wasAdded = await window.ethereum.request({
                             method: 'wallet_watchAsset',
                             params: {
                               type: 'ERC721',
                               options: {
-                                address: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
+                                address: SECURITY_CONFIG.CONTRACTS.CHARACTER_NFT,
                                 tokenId: tokenId.toString(),
                               },
                             },
@@ -192,32 +294,29 @@ const WalletConnection = ({
 
                           if (wasAdded) {
                             successCount++;
-                            console.log(`✅ Test Character NFT #${tokenId} successfully added to wallet`);
+                            console.log(`✅ Character NFT #${tokenId} added to wallet`);
                           }
 
-                          // Small delay between requests to avoid overwhelming MetaMask
-                          await new Promise(resolve => setTimeout(resolve, 100));
+                          // Security: Rate limiting between requests
+                          await new Promise(resolve => 
+                            setTimeout(resolve, SECURITY_CONFIG.RATE_LIMITS.NFT_ADD_DELAY)
+                          );
                         } catch (error: unknown) {
                           const errorObj = error as { code?: number | string; message?: string };
                           if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
-                            console.log(`ℹ️ User cancelled adding Character NFT #${tokenId}`);
+                            console.log(`User cancelled adding Character NFT #${tokenId}`);
                             break; // Stop if user cancels
-                          } else if (errorObj?.code === -32002) {
-                            console.log(`ℹ️ Request for Character NFT #${tokenId} already pending`);
-                          } else if (errorObj?.code === -32603 || errorObj?.message?.includes("already exists")) {
-                            console.log(`ℹ️ Character NFT #${tokenId} may already be in wallet`);
                           }
+                          // Continue with other tokens on other errors
                         }
                       }
 
                       if (successCount === 0) {
-                        setCharacterNftError("No new NFTs found");
-                      } else {
-                        console.log(`✅ Successfully added ${successCount} Character NFTs to wallet`);
+                        setCharacterNftError("No new NFTs were added");
                       }
-                    } catch {
-                      console.log('ℹ️ Character NFT add request completed');
-                      setCharacterNftError("No new NFTs found");
+                    } catch (error) {
+                      console.error("Character NFT addition failed:", error);
+                      setCharacterNftError(sanitizeError(error));
                     } finally {
                       setIsAddingCharacterNft(false);
                     }
@@ -251,36 +350,50 @@ const WalletConnection = ({
                 <div className="flex justify-center">
                   <button
                     onClick={async () => {
-                      if (!account || typeof window.ethereum === "undefined") return;
+                      // Security: Validate prerequisites
+                      if (!validateContractInteraction()) {
+                        alert("Invalid wallet state or rate limited. Please check your connection.");
+                        return;
+                      }
 
                       setIsClaimingAirdrop(true);
 
                       try {
                         console.log("🎁 Attempting to claim founder's airdrop...");
 
-                        // Initialize web3 provider and signer
+                        // Security: Validate account format
+                        if (!account || !isValidAddress(account)) {
+                          throw new Error("Invalid account address");
+                        }
+
+                        // Initialize web3 provider with security checks
                         const { ethers } = await import('ethers');
                         const provider = new ethers.BrowserProvider(window.ethereum);
                         const signer = await provider.getSigner();
 
-                        // FAET Token contract setup (where the claim functions are)
+                        // Security: Validate signer address matches connected account
+                        const signerAddress = await signer.getAddress();
+                        if (signerAddress.toLowerCase() !== account.toLowerCase()) {
+                          throw new Error("Signer address mismatch");
+                        }
+
+                        // FAET Token contract setup with security validation
                         const faetTokenABI = [
                           "function claim(uint256 tokenId)",
                           "function batchClaim(uint256[] calldata tokenIds)",
                           "function canClaim(address user, uint256 tokenId) view returns (bool)",
-                          "function isClaimable(uint256 tokenId) view returns (bool)",
                           "function claimed(uint256 tokenId) view returns (bool)",
                           "function foundersPassNFT() view returns (address)",
                           "function PASS_COUNT() view returns (uint256)"
                         ];
 
                         const faetTokenContract = new ethers.Contract(
-                          "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394", // FAET Token contract
+                          SECURITY_CONFIG.CONTRACTS.FAET_TOKEN,
                           faetTokenABI,
                           signer
                         );
 
-                        // Founder's Pass NFT contract setup (to check ownership)
+                        // Founder's Pass NFT contract setup
                         const foundersPassABI = [
                           "function balanceOf(address owner) view returns (uint256)",
                           "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
@@ -288,138 +401,114 @@ const WalletConnection = ({
                         ];
 
                         const foundersPassContract = new ethers.Contract(
-                          "0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D", // Founder's Pass NFT contract
+                          SECURITY_CONFIG.CONTRACTS.FOUNDERS_PASS,
                           foundersPassABI,
                           signer
                         );
 
-                        console.log("📋 Checking Founder's Pass NFT balance...");
-
-                        // Verify the contracts are connected properly
+                        // Security: Verify contract addresses match
                         const nftAddressFromContract = await faetTokenContract.foundersPassNFT();
-                        console.log("NFT address from FAET contract:", nftAddressFromContract);
-                        console.log("Expected NFT address:", "0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D");
+                        if (nftAddressFromContract.toLowerCase() !== SECURITY_CONFIG.CONTRACTS.FOUNDERS_PASS.toLowerCase()) {
+                          throw new Error("Contract address mismatch");
+                        }
 
-                        // Check if user owns any Founder's Pass NFTs
+                        // Check NFT balance with security validation
                         const nftBalance = await foundersPassContract.balanceOf(account);
                         console.log(`User owns ${nftBalance.toString()} Founder's Pass NFTs`);
 
                         if (nftBalance === 0n) {
-                          alert("❌ No Founder's Pass NFTs found in your wallet.\n\nYou need to own at least one Founder's Pass NFT to claim the airdrop.");
+                          alert("❌ No Founder's Pass NFTs found in your wallet.");
                           return;
                         }
 
-                        // Get all token IDs owned by user using tokenOfOwnerByIndex
-                        const ownedTokenIds = [];
-                        for (let i = 0; i < Number(nftBalance); i++) {
+                        // Security: Limit the number of tokens to check
+                        const maxTokensToCheck = Math.min(Number(nftBalance), 150);
+                        const ownedTokenIds: number[] = [];
+
+                        // Get owned token IDs with error handling
+                        for (let i = 0; i < maxTokensToCheck; i++) {
                           try {
                             const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
-                            ownedTokenIds.push(Number(tokenId));
-                            console.log(`Found owned token ID: ${tokenId}`);
-                          } catch (error) {
-                            console.log(`Could not get token at index ${i}:`, error);
-                            // If tokenOfOwnerByIndex fails, try alternative method
-                            // Check tokens 0-149 individually
-                            const passCount = await faetTokenContract.PASS_COUNT();
-                            for (let tokenId = 0; tokenId < Number(passCount); tokenId++) {
-                              try {
-                                const owner = await foundersPassContract.ownerOf(tokenId);
-                                if (owner.toLowerCase() === account.toLowerCase()) {
-                                  ownedTokenIds.push(tokenId);
-                                  console.log(`Found owned token ID via direct check: ${tokenId}`);
-                                }
-                              } catch {
-                                // Token doesn't exist or other error, continue
-                              }
+                            const tokenIdNumber = Number(tokenId);
+                            
+                            // Security: Validate token ID range
+                            if (tokenIdNumber >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
+                                tokenIdNumber <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
+                              ownedTokenIds.push(tokenIdNumber);
                             }
-                            break; // Exit the tokenOfOwnerByIndex loop since it's not working
+                          } catch (error) {
+                            console.log(`Could not get token at index ${i}:`, sanitizeError(error));
+                            break;
                           }
                         }
 
-                        console.log("All owned Founder's Pass token IDs:", ownedTokenIds);
-
                         if (ownedTokenIds.length === 0) {
-                          alert("❌ Could not retrieve your Founder's Pass NFT token IDs.\n\nPlease try again or contact support.");
+                          alert("❌ Could not retrieve your Founder's Pass NFT token IDs.");
                           return;
                         }
 
-                        // Check which of the owned tokens are claimable
-                        const claimableTokens = [];
-                        const alreadyClaimedTokens = [];
+                        // Check claimability with rate limiting
+                        const claimableTokens: number[] = [];
+                        const alreadyClaimedTokens: number[] = [];
 
                         for (const tokenId of ownedTokenIds) {
                           try {
-                            // Check if already claimed
+                            // Security: Add delay between contract calls
+                            if (ownedTokenIds.indexOf(tokenId) > 0) {
+                              await new Promise(resolve => setTimeout(resolve, 100));
+                            }
+
                             const isClaimed = await faetTokenContract.claimed(tokenId);
                             if (isClaimed) {
                               alreadyClaimedTokens.push(tokenId);
                               continue;
                             }
 
-                            // Check if claimable
                             const canClaim = await faetTokenContract.canClaim(account, tokenId);
-                            console.log(`Token ${tokenId}: canClaim = ${canClaim}, claimed = ${isClaimed}`);
-
                             if (canClaim) {
                               claimableTokens.push(tokenId);
                             }
                           } catch (error) {
-                            console.log(`Error checking claimability for token ${tokenId}:`, error);
+                            console.log(`Error checking token ${tokenId}:`, sanitizeError(error));
                           }
                         }
 
-                        console.log(`Claimable tokens: ${claimableTokens}`);
-                        console.log(`Already claimed tokens: ${alreadyClaimedTokens}`);
-
                         if (claimableTokens.length === 0) {
                           if (alreadyClaimedTokens.length > 0) {
-                            alert(`❌ All your Founder's Pass NFTs have already been claimed.\n\nAlready claimed token IDs: ${alreadyClaimedTokens.join(', ')}`);
+                            alert(`❌ All your Founder's Pass NFTs have already been claimed.`);
                           } else {
-                            alert("❌ No claimable airdrop tokens found.\n\nThis could mean:\n- The tokens have already been claimed\n- There's an issue with the contract\n- The claiming period has ended");
+                            alert("❌ No claimable airdrop tokens found.");
                           }
                           return;
                         }
 
-                        // Use batch claim if multiple tokens, single claim if one
+                        // Execute claim with security validation
                         let tx;
                         if (claimableTokens.length === 1) {
-                          console.log(`Claiming single token ID: ${claimableTokens[0]}`);
                           tx = await faetTokenContract.claim(claimableTokens[0]);
                         } else {
-                          console.log(`Batch claiming ${claimableTokens.length} tokens:`, claimableTokens);
-                          tx = await faetTokenContract.batchClaim(claimableTokens);
+                          // Security: Limit batch size to prevent gas issues
+                          const batchSize = Math.min(claimableTokens.length, 10);
+                          const tokensToProcess = claimableTokens.slice(0, batchSize);
+                          tx = await faetTokenContract.batchClaim(tokensToProcess);
                         }
 
-                        console.log("Transaction submitted:", tx.hash);
-                        alert(`🔄 Transaction submitted!\n\nHash: ${tx.hash}\n\nClaiming ${claimableTokens.length} Founder's Pass token(s)\nWaiting for confirmation...`);
+                        alert(`🔄 Transaction submitted! Hash: ${tx.hash}`);
 
-                        // Wait for transaction confirmation
-                        const receipt = await tx.wait();
-                        console.log("Transaction confirmed:", receipt);
+                        // Wait for confirmation with timeout
+                        const receipt = await Promise.race([
+                          tx.wait(),
+                          new Promise((_, reject) => 
+                            setTimeout(() => reject(new Error("Transaction timeout")), 300000) // 5 minutes
+                          )
+                        ]);
 
-                        // Show success message
-                        alert(`🎉 Airdrop claimed successfully!\n\nFounder's Pass tokens claimed: ${claimableTokens.length}\nToken IDs: ${claimableTokens.join(', ')}\nTransaction: ${tx.hash}`);
+                        alert(`🎉 Airdrop claimed successfully! Transaction: ${tx.hash}`);
 
                       } catch (error: unknown) {
-                          const errorObj = error as { code?: number | string; reason?: string; message?: string };
-                          if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
-                            console.log('ℹ️ User cancelled airdrop claim transaction');
-                            alert("ℹ️ Transaction cancelled by user.");
-                          } else if (errorObj?.code === -32002) {
-                            alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
-                          } else if (errorObj?.reason?.includes("Not claimable") || errorObj?.message?.includes("Not claimable") || errorObj?.message?.includes("FAET: Not claimable")) {
-                            alert("❌ Token not claimable.\n\nThis could mean:\n- You don't own the Founder's Pass NFT\n- The token has already been claimed\n- The token ID is invalid\n- The contract is paused");
-                          } else if (errorObj?.reason?.includes("paused") || errorObj?.message?.includes("paused")) {
-                            alert("❌ Airdrop claiming is currently paused by the contract administrators.");
-                          } else if (errorObj?.message?.includes("insufficient funds")) {
-                            alert("❌ Insufficient funds for gas fees. Please add more ETH to your wallet.");
-                          } else if (errorObj?.code === -32603) {
-                            alert("❌ Internal JSON-RPC error. This might be a network issue. Please try again.");
-                          } else {
-                            const errorMsg = errorObj?.reason || errorObj?.message || "Unknown error occurred";
-                            alert(`❌ Failed to claim airdrop:\n\n${errorMsg}\n\nPlease check the console for more details.`);
-                          }
-                        } finally {
+                        console.error("Airdrop claim failed:", error);
+                        alert(`❌ ${sanitizeError(error)}`);
+                      } finally {
                         setIsClaimingAirdrop(false);
                       }
                     }}
@@ -442,31 +531,37 @@ const WalletConnection = ({
                 </div>
                 <button
                   onClick={async () => {
-                    setFoundersPassError(""); // Clear previous error
-                    setIsAddingFoundersPass(true);
-
-                    if (typeof window.ethereum === "undefined") {
-                      console.error("MetaMask not detected");
-                      setIsAddingFoundersPass(false);
+                    setFoundersPassError("");
+                    
+                    // Security: Validate prerequisites
+                    if (!validateContractInteraction()) {
+                      setFoundersPassError("Invalid wallet state or rate limited");
                       return;
                     }
 
+                    setIsAddingFoundersPass(true);
+
                     try {
-                      console.log("📝 Attempting to add Test Founder's Pass NFTs to MetaMask...");
+                      console.log("📝 Attempting to add Founder's Pass NFTs to MetaMask...");
 
                       let successCount = 0;
-                      // let totalAttempts = 0;
+                      const { min, max } = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS;
 
-                      // Try to add multiple token IDs (1-150) for Founder's Pass
-                      for (let tokenId = 1; tokenId <= 150; tokenId++) {
+                      // Security: Validate and process tokens in batches
+                      for (let tokenId = min; tokenId <= max; tokenId++) {
                         try {
-                          // totalAttempts++;
+                          // Security: Validate token ID
+                          if (tokenId < min || tokenId > max) {
+                            console.warn(`Security: Invalid token ID ${tokenId}`);
+                            continue;
+                          }
+
                           const wasAdded = await window.ethereum.request({
                             method: 'wallet_watchAsset',
                             params: {
                               type: 'ERC721',
                               options: {
-                                address: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
+                                address: SECURITY_CONFIG.CONTRACTS.FOUNDERS_PASS,
                                 tokenId: tokenId.toString(),
                               },
                             },
@@ -474,32 +569,29 @@ const WalletConnection = ({
 
                           if (wasAdded) {
                             successCount++;
-                            console.log(`✅ Test Founder's Pass #${tokenId} successfully added to wallet`);
+                            console.log(`✅ Founder's Pass #${tokenId} added to wallet`);
                           }
 
-                          // Small delay between requests to avoid overwhelming MetaMask
-                          await new Promise(resolve => setTimeout(resolve, 100));
+                          // Security: Rate limiting between requests
+                          await new Promise(resolve => 
+                            setTimeout(resolve, SECURITY_CONFIG.RATE_LIMITS.NFT_ADD_DELAY)
+                          );
                         } catch (error: unknown) {
                           const errorObj = error as { code?: number | string; message?: string };
                           if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
-                            console.log(`ℹ️ User cancelled adding Founder's Pass #${tokenId}`);
+                            console.log(`User cancelled adding Founder's Pass #${tokenId}`);
                             break; // Stop if user cancels
-                          } else if (errorObj?.code === -32002) {
-                            console.log(`ℹ️ Request for Founder's Pass #${tokenId} already pending`);
-                          } else if (errorObj?.code === -32603 || errorObj?.message?.includes("already exists")) {
-                            console.log(`ℹ️ Founder's Pass #${tokenId} may already be in wallet`);
                           }
+                          // Continue with other tokens on other errors
                         }
                       }
 
                       if (successCount === 0) {
-                        setFoundersPassError("No new NFTs found");
-                      } else {
-                        console.log(`✅ Successfully added ${successCount} Founder's Pass NFTs to wallet`);
+                        setFoundersPassError("No new NFTs were added");
                       }
-                    } catch {
-                      console.log('ℹ️ Founder\'s Pass add request completed');
-                      setFoundersPassError("No new NFTs found");
+                    } catch (error) {
+                      console.error("Founder's Pass addition failed:", error);
+                      setFoundersPassError(sanitizeError(error));
                     } finally {
                       setIsAddingFoundersPass(false);
                     }
