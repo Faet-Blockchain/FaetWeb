@@ -80,21 +80,7 @@ const sanitizeError = (error: unknown): string => {
   return "Operation failed. Please try again.";
 };
 
-// Security: Sanitize user inputs
-const sanitizeInput = (input: string): string => {
-  return input.replace(/[<>'"&]/g, '');
-};
 
-// Security: Validate contract interaction data
-const validateContractData = (data: unknown): boolean => {
-  try {
-    // Basic validation for contract interaction data
-    if (typeof data !== 'object' || data === null) return false;
-    return true;
-  } catch {
-    return false;
-  }
-};
 
 const WalletConnection = ({
   account,
@@ -517,7 +503,7 @@ const WalletConnection = ({
                         alert(`🔄 Transaction submitted! Hash: ${tx.hash}`);
 
                         // Wait for confirmation with timeout
-                        const receipt = await Promise.race([
+                        await Promise.race([
                           tx.wait(),
                           new Promise((_, reject) => 
                             setTimeout(() => reject(new Error("Transaction timeout")), 300000) // 5 minutes

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React from "react";
 
 // Security: Rate limiting for staking operations
 const STAKING_RATE_LIMIT = 5000; // 5 seconds between operations

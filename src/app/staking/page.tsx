@@ -721,7 +721,7 @@ export default function StakingPage() {
     setWrongNetwork(false);
     setCurrentChainId(null);
     clearWeb3State();
-  }, []);
+  }, [clearWeb3State]);
 
   const handleGoToStaking = async () => {
     // Only proceed if we're already on the correct network
@@ -814,7 +814,7 @@ export default function StakingPage() {
         }
       };
     }
-  }, [account, checkNetwork, disconnectWallet, initializeWeb3]);
+  }, [account, checkNetwork, disconnectWallet, initializeWeb3, clearWeb3State]);
 
   // Continuous network monitoring when user is connected
   useEffect(() => {
@@ -927,7 +927,7 @@ export default function StakingPage() {
     };
 
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainIdNumber]);
+  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
