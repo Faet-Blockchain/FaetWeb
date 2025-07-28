@@ -1,5 +1,18 @@
 "use client";
-import React from "react";
+import React, { useState, useCallback } from "react";
+
+// Security: Rate limiting for staking operations
+const STAKING_RATE_LIMIT = 5000; // 5 seconds between operations
+let lastStakingOperation = 0;
+
+const checkStakingRateLimit = (): boolean => {
+  const now = Date.now();
+  if (now - lastStakingOperation < STAKING_RATE_LIMIT) {
+    return false;
+  }
+  lastStakingOperation = now;
+  return true;
+};
 
 type StakingFormProps = {
   stakeAmount: string;
@@ -104,6 +117,12 @@ const StakingForm = ({
           <div className="flex flex-col justify-center">
             <button
               onClick={() => {
+                // Security: Check rate limiting
+                if (!checkStakingRateLimit()) {
+                  alert("Please wait before making another staking transaction");
+                  return;
+                }
+                
                 console.log("🔘 Stake button clicked with:", {
                   stakeAmount,
                   isLoading,

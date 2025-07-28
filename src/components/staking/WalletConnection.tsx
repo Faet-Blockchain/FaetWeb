@@ -54,6 +54,11 @@ const isValidChainId = (chainId: string | null): boolean => {
 const sanitizeError = (error: unknown): string => {
   const errorObj = error as { code?: number | string; message?: string };
   
+  // Log full error for debugging (server-side only)
+  if (typeof window === 'undefined') {
+    console.error('[Security] Full error details:', error);
+  }
+  
   // Map specific errors to user-friendly messages
   if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
     return "Transaction cancelled by user";
@@ -73,6 +78,22 @@ const sanitizeError = (error: unknown): string => {
   
   // Generic error message to prevent information leakage
   return "Operation failed. Please try again.";
+};
+
+// Security: Sanitize user inputs
+const sanitizeInput = (input: string): string => {
+  return input.replace(/[<>'"&]/g, '');
+};
+
+// Security: Validate contract interaction data
+const validateContractData = (data: unknown): boolean => {
+  try {
+    // Basic validation for contract interaction data
+    if (typeof data !== 'object' || data === null) return false;
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const WalletConnection = ({
