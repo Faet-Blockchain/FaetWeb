@@ -4,12 +4,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 // Security validation functions
-const validateContractInteraction = (): boolean => {
-  // Basic validation for contract interaction readiness
-  return typeof window !== 'undefined' && 
-         typeof window.ethereum !== 'undefined' &&
-         Date.now() > 0; // Simple time check
-};
 
 const isValidAddress = (address: string): boolean => {
   // Basic Ethereum address validation
@@ -477,7 +471,7 @@ const WalletConnection = ({
 
                               // Rate limiting
                               await new Promise(resolve => setTimeout(resolve, 25));
-                            } catch (error) {
+                            } catch {
                               // Token doesn't exist or other error, continue
                               continue;
                             }
