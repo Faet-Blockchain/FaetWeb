@@ -129,43 +129,50 @@ const RewardsSection = ({
         <h4 className="font-semibold text-purple-400 mb-4">
           Staking Distribution by Amount Range
         </h4>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stakingRanges.map((range, index) => ({
-                    name: `${range.range} (${range.count} addresses)`,
-                    value: parseFloat(range.totalWeight),
-                    fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
-                  }))}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ percent }: { percent?: number }) =>
-                    percent && percent > 0.05 ? `${(percent * 100).toFixed(1)}%` : ""
-                  }
-                  labelLine={false}
-                />
-                <Tooltip
-                  formatter={(value: number) => [
-                    `${value.toLocaleString()} FAET`,
-                  ]}
-                  contentStyle={{
-                    backgroundColor: "#374151",
-                    border: "1px solid #4b5563",
-                    borderRadius: "8px",
-                    color: "#fff",
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{ color: "#fff", fontSize: "12px" }}
-                  iconSize={8}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+        {stakingRanges.length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <div className="animate-pulse">Loading staking distribution data...</div>
+            <div className="text-xs mt-2">Fetching data from blockchain...</div>
           </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={stakingRanges.map((range, index) => ({
+                      name: `${range.range} (${range.count} addresses)`,
+                      value: parseFloat(range.totalWeight),
+                      fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    dataKey="value"
+                    label={({ percent }: { percent?: number }) =>
+                      percent && percent > 0.05 ? `${(percent * 100).toFixed(1)}%` : ""
+                    }
+                    labelLine={false}
+                  />
+                  <Tooltip
+                    formatter={(value: number) => [
+                      `${value.toLocaleString()} FAET`,
+                    ]}
+                    contentStyle={{
+                      backgroundColor: "#374151",
+                      border: "1px solid #4b5563",
+                      borderRadius: "8px",
+                      color: "#fff",
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ color: "#fff", fontSize: "12px" }}
+                    iconSize={8}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div></div>
+        )}
           <div className="space-y-4">
             <div className="bg-gray-600 p-4 rounded-lg">
               <h5 className="font-semibold text-purple-400 mb-2">

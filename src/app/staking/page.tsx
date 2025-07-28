@@ -181,6 +181,10 @@ export default function StakingPage() {
     try {
       console.log("Loading real blockchain staking data...");
 
+      // Set initial loading state
+      setTopStakers([]);
+      setStakingRanges([]);
+
       // Get all Stake events to find unique stakers
       const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
 
@@ -204,9 +208,13 @@ export default function StakingPage() {
       console.log(`Found ${uniqueStakers.length} unique stakers`);
 
       if (uniqueStakers.length === 0) {
-        console.log("No stakers found, using empty data");
+        console.log("No stakers found, using placeholder data");
         setTopStakers([]);
-        setStakingRanges([]);
+        setStakingRanges([{
+          range: "No Data",
+          count: 0,
+          totalWeight: "0"
+        }]);
         return;
       }
 
@@ -406,7 +414,14 @@ export default function StakingPage() {
       }
 
       // Load top stakers data
-      await loadTopStakersData(staking);
+      try {
+        await loadTopStakersData(staking);
+      } catch (stakersError) {
+        console.warn("Error loading top stakers data:", stakersError);
+        // Set empty data as fallback
+        setTopStakers([]);
+        setStakingRanges([]);
+      }
     } catch (error: unknown) {
       console.error("Critical error loading user data:", (error as { message?: string })?.message || error);
       if ((error as { code?: string })?.code === "BAD_DATA") {
@@ -478,6 +493,15 @@ export default function StakingPage() {
 
         console.log("Contracts initialized, loading user data...");
         await loadUserData(token, staking, account);
+        
+        // Also load top stakers data independently in case it fails in loadUserData
+        try {
+          console.log("Loading top stakers data independently...");
+          await loadTopStakersData(staking);
+        } catch (stakersError) {
+          console.warn("Independent top stakers data load failed:", stakersError);
+        }
+        
         console.log("Web3 initialization complete");
       } catch (error: unknown) {
         console.error("Error initializing Web3:", (error as { message?: string })?.message || error);
