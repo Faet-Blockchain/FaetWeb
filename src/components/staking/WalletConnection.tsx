@@ -101,7 +101,7 @@ const WalletConnection = ({
               ) : (
                 <>
                   <Image
-                    src="/images/metamask-icon.png"
+                    src="/images/metamask-icon.webp"
                     alt="MetaMask"
                     width={24}
                     height={24}
