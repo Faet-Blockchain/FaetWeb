@@ -1,0 +1,13 @@
+Error: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+    at createConsoleError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:882:71)
+    at handleConsoleError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1058:54)
+    at console.error (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1223:57)
+    at getRootForUpdatedFiber (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:4741:143)
+    at enqueueConcurrentRenderForLane (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:4728:16)
+    at forceStoreRerender (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:6591:20)
+    at https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:6577:45
+    at https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:12343:39
+    at Array.forEach (<anonymous>)
+    at _devbuildindicator.devBuildIndicator.hide (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:12343:19)
+    at handleDevBuildIndicatorHmrEvents (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:14808:54)
+    at WebSocket.handler (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev:3001/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:15520:88)
