@@ -7,7 +7,7 @@ interface LogEntry {
   timestamp: string;
   userAgent?: string;
   ip?: string;
-  extra?: Record<string, any>;
+  extra?: Record<string, string | number | boolean | null>;
 }
 
 export class SecurityLogger {
@@ -25,7 +25,7 @@ export class SecurityLogger {
     }
   }
 
-  static logSecurityEvent(message: string, extra?: Record<string, any>) {
+  static logSecurityEvent(message: string, extra?: Record<string, string | number | boolean | null>) {
     this.log({
       level: 'security',
       message,
