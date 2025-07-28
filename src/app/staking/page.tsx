@@ -151,7 +151,7 @@ export default function StakingPage() {
       clearWeb3State();
       return false;
     }
-  }, []);
+  }, [clearWeb3State]);
 
   const switchToLiskSepolia = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -307,7 +307,7 @@ export default function StakingPage() {
     }
   };
 
-  const loadUserData = async (
+  const loadUserData = useCallback(async (
     token: ethers.Contract,
     staking: ethers.Contract,
     userAddress: string,
@@ -457,7 +457,7 @@ export default function StakingPage() {
       setUserStakes([]);
       setTotalRewardsFunded("0");
     }
-  };
+  }, [provider]);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
@@ -538,7 +538,7 @@ export default function StakingPage() {
       console.log("Cannot initialize Web3: missing ethereum or account");
       clearWeb3State();
     }
-  }, [account, currentChainId]);
+  }, [account, currentChainId, loadUserData]);
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -932,18 +932,6 @@ export default function StakingPage() {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
-
-  const loadUserDataCallback = useCallback(
-    (token: ethers.Contract, staking: ethers.Contract, userAddress: string) => {
-      console.log("🔄 [loadUserDataCallback] Called with:", { 
-        userAddress, 
-        hasToken: !!token, 
-        hasStaking: !!staking 
-      });
-      loadUserData(token, staking, userAddress);
-    },
-    [loadUserData]
-  );
 
   return (
     <div className="min-h-screen bg-black text-white pt-20">
