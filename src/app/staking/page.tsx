@@ -47,7 +47,6 @@ export default function StakingPage() {
   const [currentChainIdNumber, setCurrentChainIdNumber] = useState<number | null>(null);
 
   // Web3 state
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(null);
   const [stakingContract, setStakingContract] = useState<ethers.Contract | null>(null);
 
@@ -88,7 +87,6 @@ export default function StakingPage() {
   };
 
   const clearWeb3State = useCallback(() => {
-    setProvider(null);
     setTokenContract(null);
     setStakingContract(null);
     setTokenBalance("0");
@@ -484,8 +482,7 @@ export default function StakingPage() {
 
         console.log("🔄 [initializeWeb3] Setting contracts in state...");
         
-        // Set provider and contracts together to prevent multiple re-renders
-        setProvider(web3Provider);
+        // Set contracts in state
         setTokenContract(token);
         setStakingContract(staking);
 
