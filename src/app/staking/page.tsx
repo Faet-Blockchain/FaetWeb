@@ -870,6 +870,12 @@ export default function StakingPage() {
           const timestamp = new Date().toLocaleTimeString();
           console.log(`[${timestamp}] Updating pending rewards...`);
 
+          // Check if ethereum is available
+          if (typeof window.ethereum === "undefined") {
+            console.warn(`[${timestamp}] window.ethereum not available`);
+            return;
+          }
+
           // Create a fresh provider for each update to avoid stale references
           const freshProvider = new ethers.BrowserProvider(window.ethereum);
           const currentBlock = await freshProvider.getBlockNumber();
