@@ -53,12 +53,12 @@ const isValidChainId = (chainId: string | null): boolean => {
 // Security: Sanitize error messages to prevent information leakage
 const sanitizeError = (error: unknown): string => {
   const errorObj = error as { code?: number | string; message?: string };
-  
+
   // Log full error for debugging (server-side only)
   if (typeof window === 'undefined') {
     console.error('[Security] Full error details:', error);
   }
-  
+
   // Map specific errors to user-friendly messages
   if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
     return "Transaction cancelled by user";
@@ -75,7 +75,7 @@ const sanitizeError = (error: unknown): string => {
   if (errorObj?.message?.includes("Not claimable")) {
     return "Token not eligible for claiming";
   }
-  
+
   // Generic error message to prevent information leakage
   return "Operation failed. Please try again.";
 };
@@ -125,7 +125,7 @@ const WalletConnection = ({
       console.warn("Security: Invalid account or network state");
       return false;
     }
-    
+
     if (typeof window.ethereum === "undefined") {
       console.warn("Security: MetaMask not detected");
       return false;
@@ -264,7 +264,7 @@ const WalletConnection = ({
                 <button
                   onClick={async () => {
                     setCharacterNftError("");
-                    
+
                     // Security: Validate prerequisites
                     if (!validateContractInteraction()) {
                       setCharacterNftError("Invalid wallet state or rate limited");
@@ -286,6 +286,12 @@ const WalletConnection = ({
                           if (tokenId < min || tokenId > max) {
                             console.warn(`Security: Invalid token ID ${tokenId}`);
                             continue;
+                          }
+
+                          // Security: Check if ethereum is still available
+                          if (typeof window.ethereum === "undefined") {
+                            console.warn(`Security: window.ethereum became unavailable during operation`);
+                            break;
                           }
 
                           const wasAdded = await window.ethereum.request({
@@ -437,7 +443,7 @@ const WalletConnection = ({
                           try {
                             const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
                             const tokenIdNumber = Number(tokenId);
-                            
+
                             // Security: Validate token ID range
                             if (tokenIdNumber >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
                                 tokenIdNumber <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
@@ -539,7 +545,7 @@ const WalletConnection = ({
                 <button
                   onClick={async () => {
                     setFoundersPassError("");
-                    
+
                     // Security: Validate prerequisites
                     if (!validateContractInteraction()) {
                       setFoundersPassError("Invalid wallet state or rate limited");
@@ -561,6 +567,12 @@ const WalletConnection = ({
                           if (tokenId < min || tokenId > max) {
                             console.warn(`Security: Invalid token ID ${tokenId}`);
                             continue;
+                          }
+
+                          // Security: Check if ethereum is still available
+                          if (typeof window.ethereum === "undefined") {
+                            console.warn(`Security: window.ethereum became unavailable during operation`);
+                            break;
                           }
 
                           const wasAdded = await window.ethereum.request({
