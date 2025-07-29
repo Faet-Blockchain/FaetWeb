@@ -739,10 +739,42 @@ export default function StakingPage() {
     // Set new network
     setSelectedNetwork(network);
     
-    // Force immediate network check after state update
+    // Force immediate network check after state update with the new network config
     setTimeout(async () => {
       console.log('Forcing network check after network change...');
-      await checkNetwork();
+      // Get the new network config for the selected network
+      const newNetworkConfig = getNetworkConfig(network);
+      
+      // Check network with the new expected chain ID
+      if (typeof window.ethereum !== "undefined") {
+        try {
+          const chainId = (await window.ethereum.request({
+            method: "eth_chainId",
+          })) as string;
+
+          console.log(`[handleNetworkChange] Current chain ID: "${chainId}"`);
+          console.log(`[handleNetworkChange] Expected chain ID for ${network}: "${newNetworkConfig.chainId}"`);
+
+          setCurrentChainId(chainId);
+          const currentChainNumber = parseInt(chainId, 16);
+          const requiredChainNumber = newNetworkConfig.chainIdNumber;
+          setCurrentChainIdNumber(currentChainNumber);
+
+          const isCorrectNetwork = currentChainNumber === requiredChainNumber;
+          console.log(`[handleNetworkChange] Networks match for ${network}: ${isCorrectNetwork}`);
+
+          setWrongNetwork(!isCorrectNetwork);
+
+          if (!isCorrectNetwork) {
+            console.log("[handleNetworkChange] Wrong network detected after switch");
+          } else {
+            console.log("[handleNetworkChange] Correct network confirmed after switch");
+          }
+        } catch (error) {
+          console.error("[handleNetworkChange] Error checking network:", error);
+          setWrongNetwork(true);
+        }
+      }
     }, 100);
   };
 
