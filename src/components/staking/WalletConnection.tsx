@@ -58,14 +58,13 @@ const SECURITY_CONFIG = {
 
 // Security: Validate chain ID dynamically based on selected network
 const isValidChainId = (chainId: string | null, selectedNetwork: 'testnet' | 'mainnet', chainIdNumber?: number | null): boolean => {
-  const expectedChainId = getExpectedChainId(selectedNetwork);
-  
-  // For mainnet, check both hex and decimal formats
   if (selectedNetwork === 'mainnet') {
+    // For mainnet, check both hex and decimal formats
     return chainId === '0x46f' || chainIdNumber === 1135;
+  } else {
+    // For testnet, check against Lisk Sepolia testnet
+    return chainId === '0x106a' || chainIdNumber === 4202;
   }
-  
-  return chainId === expectedChainId;
 };
 
 // Security: Sanitize error messages to prevent information leakage
@@ -98,8 +97,9 @@ const WalletConnection = ({
     currentChainIdNumber,
     selectedNetwork,
     canAccessStaking,
-    expectedChainId: getExpectedChainId(selectedNetwork),
-    isMainnetValid: selectedNetwork === 'mainnet' ? (currentChainId === '0x46f' || currentChainIdNumber === 1135) : 'N/A'
+    expectedChainId: selectedNetwork === 'mainnet' ? '0x46f' : '0x106a',
+    expectedChainNumber: selectedNetwork === 'mainnet' ? 1135 : 4202,
+    isNetworkValid: isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber)
   });
   const [characterNftError, setCharacterNftError] = useState<string>("");
   const [foundersPassError, setFoundersPassError] = useState<string>("");
@@ -109,11 +109,14 @@ const WalletConnection = ({
   const [lastOperationTime, setLastOperationTime] = useState<number>(0);
 
   // Security: Memoized validation checks
-  const securityChecks = useMemo(() => ({
-    isValidAccount: account && isValidAddress(account),
-    isValidChain: isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber),
-    canPerformOperations: account && !wrongNetwork && isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber)
-  }), [account, currentChainId, currentChainIdNumber, wrongNetwork, selectedNetwork]);
+  const securityChecks = useMemo(() => {
+    const chainValid = isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber);
+    return {
+      isValidAccount: account && isValidAddress(account),
+      isValidChain: chainValid,
+      canPerformOperations: account && !wrongNetwork && chainValid
+    };
+  }, [account, currentChainId, currentChainIdNumber, wrongNetwork, selectedNetwork]);
 
   // Security: Rate limiting check
   const checkRateLimit = useCallback((): boolean => {
