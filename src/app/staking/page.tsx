@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import WalletConnection from "@/components/staking/WalletConnection";
 import StakingInterface from "@/components/staking/StakingInterface";
 import StakingFeatures from "@/components/staking/StakingFeatures";
-import { getNetworkConfig, type NetworkType } from "@/lib/networks";
+import { getNetworkConfig } from "@/lib/networks";
 
 // Simplified ABI for the functions we need
 const FAET_TOKEN_ABI = [
@@ -74,7 +74,6 @@ export default function StakingPage() {
   const FAET_TOKEN_ADDRESS = currentNetworkConfig.contracts.token;
   const FAET_STAKING_ADDRESS = currentNetworkConfig.contracts.staking;
   const REQUIRED_CHAIN_ID = currentNetworkConfig.chainId;
-  const REQUIRED_CHAIN_NUMBER = currentNetworkConfig.chainIdNumber;
 
   const clearWeb3State = useCallback(() => {
     setTokenContract(null);
@@ -492,7 +491,7 @@ export default function StakingPage() {
       // DON'T call clearWeb3State() or setShowTokenStaking(false) here
       // Let the interface stay visible and show the error state
     }
-  }, [checkNetwork, selectedNetwork]);
+  }, [checkNetwork, selectedNetwork, FAET_STAKING_ADDRESS, FAET_TOKEN_ADDRESS]);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
@@ -603,7 +602,7 @@ export default function StakingPage() {
       console.log("Cannot initialize Web3: missing ethereum or account");
       clearWeb3State();
     }
-  }, [account, currentChainId, selectedNetwork, loadUserData, clearWeb3State, checkNetwork]);
+  }, [account, currentChainId, selectedNetwork, loadUserData, clearWeb3State, checkNetwork, FAET_TOKEN_ADDRESS, FAET_STAKING_ADDRESS]);
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -950,7 +949,7 @@ export default function StakingPage() {
         }
       };
     }
-  }, [account, checkNetwork, disconnectWallet, initializeWeb3, clearWeb3State]);
+  }, [account, checkNetwork, disconnectWallet, initializeWeb3, clearWeb3State, selectedNetwork]);
 
   // Continuous network monitoring when user is connected
   useEffect(() => {
@@ -1062,11 +1061,7 @@ export default function StakingPage() {
         clearInterval(rewardsUpdateInterval);
       }
     };
-  }, [stakingContract, account, wrongNetwork]);
-
-  const getExpectedChainId = (network: 'testnet' | 'mainnet') => {
-    return getNetworkConfig(network).chainId;
-  };
+  }, [stakingContract, account, wrongNetwork, FAET_STAKING_ADDRESS]);
 
   // Network validation effect
   useEffect(() => {
