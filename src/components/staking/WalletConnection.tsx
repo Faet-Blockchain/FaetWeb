@@ -35,14 +35,8 @@ type WalletConnectionProps = {
   onNetworkChange: (network: 'testnet' | 'mainnet') => void;
 };
 
-// Security: Define contract addresses and validation
+// Security: Define validation settings
 const SECURITY_CONFIG = {
-  // Valid contract addresses with checksums
-  CONTRACTS: {
-    CHARACTER_NFT: '0xB37E9A6Df0887663fe0b4Cc9Ba19F8FC0DE18e12',
-    FOUNDERS_PASS: '0x9AcB6e75D9c94eEb9320b35758cF0B21e4FF7a5D',
-    FAET_TOKEN: '0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394'
-  },
   // Rate limiting
   RATE_LIMITS: {
     NFT_ADD_DELAY: 200, // ms between NFT add requests
