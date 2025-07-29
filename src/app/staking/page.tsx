@@ -1055,7 +1055,7 @@ export default function StakingPage() {
 
   // Only allow staking interface if connected to correct network
   const canAccessStaking = Boolean(
-    account && !wrongNetwork
+    account && !wrongNetwork && currentChainId
   );
 
   // Debug logging for network state
@@ -1070,7 +1070,12 @@ export default function StakingPage() {
     tokenContract: currentNetworkConfig.contracts.token,
     stakingContract: currentNetworkConfig.contracts.staking,
     canAccessStaking,
-    networkMatches: currentChainId === currentNetworkConfig.chainId || currentChainIdNumber === currentNetworkConfig.chainIdNumber
+    networkMatches: currentChainId === currentNetworkConfig.chainId || currentChainIdNumber === currentNetworkConfig.chainIdNumber,
+    canAccessStakingComponents: {
+      hasAccount: !!account,
+      notWrongNetwork: !wrongNetwork,
+      hasChainId: !!currentChainId
+    }
   });
 
   // Initialize Web3 when account and network are both correct
@@ -1132,7 +1137,7 @@ export default function StakingPage() {
           />
         )}
 
-        {showTokenStaking && canAccessStaking && (
+        {showTokenStaking && account && (
           <StakingInterface
             account={account!}
             selectedNetwork={selectedNetwork}
