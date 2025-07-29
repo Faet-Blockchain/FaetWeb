@@ -161,16 +161,16 @@ const WalletConnection = ({
         </div>
         <div className={`border rounded-lg p-4 ${
           selectedNetwork === 'mainnet' 
-            ? 'bg-yellow-900 border-yellow-600' 
+            ? 'bg-purple-900 border-purple-600' 
             : 'bg-blue-900 border-blue-600'
         }`}>
           <p className={`text-sm ${
-            selectedNetwork === 'mainnet' ? 'text-yellow-300' : 'text-blue-300'
+            selectedNetwork === 'mainnet' ? 'text-purple-300' : 'text-blue-300'
           }`}>
             {selectedNetwork === 'mainnet' ? (
               <>
-                🚧 <strong>Mainnet Coming Soon:</strong> Contracts are ready but not yet deployed. 
-                You can preview the interface but transactions won't work.
+                🌐 <strong>Mainnet Mode:</strong> You're using the Lisk mainnet. 
+                All transactions are real and involve actual tokens.
               </>
             ) : (
               <>
@@ -249,15 +249,13 @@ const WalletConnection = ({
                       ? "bg-red-600 hover:bg-red-700 text-white"
                       : canAccessStaking
                       ? selectedNetwork === 'mainnet' 
-                        ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+                        ? "bg-purple-600 hover:bg-purple-700 text-white"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
                       : "bg-gray-600 text-gray-400 cursor-not-allowed"
                   }`}
                 >
                   {wrongNetwork 
                     ? "Switch Network" 
-                    : selectedNetwork === 'mainnet'
-                    ? "View Mainnet (Coming Soon)"
                     : "Go to Staking"
                   }
                 </button>
