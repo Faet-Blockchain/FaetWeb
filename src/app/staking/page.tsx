@@ -331,29 +331,42 @@ export default function StakingPage() {
         console.log("Testnet mode - proceeding with data loading regardless of network state");
       }
 
-      console.log("Staking contract address:", await staking.getAddress());
-      console.log("Token contract address:", await token.getAddress());
+      // Safely get contract addresses with error handling
+      try {
+        const stakingAddr = await staking.getAddress();
+        const tokenAddr = await token.getAddress();
+        console.log("Contract addresses validated - Staking:", stakingAddr, "Token:", tokenAddr);
+      } catch (addrError) {
+        console.warn("Could not get contract addresses, contracts may not be deployed:", addrError);
+        // Don't return here - let individual calls handle their own errors
+      }
 
       // Get current block number from the provider
       let currentBlock = 0;
-      if (typeof window.ethereum !== "undefined") {
-        // Always create a fresh provider to get block number to avoid dependency issues
-        const tempProvider = new ethers.BrowserProvider(window.ethereum);
-        currentBlock = await tempProvider.getBlockNumber();
+      try {
+        if (typeof window.ethereum !== "undefined") {
+          // Always create a fresh provider to get block number to avoid dependency issues
+          const tempProvider = new ethers.BrowserProvider(window.ethereum);
+          currentBlock = await tempProvider.getBlockNumber();
+          console.log("Current block number:", currentBlock);
+        }
+      } catch (blockError) {
+        console.warn("Could not get current block number:", blockError);
+        // Use fallback block number or continue without it
+        currentBlock = 0;
       }
 
-      console.log("Current block number:", currentBlock);
-
-      // Get token balance
+      // Get token balance with enhanced error handling
       try {
         const balance = await token.balanceOf(userAddress);
         setTokenBalance(ethers.formatEther(balance));
+        console.log("Successfully fetched token balance:", ethers.formatEther(balance));
       } catch (error: unknown) {
-        console.error("Error fetching token balance:", error);
+        console.warn("Error fetching token balance (contract may not exist):", error);
         setTokenBalance("0");
       }
 
-      // Get weighted balance (active staking weight)
+      // Get weighted balance (active staking weight) with enhanced error handling
       try {
         // Try getActiveWeight first since it's the actual current active weight
         const activeWeight = await staking.getActiveWeight(userAddress);
@@ -372,7 +385,7 @@ export default function StakingPage() {
         }
       }
 
-      // Get pending rewards with fallback handling
+      // Get pending rewards with enhanced error handling
       try {
         const earned = await staking.earned(userAddress);
         setPendingRewards(ethers.formatEther(earned));
@@ -382,9 +395,7 @@ export default function StakingPage() {
         setPendingRewards("0");
       }
 
-
-
-      // Get total rewards funded
+      // Get total rewards funded with enhanced error handling
       try {
         const totalFunded = await staking.totalRewardsFunded();
         setTotalRewardsFunded(ethers.formatEther(totalFunded));
@@ -394,7 +405,7 @@ export default function StakingPage() {
         setTotalRewardsFunded("0");
       }
 
-      // Get user stakes with proper error handling
+      // Get user stakes with enhanced error handling
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
         const stakeCountNumber = Number(stakeCount);
@@ -403,54 +414,53 @@ export default function StakingPage() {
         if (stakeCountNumber === 0) {
           console.log("User has no stakes");
           setUserStakes([]);
-          return;
-        }
+        } else {
+          const stakes = [];
 
-        const stakes = [];
+          for (let i = 0; i < stakeCountNumber; i++) {
+            try {
+              const stakeView = await staking.getStakeView(userAddress, i);
+              // stakeView is a struct with: amount, weightedAmount, multiplier, lockEndBlock
+              const amount = stakeView[0];
+              const weightedAmount = stakeView[1];
+              const multiplier = stakeView[2];
+              const lockEndBlock = Number(stakeView[3]);
 
-        for (let i = 0; i < stakeCountNumber; i++) {
-          try {
-            const stakeView = await staking.getStakeView(userAddress, i);
-            // stakeView is a struct with: amount, weightedAmount, multiplier, lockEndBlock
-            const amount = stakeView[0];
-            const weightedAmount = stakeView[1];
-            const multiplier = stakeView[2];
-            const lockEndBlock = Number(stakeView[3]);
+              const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
+              const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
 
-            const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
-            const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
+              console.log(`Stake ${i} details:`, {
+                currentBlock,
+                lockEndBlock,
+                blocksRemaining,
+                daysRemaining: Math.ceil(blocksRemaining / 43200),
+                amount: amount.toString(),
+                weightedAmount: weightedAmount.toString(),
+                multiplier: multiplier.toString()
+              });
 
-            console.log(`Stake ${i} details:`, {
-              currentBlock,
-              lockEndBlock,
-              blocksRemaining,
-              daysRemaining: Math.ceil(blocksRemaining / 43200),
-              amount: amount.toString(),
-              weightedAmount: weightedAmount.toString(),
-              multiplier: multiplier.toString()
-            });
-
-            stakes.push({
-              index: i,
-              amount: ethers.formatEther(amount),
-              weightedAmount: ethers.formatEther(weightedAmount),
-              multiplier: Number(multiplier) / 1e18, // Convert from wei to decimal
-              lockEndBlock: lockEndBlock,
-              isUnlocked: isUnlocked,
-              blocksRemaining: blocksRemaining,
-            });
-          } catch (stakeError) {
-            console.error(`Error loading stake ${i}:`, stakeError);
+              stakes.push({
+                index: i,
+                amount: ethers.formatEther(amount),
+                weightedAmount: ethers.formatEther(weightedAmount),
+                multiplier: Number(multiplier) / 1e18, // Convert from wei to decimal
+                lockEndBlock: lockEndBlock,
+                isUnlocked: isUnlocked,
+                blocksRemaining: blocksRemaining,
+              });
+            } catch (stakeError) {
+              console.error(`Error loading stake ${i}:`, stakeError);
+            }
           }
+          setUserStakes(stakes);
+          console.log("Successfully loaded", stakes.length, "stakes");
         }
-        setUserStakes(stakes);
-        console.log("Successfully loaded", stakes.length, "stakes");
       } catch (error: unknown) {
         console.warn("Error loading stakes (contract may not exist or wrong network):", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setUserStakes([]);
       }
 
-      // Load top stakers data
+      // Load top stakers data with enhanced error handling
       try {
         await loadTopStakersData(staking);
       } catch (stakersError) {
@@ -459,20 +469,30 @@ export default function StakingPage() {
         setTopStakers([]);
         setStakingRanges([]);
       }
+
+      console.log("✅ User data loading completed successfully");
     } catch (error: unknown) {
       console.error("Critical error loading user data:", (error as { message?: string })?.message || error);
       if ((error as { code?: string })?.code === "BAD_DATA") {
         console.warn("Contract decode error - likely wrong network or contract not deployed");
+      } else if ((error as { message?: string })?.message?.includes("network")) {
+        console.warn("Network-related error during data loading");
       }
-      // Set fallback values
+      
+      // Set fallback values but DON'T clear the interface
+      console.log("Setting fallback values due to error, but keeping interface visible");
       setTokenBalance("0");
       setStakedBalance("0");
       setPendingRewards("0");
-
       setUserStakes([]);
       setTotalRewardsFunded("0");
+      setTopStakers([]);
+      setStakingRanges([]);
+      
+      // DON'T call clearWeb3State() or setShowTokenStaking(false) here
+      // Let the interface stay visible and show the error state
     }
-  }, []);
+  }, [checkNetwork, selectedNetwork]);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
@@ -544,18 +564,27 @@ export default function StakingPage() {
 
         console.log("✅ [initializeWeb3] Web3 initialized successfully");
 
-        // Final network check before loading data
-        const finalNetworkCheck = await checkNetwork();
-        if (!finalNetworkCheck) {
-          console.log("Final network check failed, not loading user data");
-          clearWeb3State();
-          return;
+        // For testnet, skip final network check to allow data loading with errors
+        if (selectedNetwork === 'mainnet') {
+          const finalNetworkCheck = await checkNetwork();
+          if (!finalNetworkCheck) {
+            console.log("Final network check failed for mainnet, not loading user data");
+            clearWeb3State();
+            return;
+          }
+        } else {
+          console.log("Testnet mode - skipping final network check, proceeding with data loading");
         }
 
         // Load user data immediately after successful initialization
         console.log("🔄 [initializeWeb3] Loading user data for:", signerAddress);
-        await loadUserData(token, staking, signerAddress);
-        console.log("✅ [initializeWeb3] User data loading initiated");
+        try {
+          await loadUserData(token, staking, signerAddress);
+          console.log("✅ [initializeWeb3] User data loading completed");
+        } catch (loadError) {
+          console.warn("Error during user data loading, but keeping interface visible:", loadError);
+          // Don't clear web3 state or hide interface on data loading errors
+        }
 
         // Also load top stakers data independently in case it fails in loadUserData
         try {
@@ -931,7 +960,12 @@ export default function StakingPage() {
       // Check network every 10 seconds when connected (increased frequency to prevent flickering)
       networkCheckInterval = setInterval(async () => {
         console.log("[networkMonitoring] Periodic network check for", selectedNetwork);
-        await checkNetwork();
+        try {
+          await checkNetwork();
+        } catch (checkError) {
+          console.warn("[networkMonitoring] Network check failed, but continuing:", checkError);
+          // Don't let periodic network check failures disrupt the interface
+        }
       }, 10000);
     }
 
