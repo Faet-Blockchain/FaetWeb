@@ -39,7 +39,7 @@ export default function StakingPage() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [wrongNetwork, setWrongNetwork] = useState(false);
   const [showTokenStaking, setShowTokenStaking] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState<'testnet' | 'mainnet'>('testnet');
+  const [selectedNetwork, setSelectedNetwork] = useState<'testnet' | 'mainnet'>('mainnet');
   const [currentChainId, setCurrentChainId] = useState<string | null>(null);
   const [currentChainIdNumber, setCurrentChainIdNumber] = useState<number | null>(null);
 
