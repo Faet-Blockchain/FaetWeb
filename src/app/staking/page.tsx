@@ -761,14 +761,18 @@ export default function StakingPage() {
       selectedNetwork
     });
 
+    // Force a fresh network check before proceeding
+    const networkIsValid = await checkNetwork();
+    console.log("Fresh network check result:", networkIsValid);
+
     // Check if we have an account and are on the correct network
-    if (account && !wrongNetwork) {
+    if (account && networkIsValid) {
       console.log("Conditions met, showing token staking interface");
       setShowTokenStaking(true);
       setTimeout(() => scrollToSection("token-staking"), 100);
     } else if (!account) {
       console.log("No account connected, cannot proceed to staking");
-    } else if (wrongNetwork) {
+    } else if (!networkIsValid) {
       console.log("Wrong network detected, attempting to switch");
       await switchToCurrentNetwork();
     } else {
