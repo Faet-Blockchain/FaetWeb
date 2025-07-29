@@ -767,25 +767,9 @@ export default function StakingPage() {
       return;
     }
 
-    // Do a lightweight network check without updating state
-    let isNetworkValid = false;
-    if (typeof window.ethereum !== "undefined") {
-      try {
-        const chainId = (await window.ethereum.request({
-          method: "eth_chainId",
-        })) as string;
-        
-        const networkConfig = getNetworkConfig(selectedNetwork);
-        const currentChainNumber = parseInt(chainId, 16);
-        const expectedChainNumber = networkConfig.chainIdNumber;
-        
-        isNetworkValid = chainId === networkConfig.chainId || currentChainNumber === expectedChainNumber;
-        console.log("Lightweight network check result:", isNetworkValid);
-      } catch (error) {
-        console.error("Error checking network:", error);
-        isNetworkValid = false;
-      }
-    }
+    // Use the existing canAccessStaking check since it already validates network correctly
+    isNetworkValid = canAccessStaking;
+    console.log("Using existing canAccessStaking validation:", isNetworkValid);
 
     if (isNetworkValid) {
       console.log("Conditions met, showing token staking interface");
