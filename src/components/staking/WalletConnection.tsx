@@ -87,6 +87,16 @@ const WalletConnection = ({
 }: WalletConnectionProps) => {
   // Get dynamic contract addresses based on selected network
   const contractAddresses = getContractAddresses(selectedNetwork);
+  
+  // Debug logging to understand network state
+  console.log('WalletConnection Debug:', {
+    account,
+    wrongNetwork,
+    currentChainId,
+    selectedNetwork,
+    canAccessStaking,
+    expectedChainId: getExpectedChainId(selectedNetwork)
+  });
   const [characterNftError, setCharacterNftError] = useState<string>("");
   const [foundersPassError, setFoundersPassError] = useState<string>("");
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
@@ -253,7 +263,7 @@ const WalletConnection = ({
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : wrongNetwork
                       ? "bg-red-600 hover:bg-red-700 text-white"
-                      : canAccessStaking
+                      : account && !wrongNetwork
                       ? selectedNetwork === 'mainnet' 
                         ? "bg-purple-600 hover:bg-purple-700 text-white"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -264,9 +274,9 @@ const WalletConnection = ({
                     ? "Connect Wallet First"
                     : wrongNetwork 
                     ? "Switch Network" 
-                    : canAccessStaking
+                    : account && !wrongNetwork
                     ? "Go to Staking"
-                    : "Wrong Network"
+                    : "Network Issue"
                   }
                 </button>
               </div>
