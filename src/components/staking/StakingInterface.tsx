@@ -41,6 +41,7 @@ type StakingInterfaceProps = {
   totalRewardsFunded: string;
   topStakers: Array<{address: string, weight: string}>;
   stakingRanges: Array<{range: string, count: number, totalWeight: string}>;
+  onBackToOverview: () => void;
 };
 
 // Contract addresses on Lisk Sepolia
@@ -72,6 +73,7 @@ const StakingInterface = ({
   totalRewardsFunded,
   topStakers,
   stakingRanges,
+  onBackToOverview,
 }: StakingInterfaceProps) => {
 
   const networkConfig = {
@@ -92,7 +94,7 @@ const StakingInterface = ({
     >
       <div className="flex items-center justify-between mb-6">
         <button
-          onClick={() => {}}
+          onClick={onBackToOverview}
           className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
         >
           ← Back to Overview
