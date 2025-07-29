@@ -739,7 +739,12 @@ export default function StakingPage() {
     // Set new network
     setSelectedNetwork(network);
     
-    // Force network check after state change
+    // Force immediate network check after state update
+    setTimeout(async () => {
+      console.log('Forcing network check after network change...');
+      await checkNetwork();
+    }, 100);
+  }; check after state change
     setTimeout(async () => {
       await checkNetwork();
     }, 100);
@@ -937,6 +942,18 @@ export default function StakingPage() {
   const canAccessStaking = Boolean(
     account && !wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER
   );
+
+  // Additional debug logging for the parent component
+  console.log('StakingPage Debug:', {
+    account,
+    wrongNetwork,
+    currentChainId,
+    currentChainIdNumber,
+    selectedNetwork,
+    REQUIRED_CHAIN_NUMBER,
+    canAccessStaking,
+    expectedChainId: REQUIRED_CHAIN_ID
+  });
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
