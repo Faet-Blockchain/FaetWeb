@@ -235,6 +235,7 @@ const WalletConnection = ({
               Connect your MetaMask wallet to access staking features
             </p>
             <button
+              type="button"
               onClick={onConnect}
               disabled={isConnecting}
               className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 flex items-center gap-3 mx-auto"
@@ -279,6 +280,7 @@ const WalletConnection = ({
                   Stake your FAET tokens to earn rewards
                 </p>
                 <button
+                  type="button"
                   onClick={() => {
                     if (!account) {
                       console.log("No account connected");
@@ -759,6 +761,7 @@ const WalletConnection = ({
             </div>
 
             <button
+              type="button"
               onClick={onDisconnect}
               className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
             >
