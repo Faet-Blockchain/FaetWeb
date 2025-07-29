@@ -903,11 +903,11 @@ export default function StakingPage() {
     let networkCheckInterval: NodeJS.Timeout;
 
     if (account && typeof window.ethereum !== "undefined") {
-      // Check network every 5 seconds when connected (reduced frequency to prevent race conditions)
+      // Check network every 10 seconds when connected (increased frequency to prevent flickering)
       networkCheckInterval = setInterval(async () => {
         console.log("[networkMonitoring] Periodic network check for", selectedNetwork);
         await checkNetwork();
-      }, 5000);
+      }, 10000);
     }
 
     return () => {

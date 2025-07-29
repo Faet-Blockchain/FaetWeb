@@ -59,13 +59,17 @@ const SECURITY_CONFIG = {
 
 // Security: Validate chain ID dynamically based on selected network
 const isValidChainId = (chainId: string | null, selectedNetwork: 'testnet' | 'mainnet', chainIdNumber?: number | null): boolean => {
-  if (selectedNetwork === 'mainnet') {
-    // For mainnet, check both hex and decimal formats
-    return chainId === '0x46f' || chainIdNumber === 1135;
-  } else {
-    // For testnet, check against Lisk Sepolia testnet
-    return chainId === '0x106a' || chainIdNumber === 4202;
-  }
+  if (!chainId && !chainIdNumber) return false;
+  
+  const networkConfig = getNetworkConfig(selectedNetwork);
+  const expectedChainId = networkConfig.chainId;
+  const expectedChainNumber = networkConfig.chainIdNumber;
+  
+  // Check both hex string and decimal number formats for reliability
+  const hexMatches = chainId === expectedChainId;
+  const numberMatches = chainIdNumber === expectedChainNumber;
+  
+  return hexMatches || numberMatches;
 };
 
 // Security: Sanitize error messages to prevent information leakage
@@ -110,13 +114,23 @@ const WalletConnection = ({
   const [isAddingFoundersPass, setIsAddingFoundersPass] = useState<boolean>(false);
   const [lastOperationTime, setLastOperationTime] = useState<number>(0);
 
-  // Security: Memoized validation checks
+  // Security: Memoized validation checks with stable network validation
   const securityChecks = useMemo(() => {
     const chainValid = isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber);
+    console.log('WalletConnection securityChecks:', {
+      currentChainId,
+      currentChainIdNumber,
+      selectedNetwork,
+      chainValid,
+      wrongNetwork,
+      expectedChainId: getNetworkConfig(selectedNetwork).chainId,
+      expectedChainNumber: getNetworkConfig(selectedNetwork).chainIdNumber
+    });
+    
     return {
       isValidAccount: account && isValidAddress(account),
       isValidChain: chainValid,
-      canPerformOperations: account && !wrongNetwork && chainValid
+      canPerformOperations: account && chainValid && !wrongNetwork
     };
   }, [account, currentChainId, currentChainIdNumber, wrongNetwork, selectedNetwork]);
 
@@ -270,9 +284,11 @@ const WalletConnection = ({
                       console.log("No account connected");
                       return;
                     }
-                    if (wrongNetwork) {
+                    if (!securityChecks.isValidChain) {
+                      console.log("Invalid network, switching...");
                       onSwitchNetwork();
-                    } else if (canAccessStaking) {
+                    } else if (securityChecks.canPerformOperations) {
+                      console.log("Network valid, going to staking");
                       onGoToStaking();
                     } else {
                       console.log("Cannot access staking - conditions not met");
@@ -282,9 +298,9 @@ const WalletConnection = ({
                   className={`font-bold py-2 px-6 rounded-lg transition-colors ${
                     !account
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                      : wrongNetwork
+                      : !securityChecks.isValidChain
                       ? "bg-red-600 hover:bg-red-700 text-white"
-                      : canAccessStaking
+                      : securityChecks.canPerformOperations
                       ? selectedNetwork === 'mainnet' 
                         ? "bg-purple-600 hover:bg-purple-700 text-white"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -293,9 +309,9 @@ const WalletConnection = ({
                 >
                   {!account 
                     ? "Connect Wallet First"
-                    : wrongNetwork 
+                    : !securityChecks.isValidChain
                     ? "Switch Network" 
-                    : canAccessStaking
+                    : securityChecks.canPerformOperations
                     ? "Go to Staking"
                     : "Network Issue"
                   }
