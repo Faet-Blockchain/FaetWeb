@@ -37,18 +37,18 @@ export const NETWORK_CONFIGS: Record<NetworkType, NetworkConfig> = {
     }
   },
   mainnet: {
-    chainId: '0x46c', // Lisk mainnet chain ID (1116)
-    chainIdNumber: 1116,
-    name: 'Lisk Mainnet',
-    rpcUrl: 'https://rpc.api.lisk.com',
-    blockExplorerUrl: 'https://blockscout.lisk.com',
+    chainId: '0x106a', // Using testnet chain ID temporarily for development
+    chainIdNumber: 4202, // Using testnet chain ID temporarily for development
+    name: 'Lisk Sepolia Testnet (Mainnet Prep)', // Indicate this is temporary
+    rpcUrl: 'https://rpc.sepolia-api.lisk.com',
+    blockExplorerUrl: 'https://sepolia-blockscout.lisk.com',
     nativeCurrency: {
-      name: 'Ether',
+      name: 'Sepolia Ether',
       symbol: 'ETH',
       decimals: 18,
     },
     contracts: {
-      // Placeholder addresses - need to be updated with actual mainnet deployments
+      // Using testnet addresses temporarily for mainnet preparation
       token: '0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394',
       staking: '0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472'
     }

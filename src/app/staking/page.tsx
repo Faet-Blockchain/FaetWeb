@@ -724,6 +724,8 @@ export default function StakingPage() {
     } else {
       // This shouldn't happen since the button should show "Switch Network" instead
       console.error("handleGoToStaking called while on wrong network or not eligible");
+      // Fallback: try to switch network
+      await switchToCurrentNetwork();
     }
   };
 

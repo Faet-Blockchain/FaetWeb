@@ -245,7 +245,9 @@ const WalletConnection = ({
                   onClick={wrongNetwork ? onSwitchNetwork : onGoToStaking}
                   disabled={!account}
                   className={`font-bold py-2 px-6 rounded-lg transition-colors ${
-                    wrongNetwork
+                    !account
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : wrongNetwork
                       ? "bg-red-600 hover:bg-red-700 text-white"
                       : canAccessStaking
                       ? selectedNetwork === 'mainnet' 
@@ -254,9 +256,13 @@ const WalletConnection = ({
                       : "bg-gray-600 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {wrongNetwork 
+                  {!account 
+                    ? "Connect Wallet First"
+                    : wrongNetwork 
                     ? "Switch Network" 
-                    : "Go to Staking"
+                    : canAccessStaking
+                    ? "Go to Staking"
+                    : "Wrong Network"
                   }
                 </button>
               </div>
