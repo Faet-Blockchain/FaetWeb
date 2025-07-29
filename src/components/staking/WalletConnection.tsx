@@ -134,6 +134,7 @@ const WalletConnection = ({
         transition={{ duration: 0.75, ease: "easeInOut", delay: 0.15 }}
         className="mb-8"
       >
+      >
         <div className="flex items-center gap-4 mb-4">
           <label className="text-sm font-medium">Network:</label>
           <div className="flex bg-gray-800 rounded-lg p-1">
@@ -187,6 +188,7 @@ const WalletConnection = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeInOut", delay: 0.2 }}
         className="bg-gray-900 p-8 rounded-lg border border-gray-700 mb-0"
+      >
       >
         <h2 className="text-2xl font-nocturne-serif-bold mb-6">
           Wallet Connection
