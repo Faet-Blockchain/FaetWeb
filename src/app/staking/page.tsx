@@ -83,8 +83,9 @@ export default function StakingPage() {
     setStakedBalance("0");
     setPendingRewards("0");
     setUserStakes([]);
-
     setTotalRewardsFunded("0");
+    setTopStakers([]);
+    setStakingRanges([]);
     setShowTokenStaking(false);
   }, []);
 
@@ -729,6 +730,21 @@ export default function StakingPage() {
     }
   };
 
+  const handleNetworkChange = (network: 'testnet' | 'mainnet') => {
+    console.log(`Switching from ${selectedNetwork} to ${network}`);
+    
+    // Clear all state when switching networks to prevent data mixing
+    clearWeb3State();
+    
+    // Set new network
+    setSelectedNetwork(network);
+    
+    // Force network check after state change
+    setTimeout(async () => {
+      await checkNetwork();
+    }, 100);
+  };
+
   // Network detection and event handling
   useEffect(() => {
     if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
@@ -950,7 +966,7 @@ export default function StakingPage() {
           transition={{ duration: 0.75, ease: "easeInOut" }}
           className="text-5xl md:text-7xl font-nocturne-serif-bold mb-8"
         >
-          {selectedNetwork === 'mainnet' ? 'FAET STAKING' : 'STAKING (TESTNET)'}
+          {selectedNetwork === 'mainnet' ? 'FAET STAKING - MAINNET' : 'FAET STAKING - TESTNET'}
         </motion.h1>
 
         <motion.p
@@ -960,8 +976,8 @@ export default function StakingPage() {
           className="text-lg mb-6 max-w-3xl"
         >
           {selectedNetwork === 'mainnet' 
-            ? 'Stake your FAET tokens to earn rewards and unlock exclusive platform benefits. Connect your MetaMask wallet to get started with staking on the FAET platform.'
-            : 'Test the FAET staking system on the Lisk Sepolia testnet. This is a safe environment to test staking functionality before mainnet launch.'
+            ? 'Stake your FAET tokens to earn real rewards on the Lisk mainnet. All transactions involve actual tokens and have real value. Connect your MetaMask wallet to get started with mainnet staking.'
+            : 'Test the FAET staking system on the Lisk Sepolia testnet. This is a safe environment to test staking functionality with test tokens. Perfect for learning how the system works before mainnet.'
           }
         </motion.p>
 
@@ -977,13 +993,14 @@ export default function StakingPage() {
             onDisconnect={disconnectWallet}
             onSwitchNetwork={switchToCurrentNetwork}
             onGoToStaking={handleGoToStaking}
-            onNetworkChange={setSelectedNetwork}
+            onNetworkChange={handleNetworkChange}
           />
         )}
 
         {showTokenStaking && canAccessStaking && (
           <StakingInterface
             account={account!}
+            selectedNetwork={selectedNetwork}
             tokenBalance={tokenBalance}
             stakedBalance={stakedBalance}
             pendingRewards={pendingRewards}
@@ -1001,7 +1018,11 @@ export default function StakingPage() {
             onStake={handleStake}
             onWithdraw={handleWithdraw}
             onClaimRewards={handleClaimRewards}
-            onBackToOverview={() => setShowTokenStaking(false)}
+            onBackToOverview={() => {
+              setShowTokenStaking(false);
+              // Scroll back to top when returning to overview
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
           />
         )}
 
