@@ -1,0 +1,14 @@
+Error: handleGoToStaking called while on wrong network or not eligible
+    at createConsoleError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:882:71)
+    at handleConsoleError (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1058:54)
+    at console.error (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_client_8f19e6fb._.js:1223:57)
+    at handleGoToStaking (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/src_62ec0956._.js:3000:21)
+    at executeDispatch (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:10906:13)
+    at runWithFiberInDEV (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:3073:74)
+    at processDispatchQueue (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:10932:41)
+    at https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:11223:13
+    at batchedUpdates$1 (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:4384:44)
+    at dispatchEventForPluginEventSystem (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:11008:9)
+    at dispatchEvent (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:13121:37)
+    at dispatchDiscreteEvent (https://8961cd36-a14f-4e51-b40a-0c3e18a96007-00-ypoca8e23sgi.worf.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_2ce9398a._.js:13103:64)
+    at button (<anonymous>)
