@@ -317,6 +317,15 @@ export default function StakingPage() {
   ) => {
     try {
       console.log("Loading user data for:", userAddress);
+      console.log("Selected network:", selectedNetwork);
+      
+      // Validate network before making any contract calls
+      const networkValid = await checkNetwork();
+      if (!networkValid) {
+        console.log("Network invalid during loadUserData, aborting");
+        return;
+      }
+      
       console.log("Staking contract address:", await staking.getAddress());
       console.log("Token contract address:", await token.getAddress());
 
@@ -464,6 +473,16 @@ export default function StakingPage() {
     if (typeof window.ethereum !== "undefined" && account) {
       try {
         console.log("Initializing Web3 for account:", account);
+        console.log("Selected network:", selectedNetwork);
+        console.log("Current chain ID:", currentChainId);
+
+        // Double-check we're on the correct network before initializing
+        const networkValid = await checkNetwork();
+        if (!networkValid) {
+          console.log("Network validation failed during Web3 initialization, aborting");
+          clearWeb3State();
+          return;
+        }
 
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
 
@@ -511,12 +530,22 @@ export default function StakingPage() {
 
           if (tokenCode === "0x" || stakingCode === "0x") {
             console.warn("One or more contracts not deployed on this network");
+            return;
           }
         } catch (codeError) {
           console.warn("Could not validate contract deployment:", codeError);
+          return;
         }
 
         console.log("✅ [initializeWeb3] Web3 initialized successfully");
+
+        // Final network check before loading data
+        const finalNetworkCheck = await checkNetwork();
+        if (!finalNetworkCheck) {
+          console.log("Final network check failed, not loading user data");
+          clearWeb3State();
+          return;
+        }
 
         // Load user data immediately after successful initialization
         console.log("🔄 [initializeWeb3] Loading user data for:", signerAddress);
@@ -540,7 +569,7 @@ export default function StakingPage() {
       console.log("Cannot initialize Web3: missing ethereum or account");
       clearWeb3State();
     }
-  }, [account, currentChainId, loadUserData, clearWeb3State]);
+  }, [account, currentChainId, selectedNetwork, loadUserData, clearWeb3State, checkNetwork]);
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -740,6 +769,9 @@ export default function StakingPage() {
 
     // Clear all state when switching networks to prevent data mixing
     clearWeb3State();
+
+    // Force hide staking interface immediately to prevent cross-network calls
+    setShowTokenStaking(false);
 
     // Set new network
     setSelectedNetwork(network);
