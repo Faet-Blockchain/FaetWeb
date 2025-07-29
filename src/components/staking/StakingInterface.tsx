@@ -6,13 +6,24 @@ import StakingForm from "./StakingForm";
 import UserStakes from "./UserStakes";
 import RewardsSection from "./RewardsSection";
 
+type NetworkType = 'testnet' | 'mainnet';
+
 type StakingInterfaceProps = {
-  account: string;
+  account: string | null;
+  isConnecting: boolean;
+  wrongNetwork: boolean;
+  onConnect: () => void;
+  onDisconnect: () => void;
+  onAddNetwork: () => void;
+  selectedNetwork: NetworkType;
+  onNetworkChange: (network: NetworkType) => void;
   tokenBalance: string;
   stakedBalance: string;
   pendingRewards: string;
   stakeAmount: string;
+  onStakeAmountChange: (amount: string) => void;
   selectedDays: number;
+  onSelectedDaysChange: (days: number) => void;
   userStakes: Array<{
     index: number;
     amount: string;
@@ -23,17 +34,13 @@ type StakingInterfaceProps = {
     blocksRemaining: number;
   }>;
   isLoading: boolean;
-  txHash: string;
-  wrongNetwork: boolean;
-  totalRewardsFunded: string;
-  topStakers: Array<{address: string, weight: string}>;
-  stakingRanges: Array<{range: string, count: number, totalWeight: string}>;
-  onStakeAmountChange: (amount: string) => void;
-  onSelectedDaysChange: (days: number) => void;
   onStake: () => void;
   onWithdraw: (stakeIndex: number) => void;
   onClaimRewards: () => void;
-  onBackToOverview: () => void;
+  txHash: string;
+  totalRewardsFunded: string;
+  topStakers: Array<{address: string, weight: string}>;
+  stakingRanges: Array<{range: string, count: number, totalWeight: string}>;
 };
 
 // Contract addresses on Lisk Sepolia
@@ -42,25 +49,39 @@ const FAET_STAKING_ADDRESS = "0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472";
 
 const StakingInterface = ({
   account,
+  isConnecting,
+  wrongNetwork,
+  onConnect,
+  onDisconnect,
+  onAddNetwork,
+  selectedNetwork,
+  onNetworkChange,
   tokenBalance,
   stakedBalance,
   pendingRewards,
   stakeAmount,
+  onStakeAmountChange,
   selectedDays,
+  onSelectedDaysChange,
   userStakes,
   isLoading,
-  txHash,
-  wrongNetwork,
-  totalRewardsFunded,
-  topStakers,
-  stakingRanges,
-  onStakeAmountChange,
-  onSelectedDaysChange,
   onStake,
   onWithdraw,
   onClaimRewards,
-  onBackToOverview,
+  txHash,
+  totalRewardsFunded,
+  topStakers,
+  stakingRanges,
 }: StakingInterfaceProps) => {
+
+  const networkConfig = {
+    name: selectedNetwork === 'mainnet' ? 'Mainnet' : 'Testnet',
+    contracts: {
+      token: selectedNetwork === 'mainnet' ? '0x...' : FAET_TOKEN_ADDRESS,
+      staking: selectedNetwork === 'mainnet' ? '0x...' : FAET_STAKING_ADDRESS,
+    },
+  };
+
   return (
     <motion.div
       id="token-staking"
@@ -71,7 +92,7 @@ const StakingInterface = ({
     >
       <div className="flex items-center justify-between mb-6">
         <button
-          onClick={onBackToOverview}
+          onClick={() => {}}
           className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
         >
           ← Back to Overview
@@ -126,34 +147,21 @@ const StakingInterface = ({
 
       <div className="mb-6">
         <h2 className="text-2xl font-nocturne-serif-bold">
-          Token Staking (Testnet)
+          Token Staking ({networkConfig.name})
         </h2>
       </div>
 
-      {/* Contract Addresses */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <h4 className="font-semibold text-purple-400 mb-2">Token Contract</h4>
-          <a
-            href={`https://sepolia-blockscout.lisk.com/address/${FAET_TOKEN_ADDRESS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-purple-400 hover:text-purple-300 font-mono text-xs break-all"
-          >
-            {FAET_TOKEN_ADDRESS}
-          </a>
-        </div>
-        <div className="bg-gray-800 p-4 rounded-lg">
-          <h4 className="font-semibold text-green-400 mb-2">Staking Contract</h4>
-          <a
-            href={`https://sepolia-blockscout.lisk.com/address/${FAET_STAKING_ADDRESS}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-green-400 hover:text-green-300 font-mono text-xs break-all"
-          >
-            {FAET_STAKING_ADDRESS}
-          </a>
-        </div>
+      {/* Network Information */}
+      <div className="mb-6">
+        <p className="text-gray-400">
+          Network: {networkConfig.name}
+        </p>
+        <p className="text-gray-400">
+          Token Contract: {networkConfig.contracts.token}
+        </p>
+        <p className="text-gray-400">
+          Staking Contract: {networkConfig.contracts.staking}
+        </p>
       </div>
 
       <UserBalance

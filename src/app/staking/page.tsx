@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import WalletConnection from "@/components/staking/WalletConnection";
 import StakingInterface from "@/components/staking/StakingInterface";
 import StakingFeatures from "@/components/staking/StakingFeatures";
+import { getNetworkConfig, type NetworkType } from "@/lib/networks";
 
 // Contract addresses on Lisk Sepolia
 const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
@@ -464,7 +465,7 @@ export default function StakingPage() {
         console.log("Initializing Web3 for account:", account);
 
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
-        
+
         const signer = await web3Provider.getSigner();
         const signerAddress = await signer.getAddress();
         console.log("Signer address:", signerAddress);
@@ -481,7 +482,7 @@ export default function StakingPage() {
         );
 
         console.log("🔄 [initializeWeb3] Setting contracts in state...");
-        
+
         // Set contracts in state
         setTokenContract(token);
         setStakingContract(staking);

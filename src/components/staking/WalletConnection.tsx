@@ -139,8 +139,11 @@ const WalletConnection = ({
           <div className="flex bg-gray-800 rounded-lg p-1">
             <button
               onClick={() => onNetworkChange('mainnet')}
-              disabled={true}
-              className="px-4 py-2 rounded-md text-sm font-medium text-gray-600 cursor-not-allowed"
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedNetwork === 'mainnet'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
             >
               Mainnet
             </button>
