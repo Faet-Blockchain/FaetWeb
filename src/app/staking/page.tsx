@@ -7,10 +7,6 @@ import StakingInterface from "@/components/staking/StakingInterface";
 import StakingFeatures from "@/components/staking/StakingFeatures";
 import { getNetworkConfig, type NetworkType } from "@/lib/networks";
 
-// Contract addresses on Lisk Sepolia
-const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
-const FAET_STAKING_ADDRESS = "0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472";
-
 // Simplified ABI for the functions we need
 const FAET_TOKEN_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
@@ -73,19 +69,12 @@ export default function StakingPage() {
   const [topStakers, setTopStakers] = useState<Array<{address: string, weight: string}>>([]);
   const [stakingRanges, setStakingRanges] = useState<Array<{range: string, count: number, totalWeight: string}>>([]);
 
-  // Lisk Sepolia testnet configuration
-  const LISK_SEPOLIA_CHAIN_ID = "0x106a"; // 4202 in decimal
-  const LISK_SEPOLIA_CONFIG = {
-    chainId: LISK_SEPOLIA_CHAIN_ID,
-    chainName: "Lisk Sepolia Testnet",
-    nativeCurrency: {
-      name: "Sepolia Ether",
-      symbol: "ETH",
-      decimals: 18,
-    },
-    rpcUrls: ["https://rpc.sepolia-api.lisk.com"],
-    blockExplorerUrls: ["https://sepolia-blockscout.lisk.com"],
-  };
+  // Get current network configuration
+  const currentNetworkConfig = getNetworkConfig(selectedNetwork);
+  const FAET_TOKEN_ADDRESS = currentNetworkConfig.contracts.token;
+  const FAET_STAKING_ADDRESS = currentNetworkConfig.contracts.staking;
+  const REQUIRED_CHAIN_ID = currentNetworkConfig.chainId;
+  const REQUIRED_CHAIN_NUMBER = currentNetworkConfig.chainIdNumber;
 
   const clearWeb3State = useCallback(() => {
     setTokenContract(null);
@@ -107,14 +96,14 @@ export default function StakingPage() {
         })) as string;
 
         console.log(`[checkNetwork] Raw chain ID from wallet: "${chainId}"`);
-        console.log(`[checkNetwork] Required chain ID: "${LISK_SEPOLIA_CHAIN_ID}"`);
+        console.log(`[checkNetwork] Required chain ID: "${REQUIRED_CHAIN_ID}"`);
         console.log(`[checkNetwork] Type of chainId: ${typeof chainId}`);
 
         setCurrentChainId(chainId);
 
         // Convert hex strings to integers for reliable comparison
         const currentChainNumber = parseInt(chainId, 16);
-        const requiredChainNumber = parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
+        const requiredChainNumber = REQUIRED_CHAIN_NUMBER;
 
         setCurrentChainIdNumber(currentChainNumber);
 
@@ -152,19 +141,25 @@ export default function StakingPage() {
     }
   }, [clearWeb3State]);
 
-  const switchToLiskSepolia = async () => {
+  const switchToCurrentNetwork = async () => {
     if (typeof window.ethereum !== "undefined") {
       try {
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId: LISK_SEPOLIA_CHAIN_ID }],
+          params: [{ chainId: REQUIRED_CHAIN_ID }],
         });
       } catch (switchError: unknown) {
         if ((switchError as { code?: number })?.code === 4902) {
           try {
             await window.ethereum.request({
               method: "wallet_addEthereumChain",
-              params: [LISK_SEPOLIA_CONFIG],
+              params: [{
+                chainId: currentNetworkConfig.chainId,
+                chainName: currentNetworkConfig.name,
+                nativeCurrency: currentNetworkConfig.nativeCurrency,
+                rpcUrls: [currentNetworkConfig.rpcUrl],
+                blockExplorerUrls: [currentNetworkConfig.blockExplorerUrl],
+              }],
             });
           } catch (addError) {
             console.error("Error adding network:", addError);
@@ -761,7 +756,7 @@ export default function StakingPage() {
 
           // Convert hex strings to integers for reliable comparison
           const currentChainNumber = parseInt(actualChainId, 16);
-          const requiredChainNumber = parseInt(LISK_SEPOLIA_CHAIN_ID, 16);
+          const requiredChainNumber = REQUIRED_CHAIN_NUMBER;
 
           setCurrentChainIdNumber(currentChainNumber);
 
@@ -921,19 +916,19 @@ export default function StakingPage() {
   }, [stakingContract, account, wrongNetwork]);
 
   // Only allow staking interface if connected to correct network
-  const canAccessStaking = Boolean(account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16) && selectedNetwork === 'testnet');
+  const canAccessStaking = Boolean(account && !wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER);
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
-      if (account && !wrongNetwork && currentChainIdNumber === parseInt(LISK_SEPOLIA_CHAIN_ID, 16)) {
+      if (account && !wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER) {
         console.log("Auto-initializing Web3 due to state change");
         await initializeWeb3();
       }
     };
 
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3]);
+  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3, REQUIRED_CHAIN_NUMBER]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -975,7 +970,7 @@ export default function StakingPage() {
             canAccessStaking={canAccessStaking}
             onConnect={connectMetaMask}
             onDisconnect={disconnectWallet}
-            onSwitchNetwork={switchToLiskSepolia}
+            onSwitchNetwork={switchToCurrentNetwork}
             onGoToStaking={handleGoToStaking}
             onNetworkChange={setSelectedNetwork}
           />

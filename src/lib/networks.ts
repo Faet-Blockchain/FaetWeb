@@ -32,25 +32,25 @@ export const NETWORK_CONFIGS: Record<NetworkType, NetworkConfig> = {
       decimals: 18,
     },
     contracts: {
-      token: '0x7A1618aac5bEBa6c87fA7c9C91BDA0Dc7A68D5c9',
-      staking: '0x4Ded6C5b3D2A5B8f8d9F8e5B0d8E7A2C3F4B5D6E'
+      token: '0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394',
+      staking: '0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472'
     }
   },
   mainnet: {
-    chainId: '0x46f', // Lisk mainnet chain ID (1135)
-    chainIdNumber: 1135,
+    chainId: '0x46c', // Lisk mainnet chain ID (1116)
+    chainIdNumber: 1116,
     name: 'Lisk Mainnet',
     rpcUrl: 'https://rpc.api.lisk.com',
     blockExplorerUrl: 'https://blockscout.lisk.com',
     nativeCurrency: {
-      name: 'Lisk',
-      symbol: 'LSK',
+      name: 'Ether',
+      symbol: 'ETH',
       decimals: 18,
     },
     contracts: {
-      // Using testnet addresses as placeholders for now
-      token: '0x7A1618aac5bEBa6c87fA7c9C91BDA0Dc7A68D5c9',
-      staking: '0x4Ded6C5b3D2A5B8f8d9F8e5B0d8E7A2C3F4B5D6E'
+      // Placeholder addresses - need to be updated with actual mainnet deployments
+      token: '0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394',
+      staking: '0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472'
     }
   }
 };
