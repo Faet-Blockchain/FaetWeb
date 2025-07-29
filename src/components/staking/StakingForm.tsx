@@ -22,7 +22,7 @@ type StakingFormProps = {
   wrongNetwork: boolean;
   txHash: string;
   stakedBalance: string;
-  totalStakeWeight?: string;
+  totalStakeWeight: string;
   onStakeAmountChange: (amount: string) => void;
   onSelectedDaysChange: (days: number) => void;
   onStake: () => void;

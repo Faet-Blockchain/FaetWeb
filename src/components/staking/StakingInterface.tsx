@@ -34,7 +34,7 @@ type StakingInterfaceProps = {
   onClaimRewards: () => void;
   txHash: string;
   totalRewardsFunded: string;
-  totalStakeWeight?: string;
+  totalStakeWeight: string;
   topStakers: Array<{address: string, weight: string}>;
   stakingRanges: Array<{range: string, count: number, totalWeight: string}>;
   onBackToOverview: () => void;
@@ -153,7 +153,7 @@ const StakingInterface = ({
         isLoading={isLoading}
         wrongNetwork={wrongNetwork}
         txHash={txHash}
-        totalStakeWeight={totalStakeWeight}
+        totalStakeWeight={totalStakeWeight || "0"}
         onStakeAmountChange={onStakeAmountChange}
         onSelectedDaysChange={onSelectedDaysChange}
         onStake={onStake}
