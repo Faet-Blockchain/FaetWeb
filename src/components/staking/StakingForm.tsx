@@ -21,6 +21,8 @@ type StakingFormProps = {
   isLoading: boolean;
   wrongNetwork: boolean;
   txHash: string;
+  stakedBalance: string;
+  totalStakeWeight?: string;
   onStakeAmountChange: (amount: string) => void;
   onSelectedDaysChange: (days: number) => void;
   onStake: () => void;
@@ -40,10 +42,39 @@ const StakingForm = ({
   isLoading,
   wrongNetwork,
   txHash,
+  stakedBalance,
+  totalStakeWeight = "0",
   onStakeAmountChange,
   onSelectedDaysChange,
   onStake,
 }: StakingFormProps) => {
+  
+  // Calculate potential weighted amount for current input
+  const calculatePotentialWeight = (): number => {
+    if (!stakeAmount || parseFloat(stakeAmount) <= 0) return 0;
+    const amount = parseFloat(stakeAmount);
+    const multiplier = calculateMultiplier(selectedDays);
+    return amount * multiplier;
+  };
+
+  // Calculate total stake weight including user's current stakes and potential new stake
+  const calculateTotalStakeWeight = (): number => {
+    const currentTotal = parseFloat(totalStakeWeight) || 0;
+    const potentialWeight = calculatePotentialWeight();
+    return currentTotal + potentialWeight;
+  };
+
+  // Calculate user's weighted percentage share
+  const calculateWeightedPercentage = (): number => {
+    const totalWeight = calculateTotalStakeWeight();
+    if (totalWeight === 0) return 0;
+    
+    const userCurrentWeight = parseFloat(stakedBalance) || 0;
+    const potentialWeight = calculatePotentialWeight();
+    const userTotalWeight = userCurrentWeight + potentialWeight;
+    
+    return (userTotalWeight / totalWeight) * 100;
+  };
   return (
     <div className="bg-gray-800 p-6 rounded-lg mb-6">
       <h3 className="text-xl font-nocturne-serif-bold mb-4">
@@ -87,6 +118,29 @@ const StakingForm = ({
               {selectedDays === 0 ? "No Lock" : `${selectedDays} days`}
             </span>
           </div>
+          {stakeAmount && parseFloat(stakeAmount) > 0 && (
+            <>
+              <div className="border-t border-gray-600 my-2"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-300">Your Stake Weight:</span>
+                <span className="text-sm font-bold text-green-400">
+                  {calculatePotentialWeight().toFixed(2)} FAET
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm text-gray-300">Total Stake Weight:</span>
+                <span className="text-sm text-yellow-400">
+                  {calculateTotalStakeWeight().toFixed(2)} FAET
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-sm text-gray-300">Your Weighted %:</span>
+                <span className="text-sm font-bold text-orange-400">
+                  {calculateWeightedPercentage().toFixed(4)}%
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

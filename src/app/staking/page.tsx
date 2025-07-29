@@ -27,6 +27,7 @@ const FAET_STAKING_ABI = [
   "function getMultiplier(uint256 daysLocked) view returns (uint256)",
   "function getActiveWeight(address user) view returns (uint256)",
   "function totalStaked() view returns (uint256)",
+  "function totalWeightedSupply() view returns (uint256)",
   "function totalRewardsFunded() view returns (uint256)",
   "function rewardPerToken() view returns (uint256)",
   "event Staked(address indexed user, uint256 amount, uint256 duration, uint256 stakeIndex)",
@@ -66,6 +67,7 @@ export default function StakingPage() {
   const [txHash, setTxHash] = useState<string>("");
 
   const [totalRewardsFunded, setTotalRewardsFunded] = useState<string>("0");
+  const [totalStakeWeight, setTotalStakeWeight] = useState<string>("0");
   const [topStakers, setTopStakers] = useState<Array<{address: string, weight: string}>>([]);
   const [stakingRanges, setStakingRanges] = useState<Array<{range: string, count: number, totalWeight: string}>>([]);
 
@@ -83,6 +85,7 @@ export default function StakingPage() {
     setPendingRewards("0");
     setUserStakes([]);
     setTotalRewardsFunded("0");
+    setTotalStakeWeight("0");
     setTopStakers([]);
     setStakingRanges([]);
     setShowTokenStaking(false);
@@ -339,6 +342,20 @@ export default function StakingPage() {
         setTotalRewardsFunded("0");
       }
 
+      // Get total stake weight
+      try {
+        const totalWeighted = await staking.totalWeightedSupply();
+        setTotalStakeWeight(ethers.formatEther(totalWeighted));
+      } catch (error: unknown) {
+        // Fallback: try weightedBalances if totalWeightedSupply doesn't exist
+        try {
+          const totalStaked = await staking.totalStaked();
+          setTotalStakeWeight(ethers.formatEther(totalStaked));
+        } catch (fallbackError: unknown) {
+          setTotalStakeWeight("0");
+        }
+      }
+
       // Get user stakes
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
@@ -396,6 +413,7 @@ export default function StakingPage() {
       setPendingRewards("0");
       setUserStakes([]);
       setTotalRewardsFunded("0");
+      setTotalStakeWeight("0");
       setTopStakers([]);
       setStakingRanges([]);
     }
@@ -965,6 +983,7 @@ export default function StakingPage() {
             txHash={txHash}
             wrongNetwork={wrongNetwork}
             totalRewardsFunded={totalRewardsFunded}
+            totalStakeWeight={totalStakeWeight}
             topStakers={topStakers}
             stakingRanges={stakingRanges}
             onStakeAmountChange={setStakeAmount}
