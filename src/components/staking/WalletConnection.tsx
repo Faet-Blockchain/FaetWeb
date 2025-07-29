@@ -364,7 +364,7 @@ const WalletConnection = ({
                       Processing...
                     </>
                   ) : (
-                    "Add Test Character NFT to Metamask"
+                    {selectedNetwork === 'mainnet' ? "Add Character NFT to Metamask" : "Add Test Character NFT to Metamask"}
                   )}
                 </button>
                 {characterNftError && (
@@ -373,9 +373,14 @@ const WalletConnection = ({
               </div>
 
               <div className="bg-gray-800 p-6 rounded-lg">
-                <h3 className="text-xl font-bold mb-4">Claim Founder&apos;s Airdrop</h3>
+                <h3 className="text-xl font-bold mb-4">
+                  {selectedNetwork === 'mainnet' ? "Claim Founder's Airdrop" : "Test Airdrop Claim"}
+                </h3>
                 <p className="text-gray-300 mb-4">
-                  Claim your exclusive founder rewards
+                  {selectedNetwork === 'mainnet' 
+                    ? "Claim your exclusive founder rewards"
+                    : "Test the airdrop claiming functionality"
+                  }
                 </p>
                 <div className="flex justify-center">
                   <button
@@ -602,7 +607,7 @@ const WalletConnection = ({
                         Processing...
                       </>
                     ) : (
-                      "Claim Airdrop"
+                      {selectedNetwork === 'mainnet' ? "Claim Airdrop" : "Test Claim"}
                     )}
                   </button>
                 </div>
@@ -693,7 +698,7 @@ const WalletConnection = ({
                       Processing...
                     </>
                   ) : (
-                    "Add Test Founder's Pass to Metamask"
+                    {selectedNetwork === 'mainnet' ? "Add Founder's Pass to Metamask" : "Add Test Founder's Pass to Metamask"}
                   )}
                 </button>
                 {foundersPassError && (

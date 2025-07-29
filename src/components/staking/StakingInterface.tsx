@@ -115,23 +115,13 @@ const StakingInterface = ({
                 });
 
                 if (wasAdded) {
-                  console.log('✅ FAET token successfully added to wallet');
+                  console.log(`${selectedNetwork === 'mainnet' ? 'FAET' : 'Test FAET'} token added to wallet!`);
                 } else {
-                  console.log('ℹ️ Token addition was not completed');
+                  console.log(`User cancelled adding ${selectedNetwork === 'mainnet' ? 'FAET' : 'Test FAET'} token`);
                 }
-              } catch (error: unknown) {
-                const errorObj = error as { code?: number; message?: string };
-                if (errorObj?.code === 4001) {
-                  console.log('ℹ️ User cancelled adding token to wallet');
-                } else if (errorObj?.code === -32002) {
-                  console.log('⚠️ Request already pending in MetaMask');
-                } else {
-                  const errorObj = error as { message?: string };
-                  console.warn('⚠️ Error adding token to wallet:', errorObj?.message || 'Unknown error');
-                }
+              } catch (error) {
+                console.error(`Error adding ${selectedNetwork === 'mainnet' ? 'FAET' : 'Test FAET'} token:`, error);
               }
-            } else {
-              console.warn('⚠️ MetaMask not detected');
             }
           }}
           disabled={!account || wrongNetwork}
@@ -141,7 +131,7 @@ const StakingInterface = ({
               : "bg-blue-600 hover:bg-blue-700 text-white"
           }`}
         >
-          Add Test Token to Metamask
+          {selectedNetwork === 'mainnet' ? 'Add FAET Token to MetaMask' : 'Add Test FAET Token to MetaMask'}
         </button>
       </div>
 

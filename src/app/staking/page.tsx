@@ -950,7 +950,7 @@ export default function StakingPage() {
           transition={{ duration: 0.75, ease: "easeInOut" }}
           className="text-5xl md:text-7xl font-nocturne-serif-bold mb-8"
         >
-          STAKING
+          {selectedNetwork === 'mainnet' ? 'FAET STAKING' : 'STAKING (TESTNET)'}
         </motion.h1>
 
         <motion.p
@@ -959,9 +959,10 @@ export default function StakingPage() {
           transition={{ duration: 0.75, ease: "easeInOut", delay: 0.1 }}
           className="text-lg mb-6 max-w-3xl"
         >
-          Stake your FAET tokens and NFTs to earn rewards and unlock exclusive
-          platform benefits. Connect your MetaMask wallet to get started with
-          staking on the FAET platform.
+          {selectedNetwork === 'mainnet' 
+            ? 'Stake your FAET tokens to earn rewards and unlock exclusive platform benefits. Connect your MetaMask wallet to get started with staking on the FAET platform.'
+            : 'Test the FAET staking system on the Lisk Sepolia testnet. This is a safe environment to test staking functionality before mainnet launch.'
+          }
         </motion.p>
 
         {!showTokenStaking && (
