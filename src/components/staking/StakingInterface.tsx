@@ -44,9 +44,7 @@ type StakingInterfaceProps = {
   onBackToOverview: () => void;
 };
 
-// Contract addresses on Lisk Sepolia
-const FAET_TOKEN_ADDRESS = "0x80fD38fFDE3E77fAcE192Ea74fD510618C50f394";
-const FAET_STAKING_ADDRESS = "0x84B7F164cbAEdb17E98B5EA2512e6c41121E8472";
+import { getNetworkConfig } from "@/lib/networks";
 
 const StakingInterface = ({
   account,
@@ -76,13 +74,7 @@ const StakingInterface = ({
   onBackToOverview,
 }: StakingInterfaceProps) => {
 
-  const networkConfig = {
-    name: selectedNetwork === 'mainnet' ? 'Mainnet' : 'Testnet',
-    contracts: {
-      token: selectedNetwork === 'mainnet' ? '0x...' : FAET_TOKEN_ADDRESS,
-      staking: selectedNetwork === 'mainnet' ? '0x...' : FAET_STAKING_ADDRESS,
-    },
-  };
+  const networkConfig = getNetworkConfig(selectedNetwork);
 
   return (
     <motion.div
@@ -108,7 +100,7 @@ const StakingInterface = ({
                   params: {
                     type: 'ERC20',
                     options: {
-                      address: FAET_TOKEN_ADDRESS,
+                      address: networkConfig.contracts.token,
                       symbol: 'FAET',
                       decimals: 18,
                       image: 'https://your-domain.com/faet-token-icon.png',
