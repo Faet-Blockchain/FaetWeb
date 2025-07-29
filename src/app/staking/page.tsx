@@ -717,6 +717,12 @@ export default function StakingPage() {
   }, [clearWeb3State]);
 
   const handleGoToStaking = async () => {
+    // For mainnet, show coming soon message
+    if (selectedNetwork === 'mainnet') {
+      alert("🚧 Mainnet staking is coming soon! The contracts are ready but not yet deployed. Please use testnet for now.");
+      return;
+    }
+    
     // Only proceed if we're already on the correct network
     if (!wrongNetwork && canAccessStaking) {
       setShowTokenStaking(true);
@@ -915,8 +921,13 @@ export default function StakingPage() {
     };
   }, [stakingContract, account, wrongNetwork]);
 
-  // Only allow staking interface if connected to correct network
-  const canAccessStaking = Boolean(account && !wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER);
+  // Only allow staking interface if connected to correct network OR if mainnet is selected (for coming soon message)
+  const canAccessStaking = Boolean(
+    account && (
+      selectedNetwork === 'mainnet' || // Allow mainnet selection for coming soon message
+      (!wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER)
+    )
+  );
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
@@ -976,7 +987,57 @@ export default function StakingPage() {
           />
         )}
 
-        {showTokenStaking && canAccessStaking && (
+        {showTokenStaking && canAccessStaking && selectedNetwork === 'mainnet' && (
+          <motion.div
+            id="token-staking"
+            initial={{ opacity: 0, y: 20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="bg-gray-900 p-8 rounded-lg border border-gray-700 mt-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => setShowTokenStaking(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              >
+                ← Back to Overview
+              </button>
+              <h2 className="text-2xl font-nocturne-serif-bold">
+                Mainnet Staking (Coming Soon)
+              </h2>
+            </div>
+
+            <div className="bg-gradient-to-r from-yellow-900 to-orange-900 border border-yellow-600 rounded-lg p-8 text-center">
+              <h3 className="text-3xl font-bold text-yellow-300 mb-4">🚧 Under Construction</h3>
+              <p className="text-yellow-100 text-lg mb-6">
+                Mainnet staking contracts are ready and tested, but deployment is pending final security audits and governance approval.
+              </p>
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-yellow-800 bg-opacity-50 p-4 rounded-lg">
+                  <h4 className="font-bold text-yellow-200 mb-2">Contract Status</h4>
+                  <p className="text-yellow-100 text-sm">✅ Audited and Ready</p>
+                </div>
+                <div className="bg-yellow-800 bg-opacity-50 p-4 rounded-lg">
+                  <h4 className="font-bold text-yellow-200 mb-2">Expected Launch</h4>
+                  <p className="text-yellow-100 text-sm">📅 Q1 2024</p>
+                </div>
+              </div>
+              <p className="text-yellow-200 text-sm">
+                In the meantime, you can test all staking features on our <button 
+                  onClick={() => {
+                    setSelectedNetwork('testnet');
+                    setShowTokenStaking(false);
+                  }}
+                  className="underline hover:text-yellow-100 font-semibold"
+                >
+                  Testnet Environment
+                </button>
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {showTokenStaking && canAccessStaking && selectedNetwork === 'testnet' && (
           <StakingInterface
             account={account!}
             tokenBalance={tokenBalance}
