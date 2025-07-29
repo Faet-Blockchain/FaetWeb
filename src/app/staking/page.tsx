@@ -96,23 +96,28 @@ export default function StakingPage() {
           method: "eth_chainId",
         })) as string;
 
+        // Get the current network config based on selected network
+        const networkConfig = getNetworkConfig(selectedNetwork);
+        const requiredChainId = networkConfig.chainId;
+        const requiredChainNumber = networkConfig.chainIdNumber;
+
         console.log(`[checkNetwork] Raw chain ID from wallet: "${chainId}"`);
-        console.log(`[checkNetwork] Required chain ID: "${REQUIRED_CHAIN_ID}"`);
+        console.log(`[checkNetwork] Required chain ID for ${selectedNetwork}: "${requiredChainId}"`);
         console.log(`[checkNetwork] Type of chainId: ${typeof chainId}`);
 
         setCurrentChainId(chainId);
 
         // Convert hex strings to integers for reliable comparison
         const currentChainNumber = parseInt(chainId, 16);
-        const requiredChainNumber = REQUIRED_CHAIN_NUMBER;
 
         setCurrentChainIdNumber(currentChainNumber);
 
         console.log(`[checkNetwork] Current chain number: ${currentChainNumber}`);
-        console.log(`[checkNetwork] Required chain number: ${requiredChainNumber}`);
+        console.log(`[checkNetwork] Required chain number for ${selectedNetwork}: ${requiredChainNumber}`);
 
-        const isCorrectNetwork = currentChainNumber === requiredChainNumber;
-        console.log(`[checkNetwork] Networks match: ${isCorrectNetwork}`);
+        // Check both hex and decimal formats
+        const isCorrectNetwork = chainId === requiredChainId || currentChainNumber === requiredChainNumber;
+        console.log(`[checkNetwork] Networks match for ${selectedNetwork}: ${isCorrectNetwork}`);
 
         setWrongNetwork(!isCorrectNetwork);
 
@@ -120,7 +125,7 @@ export default function StakingPage() {
           clearWeb3State();
           console.log("[checkNetwork] Wrong network detected, clearing state");
         } else {
-          console.log("[checkNetwork] Correct network confirmed");
+          console.log("[checkNetwork] Correct network confirmed for", selectedNetwork);
         }
 
         return isCorrectNetwork;
@@ -140,7 +145,7 @@ export default function StakingPage() {
       clearWeb3State();
       return false;
     }
-  }, [clearWeb3State]);
+  }, [clearWeb3State, selectedNetwork]); // Add selectedNetwork to dependencies
 
   const switchToCurrentNetwork = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -785,13 +790,14 @@ export default function StakingPage() {
         const chainId = args[0] as string;
         console.log("[handleChainChanged] Chain changed event fired");
         console.log("[handleChainChanged] Event chain ID:", chainId);
-        console.log("[handleChainChanged] Type:", typeof chainId);
+        console.log("[handleChainChanged] Selected network:", selectedNetwork);
 
         // Add delay to ensure wallet state is fully updated
         setTimeout(async () => {
           console.log("[handleChainChanged] Checking network after delay...");
 
-          // Force fresh read from wallet instead of using event data          let actualChainId;
+          // Force fresh read from wallet instead of using event data
+          let actualChainId;
           try {
             actualChainId = (await window.ethereum!.request({
               method: "eth_chainId",
@@ -804,14 +810,15 @@ export default function StakingPage() {
 
           setCurrentChainId(actualChainId);
 
-          // Convert hex strings to integers for reliable comparison
+          // Get the current network config for the selected network
+          const currentNetworkConfig = getNetworkConfig(selectedNetwork);
           const currentChainNumber = parseInt(actualChainId, 16);
-          const requiredChainNumber = REQUIRED_CHAIN_NUMBER;
+          const requiredChainNumber = currentNetworkConfig.chainIdNumber;
 
           setCurrentChainIdNumber(currentChainNumber);
 
           console.log("[handleChainChanged] Fresh current chain number:", currentChainNumber);
-          console.log("[handleChainChanged] Fresh required chain number:", requiredChainNumber);
+          console.log("[handleChainChanged] Fresh required chain number for", selectedNetwork, ":", requiredChainNumber);
 
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
           console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
@@ -864,10 +871,11 @@ export default function StakingPage() {
     let networkCheckInterval: NodeJS.Timeout;
 
     if (account && typeof window.ethereum !== "undefined") {
-      // Check network every 2 seconds when connected
+      // Check network every 5 seconds when connected (reduced frequency to prevent race conditions)
       networkCheckInterval = setInterval(async () => {
+        console.log("[networkMonitoring] Periodic network check for", selectedNetwork);
         await checkNetwork();
-      }, 2000);
+      }, 5000);
     }
 
     return () => {
@@ -875,7 +883,7 @@ export default function StakingPage() {
         clearInterval(networkCheckInterval);
       }
     };
-  }, [account, checkNetwork]);
+  }, [account, checkNetwork, selectedNetwork]); // Add selectedNetwork to dependencies
 
   // Initialize on mount and when account changes
   useEffect(() => {
@@ -977,19 +985,20 @@ export default function StakingPage() {
         return;
       }
 
-      const expectedChainId = getExpectedChainId(selectedNetwork);
-      const isCorrectNetwork = currentChainId === expectedChainId;
+      const currentNetworkConfig = getNetworkConfig(selectedNetwork);
+      const expectedChainId = currentNetworkConfig.chainId;
+      const expectedChainNumber = currentNetworkConfig.chainIdNumber;
+      
+      console.log("[validateNetwork] Current chain ID:", currentChainId);
+      console.log("[validateNetwork] Expected chain ID for", selectedNetwork, ":", expectedChainId);
+      console.log("[validateNetwork] Expected chain number for", selectedNetwork, ":", expectedChainNumber);
+      console.log("[validateNetwork] Current chain number:", currentChainIdNumber);
 
-      // For mainnet, also check against the numeric chain ID
-      let isMainnetValid = false;
-      if (selectedNetwork === 'mainnet') {
-        // Lisk mainnet is chain ID 1135 (0x46f)
-        isMainnetValid = currentChainId === '0x46f' || currentChainIdNumber === 1135;
-      }
+      // Check both hex and decimal formats for reliability
+      const isCorrectNetwork = currentChainId === expectedChainId || currentChainIdNumber === expectedChainNumber;
 
-      const networkIsValid = selectedNetwork === 'mainnet' ? isMainnetValid : isCorrectNetwork;
-
-      setWrongNetwork(!networkIsValid);
+      console.log("[validateNetwork] Network is valid:", isCorrectNetwork);
+      setWrongNetwork(!isCorrectNetwork);
     };
 
     validateNetwork();
@@ -1007,11 +1016,12 @@ export default function StakingPage() {
     currentChainId,
     currentChainIdNumber,
     selectedNetwork,
-    REQUIRED_CHAIN_NUMBER: getNetworkConfig(selectedNetwork).chainIdNumber,
+    expectedChainId: currentNetworkConfig.chainId,
+    expectedChainNumber: currentNetworkConfig.chainIdNumber,
+    tokenContract: currentNetworkConfig.contracts.token,
+    stakingContract: currentNetworkConfig.contracts.staking,
     canAccessStaking,
-    expectedChainId: getExpectedChainId(selectedNetwork),
-    isMainnet: selectedNetwork === 'mainnet',
-    mainnetChainCheck: selectedNetwork === 'mainnet' ? (currentChainId === '0x46f' || currentChainIdNumber === 1135) : 'N/A'
+    networkMatches: currentChainId === currentNetworkConfig.chainId || currentChainIdNumber === currentNetworkConfig.chainIdNumber
   });
 
   // Initialize Web3 when account and network are both correct

@@ -3,6 +3,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { getContractAddresses, getExpectedChainId } from "../../lib/contracts";
+import { getNetworkConfig } from "../../lib/networks";
 
 // Security validation functions
 
@@ -88,6 +89,7 @@ const WalletConnection = ({
 }: WalletConnectionProps) => {
   // Get dynamic contract addresses based on selected network
   const contractAddresses = getContractAddresses(selectedNetwork);
+  const networkConfig = getNetworkConfig(selectedNetwork);
   
   // Debug logging to understand network state
   console.log('WalletConnection Debug:', {
