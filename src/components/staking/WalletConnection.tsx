@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { getContractAddresses, getExpectedChainId } from "../../lib/contracts";
 
 // Security validation functions
 
@@ -83,6 +84,8 @@ const WalletConnection = ({
   onGoToStaking,
   onNetworkChange,
 }: WalletConnectionProps) => {
+  // Get dynamic contract addresses based on selected network
+  const contractAddresses = getContractAddresses(selectedNetwork);
   const [characterNftError, setCharacterNftError] = useState<string>("");
   const [foundersPassError, setFoundersPassError] = useState<string>("");
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
