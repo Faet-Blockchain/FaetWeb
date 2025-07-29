@@ -744,10 +744,6 @@ export default function StakingPage() {
       console.log('Forcing network check after network change...');
       await checkNetwork();
     }, 100);
-  }; check after state change
-    setTimeout(async () => {
-      await checkNetwork();
-    }, 100);
   };
 
   // Network detection and event handling
