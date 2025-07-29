@@ -61,9 +61,10 @@ const SECURITY_CONFIG = {
 // Security: Validate Ethereum address format
 
 
-// Security: Validate chain ID
-const isValidChainId = (chainId: string | null): boolean => {
-  return chainId === SECURITY_CONFIG.LISK_SEPOLIA_CHAIN_ID;
+// Security: Validate chain ID dynamically based on selected network
+const isValidChainId = (chainId: string | null, selectedNetwork: 'testnet' | 'mainnet'): boolean => {
+  const expectedChainId = getExpectedChainId(selectedNetwork);
+  return chainId === expectedChainId;
 };
 
 // Security: Sanitize error messages to prevent information leakage
@@ -96,9 +97,9 @@ const WalletConnection = ({
   // Security: Memoized validation checks
   const securityChecks = useMemo(() => ({
     isValidAccount: account && isValidAddress(account),
-    isValidChain: isValidChainId(currentChainId),
-    canPerformOperations: account && !wrongNetwork && isValidChainId(currentChainId)
-  }), [account, currentChainId, wrongNetwork]);
+    isValidChain: isValidChainId(currentChainId, selectedNetwork),
+    canPerformOperations: account && !wrongNetwork && isValidChainId(currentChainId, selectedNetwork)
+  }), [account, currentChainId, wrongNetwork, selectedNetwork]);
 
   // Security: Rate limiting check
   const checkRateLimit = useCallback((): boolean => {
@@ -319,7 +320,7 @@ const WalletConnection = ({
                             params: {
                               type: 'ERC721',
                               options: {
-                                address: SECURITY_CONFIG.CONTRACTS.CHARACTER_NFT,
+                                address: contractAddresses.CHARACTER_NFT,
                                 tokenId: tokenId.toString(),
                               },
                             },
@@ -432,7 +433,7 @@ const WalletConnection = ({
                         ];
 
                         const faetTokenContract = new ethers.Contract(
-                          SECURITY_CONFIG.CONTRACTS.FAET_TOKEN,
+                          contractAddresses.FAET_TOKEN,
                           faetTokenABI,
                           signer
                         );
@@ -445,14 +446,14 @@ const WalletConnection = ({
                         ];
 
                         const foundersPassContract = new ethers.Contract(
-                          SECURITY_CONFIG.CONTRACTS.FOUNDERS_PASS,
+                          contractAddresses.FOUNDERS_PASS,
                           foundersPassABI,
                           signer
                         );
 
                         // Security: Verify contract addresses match
                         const nftAddressFromContract = await faetTokenContract.foundersPassNFT();
-                        if (nftAddressFromContract.toLowerCase() !== SECURITY_CONFIG.CONTRACTS.FOUNDERS_PASS.toLowerCase()) {
+                        if (nftAddressFromContract.toLowerCase() !== contractAddresses.FOUNDERS_PASS.toLowerCase()) {
                           throw new Error("Contract address mismatch");
                         }
 
@@ -652,7 +653,7 @@ const WalletConnection = ({
                             params: {
                               type: 'ERC721',
                               options: {
-                                address: SECURITY_CONFIG.CONTRACTS.FOUNDERS_PASS,
+                                address: contractAddresses.FOUNDERS_PASS,
                                 tokenId: tokenId.toString(),
                               },
                             },
