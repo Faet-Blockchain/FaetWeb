@@ -752,15 +752,27 @@ export default function StakingPage() {
   }, [clearWeb3State]);
 
   const handleGoToStaking = async () => {
-    // Only proceed if we're already on the correct network
-    if (!wrongNetwork && canAccessStaking) {
+    console.log("handleGoToStaking called with state:", {
+      account,
+      wrongNetwork,
+      canAccessStaking,
+      currentChainId,
+      currentChainIdNumber,
+      selectedNetwork
+    });
+
+    // Check if we have an account and are on the correct network
+    if (account && !wrongNetwork) {
+      console.log("Conditions met, showing token staking interface");
       setShowTokenStaking(true);
       setTimeout(() => scrollToSection("token-staking"), 100);
-    } else {
-      // This shouldn't happen since the button should show "Switch Network" instead
-      console.error("handleGoToStaking called while on wrong network or not eligible");
-      // Fallback: try to switch network
+    } else if (!account) {
+      console.log("No account connected, cannot proceed to staking");
+    } else if (wrongNetwork) {
+      console.log("Wrong network detected, attempting to switch");
       await switchToCurrentNetwork();
+    } else {
+      console.log("Unknown condition preventing staking access");
     }
   };
 
