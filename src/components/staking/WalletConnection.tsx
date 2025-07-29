@@ -665,8 +665,20 @@ const WalletConnection = ({
                           alert(`🎉 Airdrop claimed successfully! Transaction: ${tx.hash}`);
 
                         } catch (error: unknown) {
-                          console.error("Airdrop claim failed:", error);
-                          alert(`❌ ${sanitizeError(error)}`);
+                          // Handle different types of errors gracefully
+                          const errorObj = error as { code?: number | string; message?: string; reason?: string };
+                          
+                          if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED" || 
+                              errorObj?.reason === "rejected" || errorObj?.message?.includes("User denied")) {
+                            console.log('ℹ️ User cancelled airdrop claim transaction');
+                            // Don't show alert for user cancellation - it's expected behavior
+                          } else if (errorObj?.code === -32002) {
+                            console.log('⚠️ Airdrop claim request already pending in MetaMask');
+                            alert("⚠️ Transaction request already pending in MetaMask. Please check your wallet.");
+                          } else {
+                            console.error("Airdrop claim failed:", error);
+                            alert(`❌ Airdrop claim failed: ${sanitizeError(error)}`);
+                          }
                         } finally {
                           setIsClaimingAirdrop(false);
                         }
