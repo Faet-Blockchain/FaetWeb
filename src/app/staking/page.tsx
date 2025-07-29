@@ -732,19 +732,19 @@ export default function StakingPage() {
 
   const handleNetworkChange = (network: 'testnet' | 'mainnet') => {
     console.log(`Switching from ${selectedNetwork} to ${network}`);
-    
+
     // Clear all state when switching networks to prevent data mixing
     clearWeb3State();
-    
+
     // Set new network
     setSelectedNetwork(network);
-    
+
     // Force immediate network check after state update with the new network config
     setTimeout(async () => {
       console.log('Forcing network check after network change...');
       // Get the new network config for the selected network
       const newNetworkConfig = getNetworkConfig(network);
-      
+
       // Check network with the new expected chain ID
       if (typeof window.ethereum !== "undefined") {
         try {
@@ -791,8 +791,7 @@ export default function StakingPage() {
         setTimeout(async () => {
           console.log("[handleChainChanged] Checking network after delay...");
 
-          // Force fresh read from wallet instead of using event data
-          let actualChainId;
+          // Force fresh read from wallet instead of using event data          let actualChainId;
           try {
             actualChainId = (await window.ethereum!.request({
               method: "eth_chainId",
@@ -966,34 +965,66 @@ export default function StakingPage() {
     };
   }, [stakingContract, account, wrongNetwork]);
 
+  const getExpectedChainId = (network: 'testnet' | 'mainnet') => {
+    return getNetworkConfig(network).chainId;
+  };
+
+  // Network validation effect
+  useEffect(() => {
+    const validateNetwork = () => {
+      if (!currentChainId) {
+        setWrongNetwork(false);
+        return;
+      }
+
+      const expectedChainId = getExpectedChainId(selectedNetwork);
+      const isCorrectNetwork = currentChainId === expectedChainId;
+
+      // For mainnet, also check against the numeric chain ID
+      let isMainnetValid = false;
+      if (selectedNetwork === 'mainnet') {
+        // Lisk mainnet is chain ID 1135 (0x46f)
+        isMainnetValid = currentChainId === '0x46f' || currentChainIdNumber === 1135;
+      }
+
+      const networkIsValid = selectedNetwork === 'mainnet' ? isMainnetValid : isCorrectNetwork;
+
+      setWrongNetwork(!networkIsValid);
+    };
+
+    validateNetwork();
+  }, [currentChainId, currentChainIdNumber, selectedNetwork]);
+
   // Only allow staking interface if connected to correct network
   const canAccessStaking = Boolean(
-    account && !wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER
+    account && !wrongNetwork
   );
 
-  // Additional debug logging for the parent component
+  // Debug logging for network state
   console.log('StakingPage Debug:', {
     account,
     wrongNetwork,
     currentChainId,
     currentChainIdNumber,
     selectedNetwork,
-    REQUIRED_CHAIN_NUMBER,
+    REQUIRED_CHAIN_NUMBER: getNetworkConfig(selectedNetwork).chainIdNumber,
     canAccessStaking,
-    expectedChainId: REQUIRED_CHAIN_ID
+    expectedChainId: getExpectedChainId(selectedNetwork),
+    isMainnet: selectedNetwork === 'mainnet',
+    mainnetChainCheck: selectedNetwork === 'mainnet' ? (currentChainId === '0x46f' || currentChainIdNumber === 1135) : 'N/A'
   });
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
-      if (account && !wrongNetwork && currentChainIdNumber === REQUIRED_CHAIN_NUMBER) {
+      if (account && !wrongNetwork) {
         console.log("Auto-initializing Web3 due to state change");
         await initializeWeb3();
       }
     };
 
     initWeb3IfReady();
-  }, [account, wrongNetwork, currentChainIdNumber, initializeWeb3, REQUIRED_CHAIN_NUMBER]);
+  }, [account, wrongNetwork, initializeWeb3]);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -1020,7 +1051,7 @@ export default function StakingPage() {
           transition={{ duration: 0.75, ease: "easeInOut", delay: 0.1 }}
           className="text-lg mb-6 max-w-3xl"
         >
-          {selectedNetwork === 'mainnet' 
+          {selectedNetwork === 'mainnet'
             ? 'Stake your FAET tokens to earn real rewards on the Lisk mainnet. All transactions involve actual tokens and have real value. Connect your MetaMask wallet to get started with mainnet staking.'
             : 'Test the FAET staking system on the Lisk Sepolia testnet. This is a safe environment to test staking functionality with test tokens. Perfect for learning how the system works before mainnet.'
           }

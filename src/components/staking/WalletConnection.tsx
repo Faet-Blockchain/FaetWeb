@@ -26,6 +26,7 @@ type WalletConnectionProps = {
   isConnecting: boolean;
   wrongNetwork: boolean;
   currentChainId: string | null;
+  currentChainIdNumber?: number | null;
   selectedNetwork: 'testnet' | 'mainnet';
   canAccessStaking: boolean;
   onConnect: () => void;
@@ -56,8 +57,14 @@ const SECURITY_CONFIG = {
 
 
 // Security: Validate chain ID dynamically based on selected network
-const isValidChainId = (chainId: string | null, selectedNetwork: 'testnet' | 'mainnet'): boolean => {
+const isValidChainId = (chainId: string | null, selectedNetwork: 'testnet' | 'mainnet', chainIdNumber?: number | null): boolean => {
   const expectedChainId = getExpectedChainId(selectedNetwork);
+  
+  // For mainnet, check both hex and decimal formats
+  if (selectedNetwork === 'mainnet') {
+    return chainId === '0x46f' || chainIdNumber === 1135;
+  }
+  
   return chainId === expectedChainId;
 };
 
@@ -71,6 +78,7 @@ const WalletConnection = ({
   isConnecting,
   wrongNetwork,
   currentChainId,
+  currentChainIdNumber,
   selectedNetwork,
   canAccessStaking,
   onConnect,
@@ -87,9 +95,11 @@ const WalletConnection = ({
     account,
     wrongNetwork,
     currentChainId,
+    currentChainIdNumber,
     selectedNetwork,
     canAccessStaking,
-    expectedChainId: getExpectedChainId(selectedNetwork)
+    expectedChainId: getExpectedChainId(selectedNetwork),
+    isMainnetValid: selectedNetwork === 'mainnet' ? (currentChainId === '0x46f' || currentChainIdNumber === 1135) : 'N/A'
   });
   const [characterNftError, setCharacterNftError] = useState<string>("");
   const [foundersPassError, setFoundersPassError] = useState<string>("");
@@ -101,9 +111,9 @@ const WalletConnection = ({
   // Security: Memoized validation checks
   const securityChecks = useMemo(() => ({
     isValidAccount: account && isValidAddress(account),
-    isValidChain: isValidChainId(currentChainId, selectedNetwork),
-    canPerformOperations: account && !wrongNetwork && isValidChainId(currentChainId, selectedNetwork)
-  }), [account, currentChainId, wrongNetwork, selectedNetwork]);
+    isValidChain: isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber),
+    canPerformOperations: account && !wrongNetwork && isValidChainId(currentChainId, selectedNetwork, currentChainIdNumber)
+  }), [account, currentChainId, currentChainIdNumber, wrongNetwork, selectedNetwork]);
 
   // Security: Rate limiting check
   const checkRateLimit = useCallback((): boolean => {
