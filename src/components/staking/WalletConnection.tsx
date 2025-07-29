@@ -287,7 +287,7 @@ const WalletConnection = ({
                     if (!securityChecks.isValidChain) {
                       console.log("Invalid network, switching...");
                       onSwitchNetwork();
-                    } else if (securityChecks.canPerformOperations) {
+                    } else if (securityChecks.isValidAccount && securityChecks.isValidChain) {
                       console.log("Network valid, going to staking");
                       onGoToStaking();
                     } else {
@@ -300,7 +300,7 @@ const WalletConnection = ({
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : !securityChecks.isValidChain
                       ? "bg-red-600 hover:bg-red-700 text-white"
-                      : securityChecks.canPerformOperations
+                      : (securityChecks.isValidAccount && securityChecks.isValidChain)
                       ? selectedNetwork === 'mainnet' 
                         ? "bg-purple-600 hover:bg-purple-700 text-white"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -311,7 +311,7 @@ const WalletConnection = ({
                     ? "Connect Wallet First"
                     : !securityChecks.isValidChain
                     ? "Switch Network" 
-                    : securityChecks.canPerformOperations
+                    : (securityChecks.isValidAccount && securityChecks.isValidChain)
                     ? "Go to Staking"
                     : "Network Issue"
                   }
