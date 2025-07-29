@@ -289,15 +289,35 @@ export default function StakingPage() {
         setTokenBalance("0");
       }
 
-      // Get weighted balance (active staking weight)
+      // Calculate active staking weight from unlocked stakes only
+      let totalActiveWeight = BigInt(0);
       try {
-        const activeWeight = await staking.getActiveWeight(userAddress);
-        setStakedBalance(ethers.formatEther(activeWeight));
+        const stakeCount = await staking.getStakeCount(userAddress);
+        const stakeCountNumber = Number(stakeCount);
+
+        if (stakeCountNumber > 0) {
+          for (let i = 0; i < stakeCountNumber; i++) {
+            try {
+              const stakeView = await staking.getStakeView(userAddress, i);
+              const weightedAmount = stakeView[1]; // weightedAmount is at index 1
+              const lockEndBlock = Number(stakeView[3]); // lockEndBlock is at index 3
+              
+              // Only count stakes that are unlocked (lockEndBlock = 0 or current block >= lockEndBlock)
+              if (lockEndBlock === 0 || currentBlock >= lockEndBlock) {
+                totalActiveWeight += BigInt(weightedAmount.toString());
+              }
+            } catch (stakeError) {
+              // Skip failed individual stake reads
+            }
+          }
+        }
+        
+        setStakedBalance(ethers.formatEther(totalActiveWeight));
       } catch (error: unknown) {
-        // Try weightedBalances as fallback
+        // Fallback: try the contract's getActiveWeight if it exists
         try {
-          const weighted = await staking.weightedBalances(userAddress);
-          setStakedBalance(ethers.formatEther(weighted));
+          const activeWeight = await staking.getActiveWeight(userAddress);
+          setStakedBalance(ethers.formatEther(activeWeight));
         } catch (fallbackError: unknown) {
           setStakedBalance("0");
         }
