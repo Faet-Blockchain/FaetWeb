@@ -761,22 +761,39 @@ export default function StakingPage() {
       selectedNetwork
     });
 
-    // Force a fresh network check before proceeding
-    const networkIsValid = await checkNetwork();
-    console.log("Fresh network check result:", networkIsValid);
+    // Check prerequisites without causing state updates
+    if (!account) {
+      console.log("No account connected, cannot proceed to staking");
+      return;
+    }
 
-    // Check if we have an account and are on the correct network
-    if (account && networkIsValid) {
+    // Do a lightweight network check without updating state
+    let isNetworkValid = false;
+    if (typeof window.ethereum !== "undefined") {
+      try {
+        const chainId = (await window.ethereum.request({
+          method: "eth_chainId",
+        })) as string;
+        
+        const networkConfig = getNetworkConfig(selectedNetwork);
+        const currentChainNumber = parseInt(chainId, 16);
+        const expectedChainNumber = networkConfig.chainIdNumber;
+        
+        isNetworkValid = chainId === networkConfig.chainId || currentChainNumber === expectedChainNumber;
+        console.log("Lightweight network check result:", isNetworkValid);
+      } catch (error) {
+        console.error("Error checking network:", error);
+        isNetworkValid = false;
+      }
+    }
+
+    if (isNetworkValid) {
       console.log("Conditions met, showing token staking interface");
       setShowTokenStaking(true);
       setTimeout(() => scrollToSection("token-staking"), 100);
-    } else if (!account) {
-      console.log("No account connected, cannot proceed to staking");
-    } else if (!networkIsValid) {
+    } else {
       console.log("Wrong network detected, attempting to switch");
       await switchToCurrentNetwork();
-    } else {
-      console.log("Unknown condition preventing staking access");
     }
   };
 
