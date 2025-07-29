@@ -768,7 +768,7 @@ export default function StakingPage() {
     }
 
     // Use the existing canAccessStaking check since it already validates network correctly
-    isNetworkValid = canAccessStaking;
+    const isNetworkValid = canAccessStaking;
     console.log("Using existing canAccessStaking validation:", isNetworkValid);
 
     if (isNetworkValid) {
