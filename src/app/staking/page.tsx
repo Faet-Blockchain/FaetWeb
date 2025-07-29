@@ -318,14 +318,14 @@ export default function StakingPage() {
     try {
       console.log("Loading user data for:", userAddress);
       console.log("Selected network:", selectedNetwork);
-      
+
       // Validate network before making any contract calls
       const networkValid = await checkNetwork();
       if (!networkValid) {
         console.log("Network invalid during loadUserData, aborting");
         return;
       }
-      
+
       console.log("Staking contract address:", await staking.getAddress());
       console.log("Token contract address:", await token.getAddress());
 
@@ -767,18 +767,11 @@ export default function StakingPage() {
       return;
     }
 
-    // Use the existing canAccessStaking check since it already validates network correctly
-    const isNetworkValid = canAccessStaking;
-    console.log("Using existing canAccessStaking validation:", isNetworkValid);
-
-    if (isNetworkValid) {
-      console.log("Conditions met, showing token staking interface");
-      setShowTokenStaking(true);
-      setTimeout(() => scrollToSection("token-staking"), 100);
-    } else {
-      console.log("Wrong network detected, attempting to switch");
-      await switchToCurrentNetwork();
-    }
+    // Always show the staking interface when explicitly requested
+    // The StakingInterface component will handle network validation and show appropriate errors
+    console.log("Showing token staking interface");
+    setShowTokenStaking(true);
+    setTimeout(() => scrollToSection("token-staking"), 100);
   };
 
   const handleNetworkChange = (network: 'testnet' | 'mainnet') => {
@@ -1037,7 +1030,7 @@ export default function StakingPage() {
       const currentNetworkConfig = getNetworkConfig(selectedNetwork);
       const expectedChainId = currentNetworkConfig.chainId;
       const expectedChainNumber = currentNetworkConfig.chainIdNumber;
-      
+
       console.log("[validateNetwork] Current chain ID:", currentChainId);
       console.log("[validateNetwork] Expected chain ID for", selectedNetwork, ":", expectedChainId);
       console.log("[validateNetwork] Expected chain number for", selectedNetwork, ":", expectedChainNumber);
