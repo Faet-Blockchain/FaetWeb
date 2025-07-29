@@ -100,36 +100,24 @@ export default function StakingPage() {
         const requiredChainId = networkConfig.chainId;
         const requiredChainNumber = networkConfig.chainIdNumber;
 
-        console.log(`[checkNetwork] Raw chain ID from wallet: "${chainId}"`);
-        console.log(`[checkNetwork] Required chain ID for ${selectedNetwork}: "${requiredChainId}"`);
-        console.log(`[checkNetwork] Type of chainId: ${typeof chainId}`);
-
         setCurrentChainId(chainId);
 
         // Convert hex strings to integers for reliable comparison
         const currentChainNumber = parseInt(chainId, 16);
-
         setCurrentChainIdNumber(currentChainNumber);
-
-        console.log(`[checkNetwork] Current chain number: ${currentChainNumber}`);
-        console.log(`[checkNetwork] Required chain number for ${selectedNetwork}: ${requiredChainNumber}`);
 
         // Check both hex and decimal formats
         const isCorrectNetwork = chainId === requiredChainId || currentChainNumber === requiredChainNumber;
-        console.log(`[checkNetwork] Networks match for ${selectedNetwork}: ${isCorrectNetwork}`);
 
         setWrongNetwork(!isCorrectNetwork);
 
         if (!isCorrectNetwork) {
           clearWeb3State();
-          console.log("[checkNetwork] Wrong network detected, clearing state");
-        } else {
-          console.log("[checkNetwork] Correct network confirmed for", selectedNetwork);
         }
 
         return isCorrectNetwork;
       } catch (error) {
-        console.error("[checkNetwork] Error checking network:", error);
+        console.error("Network check failed:", error);
         setWrongNetwork(true);
         setCurrentChainId(null);
         setCurrentChainIdNumber(null);
@@ -137,7 +125,6 @@ export default function StakingPage() {
         return false;
       }
     } else {
-      console.log("[checkNetwork] No ethereum object found");
       setWrongNetwork(true);
       setCurrentChainId(null);
       setCurrentChainIdNumber(null);
@@ -178,8 +165,6 @@ export default function StakingPage() {
 
   const loadTopStakersData = async (staking: ethers.Contract) => {
     try {
-      console.log("Loading real blockchain staking data...");
-
       // Set initial loading state
       setTopStakers([]);
       setStakingRanges([]);
@@ -187,18 +172,14 @@ export default function StakingPage() {
       // Get all Stake events to find unique stakers
       const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
 
-      console.log("Fetching Stake events from blockchain...");
       const stakeEvents = await staking.queryFilter(
         staking.filters.Staked(),
         fromBlock,
         'latest'
       );
 
-      console.log(`Found ${stakeEvents.length} stake events`);
-
       // Get unique stakers and their current active weights
       const uniqueStakers = new Set<string>();
-      console.log("🔄 [loadTopStakersData] Processing stake events...");
 
       for (const event of stakeEvents) {
         // Type guard to check if event is EventLog (has args property)
@@ -206,51 +187,36 @@ export default function StakingPage() {
           const userAddress = event.args.user || '';
           if (userAddress) {
             uniqueStakers.add(userAddress);
-            console.log(`📝 [loadTopStakersData] Found staker: ${userAddress}`);
           }
         }
       }
 
-      console.log(`✅ [loadTopStakersData] Found ${uniqueStakers.size} unique stakers`);
-
       // Calculate current active weights for each staker
       const stakersWithWeights: Array<{ address: string; weight: string }> = [];
 
-      console.log("🔄 [loadTopStakersData] Calculating active weights for each staker...");
       for (const staker of uniqueStakers) {
         if (!staker || staker === '') continue;
 
         try {
-          console.log(`🔄 [loadTopStakersData] Getting active weight for ${staker}...`);
           const activeWeight = await staking.getActiveWeight(staker);
           const weightInEther = ethers.formatEther(activeWeight);
-
-          console.log(`📊 [loadTopStakersData] ${staker}: ${weightInEther} FAET active weight`);
 
           if (parseFloat(weightInEther) > 0) {
             stakersWithWeights.push({
               address: staker,
               weight: weightInEther
             });
-            console.log(`✅ [loadTopStakersData] Added ${staker} with weight ${weightInEther}`);
-          } else {
-            console.log(`⚠️ [loadTopStakersData] Skipping ${staker} - zero active weight`);
           }
         } catch (error: unknown) {
-          const errorMsg = (error as { message?: string })?.message || 'Unknown error';
-          console.warn(`❌ [loadTopStakersData] Error getting active weight for ${staker}:`, errorMsg);
+          // Silently skip failed stakers
         }
       }
 
       // Sort by weight (highest first) and take top 10
-      console.log("🔄 [loadTopStakersData] Sorting stakers by weight...");
       stakersWithWeights.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
       const top10 = stakersWithWeights.slice(0, 10);
 
-      console.log(`✅ [loadTopStakersData] Top 10 stakers:`, top10);
-
       // Create staking ranges
-      console.log("🔄 [loadTopStakersData] Creating staking ranges...");
       const ranges = [
         { min: 0, max: 1000, range: "0 - 1K FAET" },
         { min: 1000, max: 10000, range: "1K - 10K FAET" },
@@ -269,8 +235,6 @@ export default function StakingPage() {
           return sum + parseFloat(staker.weight);
         }, 0);
 
-        console.log(`📊 [loadTopStakersData] Range ${rangeConfig.range}: ${stakersInRange.length} stakers, ${totalWeight} total weight`);
-
         return {
           range: rangeConfig.range,
           count: stakersInRange.length,
@@ -278,30 +242,13 @@ export default function StakingPage() {
         };
       }).filter(range => range.count > 0); // Only include ranges with stakers
 
-      console.log("✅ [loadTopStakersData] Final staking ranges:", stakingRangesData);
-      console.log("✅ [loadTopStakersData] Final top 10 stakers:", top10);
-
       // Update state
-      console.log("🔄 [loadTopStakersData] Updating React state...");
       setTopStakers(top10);
       setStakingRanges(stakingRangesData);
 
-      console.log("✅ [loadTopStakersData] Successfully completed staking data load!");
     } catch (error: unknown) {
       const errorMsg = (error as { message?: string })?.message || 'Unknown error';
-      const errorCode = (error as { code?: string | number })?.code;
-      console.error("❌ [loadTopStakersData] Error loading top stakers data:", errorMsg);
-      console.error("❌ [loadTopStakersData] Error code:", errorCode);
-      console.error("❌ [loadTopStakersData] Full error object:", error);
-
-      // More specific error handling
-      if (errorCode === 'NETWORK_ERROR' || errorMsg.includes('network')) {
-        console.error("❌ [loadTopStakersData] Network error - check connection and network");
-      } else if (errorCode === 'CALL_EXCEPTION' || errorMsg.includes('call exception')) {
-        console.error("❌ [loadTopStakersData] Contract call exception - check contract deployment and ABI");
-      } else if (errorMsg.includes('timeout') || errorMsg.includes('timeout')) {
-        console.error("❌ [loadTopStakersData] Request timeout - blockchain might be slow");
-      }
+      console.error("Failed to load staking data:", errorMsg);
 
       // Set empty data as fallback
       setTopStakers([]);
@@ -315,103 +262,69 @@ export default function StakingPage() {
     userAddress: string,
   ) => {
     try {
-      console.log("Loading user data for:", userAddress);
-      console.log("Selected network:", selectedNetwork);
-
-      // For testnet, be more lenient with network validation
-      // We'll try to load data and let individual contract calls handle errors
+      // For mainnet, validate network first
       if (selectedNetwork === 'mainnet') {
         const networkValid = await checkNetwork();
         if (!networkValid) {
-          console.log("Network invalid during loadUserData for mainnet, aborting");
           return;
         }
-      } else {
-        console.log("Testnet mode - proceeding with data loading regardless of network state");
-      }
-
-      // Safely get contract addresses with error handling
-      try {
-        const stakingAddr = await staking.getAddress();
-        const tokenAddr = await token.getAddress();
-        console.log("Contract addresses validated - Staking:", stakingAddr, "Token:", tokenAddr);
-      } catch (addrError) {
-        console.warn("Could not get contract addresses, contracts may not be deployed:", addrError);
-        // Don't return here - let individual calls handle their own errors
       }
 
       // Get current block number from the provider
       let currentBlock = 0;
       try {
         if (typeof window.ethereum !== "undefined") {
-          // Always create a fresh provider to get block number to avoid dependency issues
           const tempProvider = new ethers.BrowserProvider(window.ethereum);
           currentBlock = await tempProvider.getBlockNumber();
-          console.log("Current block number:", currentBlock);
         }
       } catch (blockError) {
-        console.warn("Could not get current block number:", blockError);
-        // Use fallback block number or continue without it
         currentBlock = 0;
       }
 
-      // Get token balance with enhanced error handling
+      // Get token balance
       try {
         const balance = await token.balanceOf(userAddress);
         setTokenBalance(ethers.formatEther(balance));
-        console.log("Successfully fetched token balance:", ethers.formatEther(balance));
       } catch (error: unknown) {
-        console.warn("Error fetching token balance (contract may not exist):", error);
         setTokenBalance("0");
       }
 
-      // Get weighted balance (active staking weight) with enhanced error handling
+      // Get weighted balance (active staking weight)
       try {
-        // Try getActiveWeight first since it's the actual current active weight
         const activeWeight = await staking.getActiveWeight(userAddress);
         setStakedBalance(ethers.formatEther(activeWeight));
-        console.log("Successfully fetched active weight:", ethers.formatEther(activeWeight));
       } catch (error: unknown) {
-        console.warn("Error fetching active weight:", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         // Try weightedBalances as fallback
         try {
           const weighted = await staking.weightedBalances(userAddress);
           setStakedBalance(ethers.formatEther(weighted));
-          console.log("Successfully fetched weighted balance:", ethers.formatEther(weighted));
         } catch (fallbackError: unknown) {
-          console.warn("Error fetching weighted balances:", (fallbackError as { code?: string | number; message?: string })?.code || (fallbackError as { message?: string })?.message);
           setStakedBalance("0");
         }
       }
 
-      // Get pending rewards with enhanced error handling
+      // Get pending rewards
       try {
         const earned = await staking.earned(userAddress);
         setPendingRewards(ethers.formatEther(earned));
-        console.log("Successfully fetched earnings:", ethers.formatEther(earned));
       } catch (error: unknown) {
-        console.warn("Error fetching earnings (contract may not exist or wrong network):", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setPendingRewards("0");
       }
 
-      // Get total rewards funded with enhanced error handling
+      // Get total rewards funded
       try {
         const totalFunded = await staking.totalRewardsFunded();
         setTotalRewardsFunded(ethers.formatEther(totalFunded));
-        console.log("Successfully fetched total rewards funded:", ethers.formatEther(totalFunded));
       } catch (error: unknown) {
-        console.warn("Error fetching total rewards funded:", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setTotalRewardsFunded("0");
       }
 
-      // Get user stakes with enhanced error handling
+      // Get user stakes
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
         const stakeCountNumber = Number(stakeCount);
-        console.log("Successfully fetched stake count:", stakeCountNumber);
 
         if (stakeCountNumber === 0) {
-          console.log("User has no stakes");
           setUserStakes([]);
         } else {
           const stakes = [];
@@ -419,7 +332,6 @@ export default function StakingPage() {
           for (let i = 0; i < stakeCountNumber; i++) {
             try {
               const stakeView = await staking.getStakeView(userAddress, i);
-              // stakeView is a struct with: amount, weightedAmount, multiplier, lockEndBlock
               const amount = stakeView[0];
               const weightedAmount = stakeView[1];
               const multiplier = stakeView[2];
@@ -428,58 +340,37 @@ export default function StakingPage() {
               const isUnlocked = lockEndBlock === 0 || currentBlock >= lockEndBlock;
               const blocksRemaining = isUnlocked ? 0 : Math.max(0, lockEndBlock - currentBlock);
 
-              console.log(`Stake ${i} details:`, {
-                currentBlock,
-                lockEndBlock,
-                blocksRemaining,
-                daysRemaining: Math.ceil(blocksRemaining / 43200),
-                amount: amount.toString(),
-                weightedAmount: weightedAmount.toString(),
-                multiplier: multiplier.toString()
-              });
-
               stakes.push({
                 index: i,
                 amount: ethers.formatEther(amount),
                 weightedAmount: ethers.formatEther(weightedAmount),
-                multiplier: Number(multiplier) / 1e18, // Convert from wei to decimal
+                multiplier: Number(multiplier) / 1e18,
                 lockEndBlock: lockEndBlock,
                 isUnlocked: isUnlocked,
                 blocksRemaining: blocksRemaining,
               });
             } catch (stakeError) {
-              console.error(`Error loading stake ${i}:`, stakeError);
+              // Skip failed stakes
             }
           }
           setUserStakes(stakes);
-          console.log("Successfully loaded", stakes.length, "stakes");
         }
       } catch (error: unknown) {
-        console.warn("Error loading stakes (contract may not exist or wrong network):", (error as { code?: string | number; message?: string })?.code || (error as { message?: string })?.message);
         setUserStakes([]);
       }
 
-      // Load top stakers data with enhanced error handling
+      // Load top stakers data
       try {
         await loadTopStakersData(staking);
       } catch (stakersError) {
-        console.warn("Error loading top stakers data:", stakersError);
-        // Set empty data as fallback
         setTopStakers([]);
         setStakingRanges([]);
       }
 
-      console.log("✅ User data loading completed successfully");
     } catch (error: unknown) {
-      console.error("Critical error loading user data:", (error as { message?: string })?.message || error);
-      if ((error as { code?: string })?.code === "BAD_DATA") {
-        console.warn("Contract decode error - likely wrong network or contract not deployed");
-      } else if ((error as { message?: string })?.message?.includes("network")) {
-        console.warn("Network-related error during data loading");
-      }
+      console.error("Error loading user data:", (error as { message?: string })?.message || error);
       
-      // Set fallback values but DON'T clear the interface
-      console.log("Setting fallback values due to error, but keeping interface visible");
+      // Set fallback values but keep interface visible
       setTokenBalance("0");
       setStakedBalance("0");
       setPendingRewards("0");
@@ -487,32 +378,22 @@ export default function StakingPage() {
       setTotalRewardsFunded("0");
       setTopStakers([]);
       setStakingRanges([]);
-      
-      // DON'T call clearWeb3State() or setShowTokenStaking(false) here
-      // Let the interface stay visible and show the error state
     }
   }, [checkNetwork, selectedNetwork]);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
       try {
-        console.log("Initializing Web3 for account:", account);
-        console.log("Selected network:", selectedNetwork);
-        console.log("Current chain ID:", currentChainId);
-
         // Double-check we're on the correct network before initializing
         const networkValid = await checkNetwork();
         if (!networkValid) {
-          console.log("Network validation failed during Web3 initialization, aborting");
           clearWeb3State();
           return;
         }
 
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
-
         const signer = await web3Provider.getSigner();
         const signerAddress = await signer.getAddress();
-        console.log("Signer address:", signerAddress);
 
         const token = new ethers.Contract(
           FAET_TOKEN_ADDRESS,
@@ -525,35 +406,17 @@ export default function StakingPage() {
           signer,
         );
 
-        console.log("🔄 [initializeWeb3] Setting contracts in state...");
-
         // Set contracts in state
         setTokenContract(token);
         setStakingContract(staking);
-
-        console.log("Token contract address:", FAET_TOKEN_ADDRESS);
-        console.log("Staking contract address:", FAET_STAKING_ADDRESS);
-        console.log("Current chain ID:", currentChainId);
 
         // Validate contracts exist by checking if they have code
         try {
           const tokenCode = await web3Provider.getCode(FAET_TOKEN_ADDRESS);
           const stakingCode = await web3Provider.getCode(FAET_STAKING_ADDRESS);
 
-          if (tokenCode === "0x") {
-            console.error("Token contract not found at address:", FAET_TOKEN_ADDRESS);
-          } else {
-            console.log("Token contract validated");
-          }
-
-          if (stakingCode === "0x") {
-            console.error("Staking contract not found at address:", FAET_STAKING_ADDRESS);
-          } else {
-            console.log("Staking contract validated");
-          }
-
           if (tokenCode === "0x" || stakingCode === "0x") {
-            console.warn("One or more contracts not deployed on this network");
+            console.error("Contracts not deployed on this network");
             return;
           }
         } catch (codeError) {
@@ -561,45 +424,34 @@ export default function StakingPage() {
           return;
         }
 
-        console.log("✅ [initializeWeb3] Web3 initialized successfully");
-
-        // For testnet, skip final network check to allow data loading with errors
+        // For mainnet, do final network check
         if (selectedNetwork === 'mainnet') {
           const finalNetworkCheck = await checkNetwork();
           if (!finalNetworkCheck) {
-            console.log("Final network check failed for mainnet, not loading user data");
             clearWeb3State();
             return;
           }
-        } else {
-          console.log("Testnet mode - skipping final network check, proceeding with data loading");
         }
 
-        // Load user data immediately after successful initialization
-        console.log("🔄 [initializeWeb3] Loading user data for:", signerAddress);
+        // Load user data
         try {
           await loadUserData(token, staking, signerAddress);
-          console.log("✅ [initializeWeb3] User data loading completed");
         } catch (loadError) {
-          console.warn("Error during user data loading, but keeping interface visible:", loadError);
-          // Don't clear web3 state or hide interface on data loading errors
+          // Keep interface visible even if data loading fails
         }
 
-        // Also load top stakers data independently in case it fails in loadUserData
+        // Load top stakers data independently
         try {
-          console.log("Loading top stakers data independently...");
           await loadTopStakersData(staking);
         } catch (stakersError) {
-          console.warn("Independent top stakers data load failed:", stakersError);
+          // Silently handle stakers data failure
         }
 
-        console.log("Web3 initialization complete");
       } catch (error: unknown) {
-        console.error("Error initializing Web3:", (error as { message?: string })?.message || error);
+        console.error("Web3 initialization failed:", (error as { message?: string })?.message || error);
         clearWeb3State();
       }
     } else {
-      console.log("Cannot initialize Web3: missing ethereum or account");
       clearWeb3State();
     }
   }, [account, currentChainId, selectedNetwork, loadUserData, clearWeb3State, checkNetwork, FAET_TOKEN_ADDRESS, FAET_STAKING_ADDRESS]);
@@ -618,16 +470,11 @@ export default function StakingPage() {
           // Immediate network check after connection
           const networkOk = await checkNetwork();
           if (networkOk) {
-            console.log("Connected to correct network, initializing Web3");
             // Initialize Web3 immediately if on correct network
             setTimeout(async () => {
               await initializeWeb3();
             }, 500);
-          } else {
-            console.log("Connected to wrong network, will not initialize Web3");
           }
-        } else {
-          console.error("No accounts returned from MetaMask");
         }
       } catch (error: unknown) {
         console.error("Error connecting wallet:", error);
@@ -785,31 +632,18 @@ export default function StakingPage() {
   }, [clearWeb3State]);
 
   const handleGoToStaking = async () => {
-    console.log("handleGoToStaking called with state:", {
-      account,
-      wrongNetwork,
-      canAccessStaking,
-      currentChainId,
-      currentChainIdNumber,
-      selectedNetwork
-    });
-
     // Check prerequisites without causing state updates
     if (!account) {
-      console.log("No account connected, cannot proceed to staking");
       return;
     }
 
     // Always show the staking interface when explicitly requested
     // The StakingInterface component will handle network validation and show appropriate errors
-    console.log("Showing token staking interface");
     setShowTokenStaking(true);
     setTimeout(() => scrollToSection("token-staking"), 100);
   };
 
   const handleNetworkChange = (network: 'testnet' | 'mainnet') => {
-    console.log(`Switching from ${selectedNetwork} to ${network}`);
-
     // Clear all state when switching networks to prevent data mixing
     clearWeb3State();
 
@@ -819,21 +653,15 @@ export default function StakingPage() {
     // Set new network
     setSelectedNetwork(network);
 
-    // Force immediate network check after state update with the new network config
+    // Force immediate network check after state update
     setTimeout(async () => {
-      console.log('Forcing network check after network change...');
-      // Get the new network config for the selected network
       const newNetworkConfig = getNetworkConfig(network);
 
-      // Check network with the new expected chain ID
       if (typeof window.ethereum !== "undefined") {
         try {
           const chainId = (await window.ethereum.request({
             method: "eth_chainId",
           })) as string;
-
-          console.log(`[handleNetworkChange] Current chain ID: "${chainId}"`);
-          console.log(`[handleNetworkChange] Expected chain ID for ${network}: "${newNetworkConfig.chainId}"`);
 
           setCurrentChainId(chainId);
           const currentChainNumber = parseInt(chainId, 16);
@@ -841,17 +669,9 @@ export default function StakingPage() {
           setCurrentChainIdNumber(currentChainNumber);
 
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
-          console.log(`[handleNetworkChange] Networks match for ${network}: ${isCorrectNetwork}`);
-
           setWrongNetwork(!isCorrectNetwork);
-
-          if (!isCorrectNetwork) {
-            console.log("[handleNetworkChange] Wrong network detected after switch");
-          } else {
-            console.log("[handleNetworkChange] Correct network confirmed after switch");
-          }
         } catch (error) {
-          console.error("[handleNetworkChange] Error checking network:", error);
+          console.error("Network check failed:", error);
           setWrongNetwork(true);
         }
       }
@@ -862,24 +682,16 @@ export default function StakingPage() {
   useEffect(() => {
     if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
       const handleChainChanged = async (...args: unknown[]) => {
-        const chainId = args[0] as string;
-        console.log("[handleChainChanged] Chain changed event fired");
-        console.log("[handleChainChanged] Event chain ID:", chainId);
-        console.log("[handleChainChanged] Selected network:", selectedNetwork);
-
         // Add delay to ensure wallet state is fully updated
         setTimeout(async () => {
-          console.log("[handleChainChanged] Checking network after delay...");
-
           // Force fresh read from wallet instead of using event data
           let actualChainId;
           try {
             actualChainId = (await window.ethereum!.request({
               method: "eth_chainId",
             })) as string;
-            console.log("[handleChainChanged] Fresh chain ID from wallet:", actualChainId);
           } catch (error) {
-            console.error("[handleChainChanged] Error reading fresh chain ID:", error);
+            console.error("Error reading chain ID:", error);
             return;
           }
 
@@ -892,27 +704,18 @@ export default function StakingPage() {
 
           setCurrentChainIdNumber(currentChainNumber);
 
-          console.log("[handleChainChanged] Fresh current chain number:", currentChainNumber);
-          console.log("[handleChainChanged] Fresh required chain number for", selectedNetwork, ":", requiredChainNumber);
-
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
-          console.log("[handleChainChanged] Fresh networks match:", isCorrectNetwork);
-
           setWrongNetwork(!isCorrectNetwork);
 
           if (!isCorrectNetwork) {
-            console.log("[handleChainChanged] Wrong network detected");
             // For testnet, don't hide the interface - let it show network error messages
             if (selectedNetwork === 'mainnet') {
-              console.log("[handleChainChanged] Mainnet wrong network - clearing state and hiding staking interface");
               clearWeb3State();
               setShowTokenStaking(false);
             } else {
-              console.log("[handleChainChanged] Testnet wrong network - keeping interface visible");
               clearWeb3State();
             }
           } else if (account) {
-            console.log("[handleChainChanged] Correct network detected, reinitializing Web3");
             setTimeout(async () => {
               await initializeWeb3();
             }, 500);
@@ -922,7 +725,6 @@ export default function StakingPage() {
 
       const handleAccountsChanged = async (...args: unknown[]) => {
         const accounts = args[0] as string[];
-        console.log("Accounts changed:", accounts);
         if (accounts.length === 0) {
           disconnectWallet();
         } else {
@@ -956,13 +758,11 @@ export default function StakingPage() {
     let networkCheckInterval: NodeJS.Timeout;
 
     if (account && typeof window.ethereum !== "undefined") {
-      // Check network every 10 seconds when connected (increased frequency to prevent flickering)
+      // Check network every 10 seconds when connected
       networkCheckInterval = setInterval(async () => {
-        console.log("[networkMonitoring] Periodic network check for", selectedNetwork);
         try {
           await checkNetwork();
         } catch (checkError) {
-          console.warn("[networkMonitoring] Network check failed, but continuing:", checkError);
           // Don't let periodic network check failures disrupt the interface
         }
       }, 10000);
@@ -987,7 +787,6 @@ export default function StakingPage() {
             // Check network immediately after setting account
             const networkOk = await checkNetwork();
             if (!networkOk) {
-              console.log("Auto-connected wallet is on wrong network");
               setShowTokenStaking(false);
             }
           } else {
@@ -995,7 +794,7 @@ export default function StakingPage() {
             await checkNetwork();
           }
         } catch (error: unknown) {
-          console.error("Error checking existing connection:", error);
+          console.error("Connection check failed:", error);
           await checkNetwork();
         }
       }
@@ -1011,19 +810,13 @@ export default function StakingPage() {
     if (stakingContract && account && !wrongNetwork && typeof window.ethereum !== "undefined") {
       const updatePendingRewards = async () => {
         try {
-          const timestamp = new Date().toLocaleTimeString();
-          console.log(`[${timestamp}] Updating pending rewards...`);
-
           // Check if ethereum is available
           if (typeof window.ethereum === "undefined") {
-            console.warn(`[${timestamp}] window.ethereum not available`);
             return;
           }
 
           // Create a fresh provider for each update to avoid stale references
           const freshProvider = new ethers.BrowserProvider(window.ethereum);
-          const currentBlock = await freshProvider.getBlockNumber();
-          console.log(`[${timestamp}] Current block:`, currentBlock);
 
           // Create a fresh read-only contract instance to bypass any caching
           const freshContract = new ethers.Contract(
@@ -1034,10 +827,9 @@ export default function StakingPage() {
 
           const earned = await freshContract.earned(account);
           const formattedEarned = ethers.formatEther(earned);
-          console.log(`[${timestamp}] New pending rewards:`, formattedEarned, `(block: ${currentBlock})`);
           setPendingRewards(formattedEarned);
         } catch (error: unknown) {
-          console.warn("Error updating pending rewards:", error);
+          // Silently handle rewards update failures
         }
       };
 
@@ -1046,18 +838,10 @@ export default function StakingPage() {
 
       // Then update every 2 seconds for real-time updates
       rewardsUpdateInterval = setInterval(updatePendingRewards, 2000);
-      console.log("Started 2-second rewards update interval");
-    } else {
-      console.log("Not starting rewards interval - missing:", {
-        stakingContract: !!stakingContract,
-        account: !!account,
-        wrongNetwork
-      });
     }
 
     return () => {
       if (rewardsUpdateInterval) {
-        console.log("Clearing rewards update interval");
         clearInterval(rewardsUpdateInterval);
       }
     };
@@ -1075,15 +859,9 @@ export default function StakingPage() {
       const expectedChainId = currentNetworkConfig.chainId;
       const expectedChainNumber = currentNetworkConfig.chainIdNumber;
 
-      console.log("[validateNetwork] Current chain ID:", currentChainId);
-      console.log("[validateNetwork] Expected chain ID for", selectedNetwork, ":", expectedChainId);
-      console.log("[validateNetwork] Expected chain number for", selectedNetwork, ":", expectedChainNumber);
-      console.log("[validateNetwork] Current chain number:", currentChainIdNumber);
-
       // Check both hex and decimal formats for reliability
       const isCorrectNetwork = currentChainId === expectedChainId || currentChainIdNumber === expectedChainNumber;
 
-      console.log("[validateNetwork] Network is valid:", isCorrectNetwork);
       setWrongNetwork(!isCorrectNetwork);
     };
 
@@ -1095,31 +873,10 @@ export default function StakingPage() {
     account && !wrongNetwork && currentChainId
   );
 
-  // Debug logging for network state
-  console.log('StakingPage Debug:', {
-    account,
-    wrongNetwork,
-    currentChainId,
-    currentChainIdNumber,
-    selectedNetwork,
-    expectedChainId: currentNetworkConfig.chainId,
-    expectedChainNumber: currentNetworkConfig.chainIdNumber,
-    tokenContract: currentNetworkConfig.contracts.token,
-    stakingContract: currentNetworkConfig.contracts.staking,
-    canAccessStaking,
-    networkMatches: currentChainId === currentNetworkConfig.chainId || currentChainIdNumber === currentNetworkConfig.chainIdNumber,
-    canAccessStakingComponents: {
-      hasAccount: !!account,
-      notWrongNetwork: !wrongNetwork,
-      hasChainId: !!currentChainId
-    }
-  });
-
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
     const initWeb3IfReady = async () => {
       if (account && !wrongNetwork) {
-        console.log("Auto-initializing Web3 due to state change");
         await initializeWeb3();
       }
     };
