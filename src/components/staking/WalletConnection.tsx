@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { getContractAddresses, getExpectedChainId } from "../../lib/contracts";
+import { getContractAddresses } from "../../lib/contracts";
 import { getNetworkConfig } from "../../lib/networks";
 
 // Security validation functions
@@ -93,7 +93,6 @@ const WalletConnection = ({
 }: WalletConnectionProps) => {
   // Get dynamic contract addresses based on selected network
   const contractAddresses = getContractAddresses(selectedNetwork);
-  const networkConfig = getNetworkConfig(selectedNetwork);
 
   // Debug logging to understand network state
   console.log('WalletConnection Debug:', {
@@ -206,12 +205,12 @@ const WalletConnection = ({
           }`}>
             {selectedNetwork === 'mainnet' ? (
               <>
-                🌐 <strong>Mainnet Mode:</strong> You're using the Lisk mainnet. 
+                🌐 <strong>Mainnet Mode:</strong> You&apos;re using the Lisk mainnet. 
                 All transactions are real and involve actual tokens.
               </>
             ) : (
               <>
-                🧪 <strong>Testnet Mode:</strong> You're using the Lisk Sepolia testnet. 
+                🧪 <strong>Testnet Mode:</strong> You&apos;re using the Lisk Sepolia testnet. 
                 Perfect for testing before mainnet launch!
               </>
             )}

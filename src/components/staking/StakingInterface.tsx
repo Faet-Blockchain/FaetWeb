@@ -10,13 +10,8 @@ type NetworkType = 'testnet' | 'mainnet';
 
 type StakingInterfaceProps = {
   account: string | null;
-  isConnecting: boolean;
   wrongNetwork: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
-  onAddNetwork: () => void;
   selectedNetwork: NetworkType;
-  onNetworkChange: (network: NetworkType) => void;
   tokenBalance: string;
   stakedBalance: string;
   pendingRewards: string;
@@ -48,13 +43,8 @@ import { getNetworkConfig } from "@/lib/networks";
 
 const StakingInterface = ({
   account,
-  isConnecting,
   wrongNetwork,
-  onConnect,
-  onDisconnect,
-  onAddNetwork,
   selectedNetwork,
-  onNetworkChange,
   tokenBalance,
   stakedBalance,
   pendingRewards,

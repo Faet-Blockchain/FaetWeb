@@ -491,7 +491,7 @@ export default function StakingPage() {
       // DON'T call clearWeb3State() or setShowTokenStaking(false) here
       // Let the interface stay visible and show the error state
     }
-  }, [checkNetwork, selectedNetwork, FAET_STAKING_ADDRESS, FAET_TOKEN_ADDRESS]);
+  }, [checkNetwork, selectedNetwork]);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
