@@ -256,14 +256,26 @@ const WalletConnection = ({
                   Stake your FAET tokens to earn rewards
                 </p>
                 <button
-                  onClick={wrongNetwork ? onSwitchNetwork : onGoToStaking}
+                  onClick={() => {
+                    if (!account) {
+                      console.log("No account connected");
+                      return;
+                    }
+                    if (wrongNetwork) {
+                      onSwitchNetwork();
+                    } else if (canAccessStaking) {
+                      onGoToStaking();
+                    } else {
+                      console.log("Cannot access staking - conditions not met");
+                    }
+                  }}
                   disabled={!account}
                   className={`font-bold py-2 px-6 rounded-lg transition-colors ${
                     !account
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : wrongNetwork
                       ? "bg-red-600 hover:bg-red-700 text-white"
-                      : account && !wrongNetwork
+                      : canAccessStaking
                       ? selectedNetwork === 'mainnet' 
                         ? "bg-purple-600 hover:bg-purple-700 text-white"
                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -274,7 +286,7 @@ const WalletConnection = ({
                     ? "Connect Wallet First"
                     : wrongNetwork 
                     ? "Switch Network" 
-                    : account && !wrongNetwork
+                    : canAccessStaking
                     ? "Go to Staking"
                     : "Network Issue"
                   }
