@@ -319,11 +319,16 @@ export default function StakingPage() {
       console.log("Loading user data for:", userAddress);
       console.log("Selected network:", selectedNetwork);
 
-      // Validate network before making any contract calls
-      const networkValid = await checkNetwork();
-      if (!networkValid) {
-        console.log("Network invalid during loadUserData, aborting");
-        return;
+      // For testnet, be more lenient with network validation
+      // We'll try to load data and let individual contract calls handle errors
+      if (selectedNetwork === 'mainnet') {
+        const networkValid = await checkNetwork();
+        if (!networkValid) {
+          console.log("Network invalid during loadUserData for mainnet, aborting");
+          return;
+        }
+      } else {
+        console.log("Testnet mode - proceeding with data loading regardless of network state");
       }
 
       console.log("Staking contract address:", await staking.getAddress());
@@ -868,9 +873,16 @@ export default function StakingPage() {
           setWrongNetwork(!isCorrectNetwork);
 
           if (!isCorrectNetwork) {
-            console.log("[handleChainChanged] Wrong network detected, clearing state and hiding staking interface");
-            clearWeb3State();
-            setShowTokenStaking(false);
+            console.log("[handleChainChanged] Wrong network detected");
+            // For testnet, don't hide the interface - let it show network error messages
+            if (selectedNetwork === 'mainnet') {
+              console.log("[handleChainChanged] Mainnet wrong network - clearing state and hiding staking interface");
+              clearWeb3State();
+              setShowTokenStaking(false);
+            } else {
+              console.log("[handleChainChanged] Testnet wrong network - keeping interface visible");
+              clearWeb3State();
+            }
           } else if (account) {
             console.log("[handleChainChanged] Correct network detected, reinitializing Web3");
             setTimeout(async () => {
@@ -891,7 +903,10 @@ export default function StakingPage() {
           const networkOk = await checkNetwork();
           if (!networkOk) {
             clearWeb3State();
-            setShowTokenStaking(false);
+            // For testnet, keep the interface visible to show network errors
+            if (selectedNetwork === 'mainnet') {
+              setShowTokenStaking(false);
+            }
           }
         }
       };
