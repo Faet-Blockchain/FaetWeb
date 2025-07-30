@@ -1,11 +1,13 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   PieChart,
   Pie,
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+
+type ChartView = 'ranges' | 'topAccounts' | 'topWeighted';
 
 type RewardsSectionProps = {
   pendingRewards: string;
@@ -28,6 +30,86 @@ const RewardsSection = ({
   stakingRanges,
   onClaimRewards,
 }: RewardsSectionProps) => {
+  const [chartView, setChartView] = useState<ChartView>('ranges');
+
+  // Process data for top 10 accounts by amount
+  const getTopAccountsData = () => {
+    if (topStakers.length === 0) return [];
+    
+    const top10 = topStakers.slice(0, 10);
+    const othersWeight = topStakers.slice(10).reduce((sum, staker) => sum + parseFloat(staker.weight), 0);
+    
+    const data = top10.map((staker, index) => ({
+      name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
+      value: parseFloat(staker.weight),
+      fill: `hsl(${(index * 360) / (top10.length + (othersWeight > 0 ? 1 : 0))}, 70%, 50%)`,
+    }));
+
+    if (othersWeight > 0) {
+      data.push({
+        name: `Others (${topStakers.length - 10} accounts)`,
+        value: othersWeight,
+        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+      });
+    }
+
+    return data;
+  };
+
+  // Process data for top 10 accounts by weighted amount (same as above for now since we use weight)
+  const getTopWeightedData = () => {
+    return getTopAccountsData(); // Using same data since topStakers is already sorted by weight
+  };
+
+  // Get current chart data based on view
+  const getCurrentChartData = () => {
+    switch (chartView) {
+      case 'ranges':
+        return stakingRanges.map((range, index) => ({
+          name: `${range.range} (${range.count} addresses)`,
+          value: parseFloat(range.totalWeight),
+          fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
+        }));
+      case 'topAccounts':
+        return getTopAccountsData();
+      case 'topWeighted':
+        return getTopWeightedData();
+      default:
+        return [];
+    }
+  };
+
+  // Get current chart title
+  const getCurrentChartTitle = () => {
+    switch (chartView) {
+      case 'ranges':
+        return 'Staking Distribution by Amount Range';
+      case 'topAccounts':
+        return 'Staking Distribution by Amount - Top 10 Accounts';
+      case 'topWeighted':
+        return 'Staking Distribution by Weighted Amount - Top 10 Accounts';
+      default:
+        return '';
+    }
+  };
+
+  // Get current breakdown data for the right panel
+  const getCurrentBreakdownData = () => {
+    switch (chartView) {
+      case 'ranges':
+        return stakingRanges;
+      case 'topAccounts':
+      case 'topWeighted':
+        const accountsData = getTopAccountsData();
+        return accountsData.map(item => ({
+          range: item.name,
+          count: item.name.includes('Others') ? topStakers.length - 10 : 1,
+          totalWeight: item.value.toString(),
+        }));
+      default:
+        return [];
+    }
+  };
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg">
@@ -162,10 +244,44 @@ const RewardsSection = ({
 
       {/* Staking Distribution Chart */}
       <div className="bg-gray-700 p-6 rounded-lg">
-        <h4 className="font-semibold text-purple-400 mb-4">
-          Staking Distribution by Amount Range
-        </h4>
-        {stakingRanges.length === 0 ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h4 className="font-semibold text-purple-400 mb-2 sm:mb-0">
+            {getCurrentChartTitle()}
+          </h4>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setChartView('ranges')}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                chartView === 'ranges'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+              }`}
+            >
+              Ranges
+            </button>
+            <button
+              onClick={() => setChartView('topAccounts')}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                chartView === 'topAccounts'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+              }`}
+            >
+              Top Accounts
+            </button>
+            <button
+              onClick={() => setChartView('topWeighted')}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                chartView === 'topWeighted'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+              }`}
+            >
+              Top Weighted
+            </button>
+          </div>
+        </div>
+        {(stakingRanges.length === 0 && chartView === 'ranges') || (topStakers.length === 0 && chartView !== 'ranges') ? (
           <div className="text-center py-8 text-gray-400">
             <div className="animate-pulse">Loading staking distribution data...</div>
             <div className="text-xs mt-2">Fetching data from blockchain...</div>
@@ -176,11 +292,7 @@ const RewardsSection = ({
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={stakingRanges.map((range, index) => ({
-                      name: `${range.range} (${range.count} addresses)`,
-                      value: parseFloat(range.totalWeight),
-                      fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
-                    }))}
+                    data={getCurrentChartData()}
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
@@ -203,26 +315,30 @@ const RewardsSection = ({
               </ResponsiveContainer>
             </div>
             <div>
-              <h5 className="font-medium text-gray-300 mb-3">Range Breakdown</h5>
+              <h5 className="font-medium text-gray-300 mb-3">
+                {chartView === 'ranges' ? 'Range Breakdown' : 'Account Breakdown'}
+              </h5>
               <div className="space-y-2">
-                {stakingRanges.map((range, index) => (
+                {getCurrentBreakdownData().map((item, index) => (
                   <div
-                    key={range.range}
+                    key={chartView === 'ranges' ? item.range : `${item.range}-${index}`}
                     className="flex justify-between items-center text-sm"
                   >
                     <div className="flex items-center gap-2">
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{
-                          backgroundColor: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
+                          backgroundColor: getCurrentChartData()[index]?.fill || `hsl(${(index * 360) / getCurrentBreakdownData().length}, 70%, 50%)`,
                         }}
                       ></div>
-                      <span className="text-gray-300">{range.range}</span>
+                      <span className="text-gray-300">{item.range}</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-gray-300">{range.count} addresses</div>
+                      <div className="text-gray-300">
+                        {chartView === 'ranges' ? `${item.count} addresses` : `${item.count} account${item.count > 1 ? 's' : ''}`}
+                      </div>
                       <div className="text-purple-400 font-mono text-xs">
-                        {parseFloat(range.totalWeight).toLocaleString(undefined, {
+                        {parseFloat(item.totalWeight).toLocaleString(undefined, {
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 2,
                         })}{" "}
