@@ -35,6 +35,10 @@ const calculateMultiplier = (days: number): number => {
   return 1 + (days * 9) / 1095;
 };
 
+// Security: Stake limits
+const MIN_STAKE_AMOUNT = 1; // 1 FAET minimum
+const MAX_STAKE_AMOUNT = 1000000000; // 1 billion FAET maximum
+
 const StakingForm = ({
   stakeAmount,
   selectedDays,
@@ -79,6 +83,29 @@ const StakingForm = ({
     const userTotalWeight = calculateTotalUserWeight();
     
     return (userTotalWeight / totalWeight) * 100;
+  };
+
+  // Security: Validate stake amount
+  const validateStakeAmount = (): { isValid: boolean; error?: string } => {
+    const amount = parseFloat(stakeAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      return { isValid: false, error: "Please enter a valid amount" };
+    }
+    
+    if (amount < MIN_STAKE_AMOUNT) {
+      return { isValid: false, error: `Minimum stake is ${MIN_STAKE_AMOUNT} FAET` };
+    }
+    
+    if (amount > MAX_STAKE_AMOUNT) {
+      return { isValid: false, error: `Maximum stake is ${MAX_STAKE_AMOUNT.toLocaleString()} FAET` };
+    }
+    
+    if (amount > parseFloat(tokenBalance)) {
+      return { isValid: false, error: "Insufficient balance" };
+    }
+    
+    return { isValid: true };
   };
   return (
     <div className="bg-gray-800 p-6 rounded-lg mb-6">
@@ -162,19 +189,33 @@ const StakingForm = ({
             <div className="relative">
               <input
                 type="number"
-                placeholder="0.0"
+                placeholder={`Min: ${MIN_STAKE_AMOUNT}, Max: ${MAX_STAKE_AMOUNT.toLocaleString()}`}
                 value={stakeAmount}
+                min={MIN_STAKE_AMOUNT}
+                max={Math.min(MAX_STAKE_AMOUNT, parseFloat(tokenBalance) || 0)}
                 onChange={(e) => onStakeAmountChange(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none h-10"
+                className={`w-full bg-gray-700 border rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none h-10 ${
+                  stakeAmount && !validateStakeAmount().isValid 
+                    ? "border-red-500 focus:border-red-500" 
+                    : "border-gray-600 focus:border-blue-500"
+                }`}
               />
               <button
                 type="button"
-                onClick={() => onStakeAmountChange(tokenBalance)}
+                onClick={() => {
+                  const maxAllowed = Math.min(MAX_STAKE_AMOUNT, parseFloat(tokenBalance) || 0);
+                  onStakeAmountChange(maxAllowed.toString());
+                }}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1 rounded transition-colors"
               >
                 MAX
               </button>
             </div>
+            {stakeAmount && !validateStakeAmount().isValid && (
+              <p className="text-red-400 text-xs mt-1">
+                {validateStakeAmount().error}
+              </p>
+            )}
           </div>
           <div className="flex flex-col justify-center">
             <button
@@ -205,15 +246,13 @@ const StakingForm = ({
                 !stakeAmount ||
                 isLoading ||
                 wrongNetwork ||
-                parseFloat(stakeAmount) <= 0 ||
-                parseFloat(stakeAmount) > parseFloat(tokenBalance)
+                !validateStakeAmount().isValid
               }
               className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] h-10 ${
                 !stakeAmount ||
                 isLoading ||
                 wrongNetwork ||
-                parseFloat(stakeAmount) <= 0 ||
-                parseFloat(stakeAmount) > parseFloat(tokenBalance)
+                !validateStakeAmount().isValid
                   ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
@@ -223,9 +262,12 @@ const StakingForm = ({
           </div>
         </div>
 
-        <div className="flex justify-start">
+        <div className="flex flex-col gap-1">
           <p className="text-gray-400 text-xs">
             Available: {parseFloat(tokenBalance).toFixed(2)} FAET
+          </p>
+          <p className="text-gray-500 text-xs">
+            Limits: {MIN_STAKE_AMOUNT} - {MAX_STAKE_AMOUNT.toLocaleString()} FAET
           </p>
         </div>
       </div>
