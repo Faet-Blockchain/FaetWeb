@@ -108,15 +108,6 @@ const WalletConnection = ({
       selectedNetwork,
       currentChainIdNumber,
     );
-    console.log("WalletConnection securityChecks:", {
-      currentChainId,
-      currentChainIdNumber,
-      selectedNetwork,
-      chainValid,
-      wrongNetwork,
-      expectedChainId: getNetworkConfig(selectedNetwork).chainId,
-      expectedChainNumber: getNetworkConfig(selectedNetwork).chainIdNumber,
-    });
 
     return {
       isValidAccount: account && isValidAddress(account),
