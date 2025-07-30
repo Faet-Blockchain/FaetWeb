@@ -967,7 +967,6 @@ export default function StakingPage() {
               wrongNetwork={wrongNetwork}
               currentChainId={currentChainId}
               selectedNetwork={selectedNetwork}
-              canAccessStaking={canAccessStaking}
               onConnect={connectMetaMask}
               onDisconnect={disconnectWallet}
               onSwitchNetwork={switchToCurrentNetwork}
