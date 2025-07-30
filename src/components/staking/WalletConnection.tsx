@@ -452,7 +452,7 @@ const WalletConnection = ({
                 <p className="text-yellow-200 text-sm mb-4 text-center">
                   Will claim all unclaimed Founder's Pass NFTs in your wallet
                 </p>
-                <div className="flex justify-center"></div>
+                <div className="flex justify-center">
                   <button
                     onClick={async () => {
                       if (!account) {
