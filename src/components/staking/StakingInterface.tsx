@@ -204,7 +204,7 @@ const StakingInterface = ({
         </h3>
         <div className="text-yellow-200 text-sm space-y-2">
           <p>
-            <strong>Use at Your Own Risk:</strong> This staking utility is provided "as is" without any guarantees or warranties. 
+            <strong>Use at Your Own Risk:</strong> This staking utility is provided &quot;as is&quot; without any guarantees or warranties. 
             FaetStudio provides no guarantee regarding the functionality, security, or reliability of this service.
           </p>
           <p>

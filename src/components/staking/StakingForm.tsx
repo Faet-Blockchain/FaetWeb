@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useCallback } from "react";
-import { sanitizeInput, sanitizeNumericInput } from "@/lib/security";
+import React, { useCallback } from "react";
+import { sanitizeNumericInput } from "@/lib/security";
 import { SecurityLogger } from "@/lib/logger";
 
 // Rate limiting for staking operations
@@ -145,7 +145,7 @@ const StakingForm = ({
         }
       });
     }
-  }, [stakeAmount, selectedDays, tokenBalance, onStake]);
+  }, [stakeAmount, selectedDays, tokenBalance, onStake, isValidStakeAmount]);
   return (
     <div className="bg-gray-800 p-6 rounded-lg mb-6">
       <h3 className="text-xl font-nocturne-serif-bold mb-4">
