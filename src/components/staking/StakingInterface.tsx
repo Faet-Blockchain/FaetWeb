@@ -127,44 +127,30 @@ const StakingInterface = ({
         </h2>
       </div>
 
-      {/* Network Information */}
+      {/* Contract Information */}
       <div className="mb-6 grid md:grid-cols-2 gap-4">
         <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
-          <h3 className="text-lg font-semibold text-blue-400 mb-3">Network Information</h3>
-          <p className="text-gray-300 mb-1">
-            <span className="font-medium">Network:</span> {networkConfig.name}
-          </p>
-          <p className="text-gray-300">
-            <span className="font-medium">Chain ID:</span> {networkConfig.chainIdNumber}
-          </p>
+          <h3 className="text-lg font-semibold text-green-400 mb-3">FaetToken CA</h3>
+          <a
+            href={`https://blockscout.lisk.com/address/${networkConfig.contracts.token}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 text-xs font-mono break-all underline"
+          >
+            {networkConfig.contracts.token}
+          </a>
         </div>
         
         <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
-          <h3 className="text-lg font-semibold text-green-400 mb-3">Contract Addresses</h3>
-          <div className="space-y-2">
-            <div>
-              <p className="text-gray-300 text-sm font-medium">FAET Token Contract:</p>
-              <a
-                href={`https://blockscout.lisk.com/address/${networkConfig.contracts.token}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 text-xs font-mono break-all underline"
-              >
-                {networkConfig.contracts.token}
-              </a>
-            </div>
-            <div>
-              <p className="text-gray-300 text-sm font-medium">Staking Contract:</p>
-              <a
-                href={`https://blockscout.lisk.com/address/${networkConfig.contracts.staking}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 text-xs font-mono break-all underline"
-              >
-                {networkConfig.contracts.staking}
-              </a>
-            </div>
-          </div>
+          <h3 className="text-lg font-semibold text-green-400 mb-3">FaetStaking CA</h3>
+          <a
+            href={`https://blockscout.lisk.com/address/${networkConfig.contracts.staking}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 text-xs font-mono break-all underline"
+          >
+            {networkConfig.contracts.staking}
+          </a>
         </div>
       </div>
 
