@@ -144,6 +144,8 @@ const StakingInterface = ({
         tokenBalance={tokenBalance}
         stakedBalance={stakedBalance}
         userStakesCount={userStakes.length}
+        totalStakeWeight={totalStakeWeight}
+        userStakes={userStakes}
       />
 
       <StakingForm
