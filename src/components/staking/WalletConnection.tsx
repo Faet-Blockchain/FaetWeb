@@ -494,7 +494,7 @@ const WalletConnection = ({
 
                             const wasAdded = await window.ethereum.request({
                               method: "wallet_watchAsset",
-                              params: params,
+                              params: [params],
                             });
 
                             if (wasAdded) {
@@ -1031,8 +1031,7 @@ const WalletConnection = ({
 
                         for (
                           let tokenId =
-                            SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min;
-                          tokenId <=
+                            SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min                          tokenId <=
                           SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max;
                           tokenId++
                         ) {
@@ -1094,7 +1093,7 @@ const WalletConnection = ({
 
                             const wasAdded = await window.ethereum.request({
                               method: "wallet_watchAsset",
-                              params: params,
+                              params: [params],
                             });
 
                             if (wasAdded) {
