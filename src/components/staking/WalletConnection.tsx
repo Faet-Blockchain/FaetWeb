@@ -493,7 +493,16 @@ const WalletConnection = ({
                             );
 
                             try {
-                              const wasAdded = await window.ethereum.request({
+                              const wasAdded = await (window.ethereum.request as (args: {
+                                method: "wallet_watchAsset";
+                                params: {
+                                  type: "ERC721";
+                                  options: {
+                                    address: string;
+                                    tokenId: string;
+                                  };
+                                };
+                              }) => Promise<boolean>)({
                                 method: "wallet_watchAsset",
                                 params: params,
                               });
@@ -1131,7 +1140,16 @@ const WalletConnection = ({
                             );
 
                             try {
-                              const wasAdded = await window.ethereum.request({
+                              const wasAdded = await (window.ethereum.request as (args: {
+                                method: "wallet_watchAsset";
+                                params: {
+                                  type: "ERC721";
+                                  options: {
+                                    address: string;
+                                    tokenId: string;
+                                  };
+                                };
+                              }) => Promise<boolean>)({
                                 method: "wallet_watchAsset",
                                 params: params,
                               });
