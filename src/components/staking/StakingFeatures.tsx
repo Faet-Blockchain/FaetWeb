@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
@@ -16,28 +15,26 @@ const StakingFeatures = () => {
           Staking Rewards
         </h3>
         <p className="text-gray-300">
-          Earn ERC-20 tokens as rewards for staking your NFTs and
-          participating in the ecosystem.
+          Earn ERC-20 tokens as rewards for staking your FAET tokens and NFTs
+          and participating in the ecosystem.
         </p>
       </div>
 
       <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
-        <h3 className="text-xl font-bold mb-4 text-blue-400">
-          Exclusive Access
-        </h3>
+        <h3 className="text-xl font-bold mb-4 text-blue-400">Game Utility</h3>
         <p className="text-gray-300">
-          Unlock special in-game items, exclusive content, and early access
-          to future NFT drops.
+          Unlock special in-game items, exclusive content, and early access to
+          future NFT drops.
         </p>
       </div>
 
       <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
         <h3 className="text-xl font-bold mb-4 text-green-400">
-          Platform Benefits
+          Future Benefits
         </h3>
         <p className="text-gray-300">
-          Gain voting rights, reduced fees, and priority access to new
-          features and games.
+          Gain voting rights, reduced fees, and priority access to new features
+          and games.
         </p>
       </div>
     </motion.div>
