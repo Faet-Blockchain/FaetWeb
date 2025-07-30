@@ -676,7 +676,9 @@ const WalletConnection = ({
                     )}
                   </button>
                 </div>
-                
+                <p className="text-gray-400 text-xs text-center mt-2">
+                  (Check MetaMask, may take up to 30s)
+                </p>
               </div>
             </div>
 
