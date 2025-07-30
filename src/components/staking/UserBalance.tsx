@@ -63,7 +63,7 @@ const UserBalance = ({ tokenBalance, stakedBalance, userStakesCount, totalStakeW
         </p>
         <div className="space-y-1">
           <p className="text-gray-400 text-sm">
-            {userStakesCount} active stakes
+            {userStakes.filter(stake => !stake.isUnlocked).length} locked stakes
           </p>
           {userStakes.length > 0 && (
             <>

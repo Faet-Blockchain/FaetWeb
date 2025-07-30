@@ -294,7 +294,7 @@ export default function StakingPage() {
         setTokenBalance("0");
       }
 
-      // Calculate active staking weight from unlocked stakes only
+      // Calculate active staking weight from locked stakes only
       let totalActiveWeight = BigInt(0);
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
@@ -307,8 +307,8 @@ export default function StakingPage() {
               const weightedAmount = stakeView[1]; // weightedAmount is at index 1
               const lockEndBlock = Number(stakeView[3]); // lockEndBlock is at index 3
 
-              // Only count stakes that are unlocked (lockEndBlock = 0 or current block >= lockEndBlock)
-              if (lockEndBlock === 0 || currentBlock >= lockEndBlock) {
+              // Only count stakes that are still locked (lockEndBlock > 0 AND current block < lockEndBlock)
+              if (lockEndBlock > 0 && currentBlock < lockEndBlock) {
                 totalActiveWeight += BigInt(weightedAmount.toString());
               }
             } catch {
