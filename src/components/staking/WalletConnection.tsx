@@ -492,20 +492,52 @@ const WalletConnection = ({
                               params,
                             );
 
-                            const wasAdded = await window.ethereum.request({
-                              method: "wallet_watchAsset",
-                              params: [params],
-                            });
+                            try {
+                              const wasAdded = await window.ethereum.request({
+                                method: "wallet_watchAsset",
+                                params: [params],
+                              });
 
-                            if (wasAdded) {
-                              successCount++;
-                              console.log(
-                                `✅ Added Character NFT #${tokenId} to MetaMask`,
+                              if (wasAdded) {
+                                successCount++;
+                                console.log(
+                                  `✅ Added Character NFT #${tokenId} to MetaMask`,
+                                );
+                              } else {
+                                console.log(
+                                  `⚠️ MetaMask declined to add Character NFT #${tokenId}`,
+                                );
+                              }
+                            } catch (addError: unknown) {
+                              const addErrorObj = addError as {
+                                code?: number | string;
+                                message?: string;
+                                data?: { code?: number; message?: string };
+                              };
+
+                              console.error(
+                                `Error adding NFT #${tokenId}:`,
+                                addError,
                               );
-                            } else {
-                              console.log(
-                                `⚠️ MetaMask declined to add Character NFT #${tokenId}`,
-                              );
+
+                              // Handle specific MetaMask errors
+                              if (addErrorObj?.code === -32603) {
+                                console.log(
+                                  `⚠️ MetaMask internal error for token #${tokenId} - this is common with ERC721 tokens on some networks`,
+                                );
+                                // Don't count as failure, just continue
+                              } else if (
+                                addErrorObj?.code === 4001 ||
+                                addErrorObj?.code === "ACTION_REJECTED"
+                              ) {
+                                console.log("User cancelled Character NFT addition");
+                                userCancelled = true;
+                                break;
+                              } else {
+                                console.log(
+                                  `Failed to add Character NFT #${tokenId}: ${sanitizeError(addError)}`,
+                                );
+                              }
                             }
                           } catch (error: unknown) {
                             const errorObj = error as {
@@ -545,9 +577,15 @@ const WalletConnection = ({
                           console.log(
                             `✅ Successfully added ${successCount} Character NFT(s) to MetaMask`,
                           );
+                          alert(
+                            `✅ Successfully added ${successCount} Character NFT(s) to MetaMask!`,
+                          );
                         } else if (!userCancelled) {
-                          setCharacterNftError(
-                            "Unable to add NFTs to MetaMask. This may be due to network issues or MetaMask limitations.",
+                          console.log(
+                            "⚠️ MetaMask NFT addition not supported or failed",
+                          );
+                          alert(
+                            `ℹ️ MetaMask may not support adding ERC721 tokens on this network. Your NFTs are still safely owned at ${contractAddresses.CHARACTER_NFT}. You can view them on the block explorer.`,
                           );
                         }
                       } catch (error) {
@@ -1092,20 +1130,52 @@ const WalletConnection = ({
                               params,
                             );
 
-                            const wasAdded = await window.ethereum.request({
-                              method: "wallet_watchAsset",
-                              params: [params],
-                            });
+                            try {
+                              const wasAdded = await window.ethereum.request({
+                                method: "wallet_watchAsset",
+                                params: [params],
+                              });
 
-                            if (wasAdded) {
-                              successCount++;
-                              console.log(
-                                `✅ Added Founder's Pass #${tokenId} to MetaMask`,
+                              if (wasAdded) {
+                                successCount++;
+                                console.log(
+                                  `✅ Added Founder's Pass #${tokenId} to MetaMask`,
+                                );
+                              } else {
+                                console.log(
+                                  `⚠️ MetaMask declined to add Founder's Pass #${tokenId}`,
+                                );
+                              }
+                            } catch (addError: unknown) {
+                              const addErrorObj = addError as {
+                                code?: number | string;
+                                message?: string;
+                                data?: { code?: number; message?: string };
+                              };
+
+                              console.error(
+                                `Error adding NFT #${tokenId}:`,
+                                addError,
                               );
-                            } else {
-                              console.log(
-                                `⚠️ MetaMask declined to add Founder's Pass #${tokenId}`,
-                              );
+
+                              // Handle specific MetaMask errors
+                              if (addErrorObj?.code === -32603) {
+                                console.log(
+                                  `⚠️ MetaMask internal error for token #${tokenId} - this is common with ERC721 tokens on some networks`,
+                                );
+                                // Don't count as failure, just continue
+                              } else if (
+                                addErrorObj?.code === 4001 ||
+                                addErrorObj?.code === "ACTION_REJECTED"
+                              ) {
+                                console.log("User cancelled NFT addition");
+                                userCancelled = true;
+                                break;
+                              } else {
+                                console.log(
+                                  `Failed to add NFT #${tokenId}: ${sanitizeError(addError)}`,
+                                );
+                              }
                             }
                           } catch (error: unknown) {
                             const errorObj = error as {
@@ -1144,9 +1214,15 @@ const WalletConnection = ({
                           console.log(
                             `✅ Successfully added ${successCount} NFT(s) to MetaMask`,
                           );
+                          alert(
+                            `✅ Successfully added ${successCount} Founder's Pass NFT(s) to MetaMask!`,
+                          );
                         } else if (!userCancelled) {
-                          setFoundersPassError(
-                            "Unable to add NFTs to MetaMask. This may be due to network issues or MetaMask limitations.",
+                          console.log(
+                            "⚠️ MetaMask NFT addition not supported or failed",
+                          );
+                          alert(
+                            `ℹ️ MetaMask may not support adding ERC721 tokens on this network. Your NFTs are still safely owned at ${contractAddresses.FOUNDERS_PASS}. You can view them on the block explorer.`,
                           );
                         }
                       } catch (error) {
