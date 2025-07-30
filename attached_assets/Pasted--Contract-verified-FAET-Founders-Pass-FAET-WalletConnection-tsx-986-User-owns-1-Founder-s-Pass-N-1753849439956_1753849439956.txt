@@ -1,0 +1,74 @@
+✅ Contract verified: FAET Founders Pass (FAET)
+WalletConnection.tsx:986 User owns 1 Founder's Pass NFTs
+WalletConnection.tsx:997 Checking which Founder's Pass NFTs you own...
+WalletConnection.tsx:1004 Found owned NFT: #31
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. {code: -32603, message: 'Internal JSON-RPC error.', data: {…}, stack: '{\n  "code": -32603,\n  "message": "Internal JSON-RP…ihfbeogaeaoehlefnkodbefgpgknn/common-2.js:3:64047'}
+(anonymous) @ inpage.js:1
+(anonymous) @ inpage.js:1
+p @ inpage.js:1
+f @ inpage.js:1
+await in f
+l @ inpage.js:1
+handle @ inpage.js:1
+_rpcRequest @ inpage.js:1
+(anonymous) @ inpage.js:1
+request @ inpage.js:1
+BrowserProvider.#request @ provider-browser.ts:140
+_send @ provider-browser.ts:168
+(anonymous) @ provider-jsonrpc.ts:545
+(anonymous) @ provider-jsonrpc.ts:587
+setTimeout
+#scheduleDrain @ provider-jsonrpc.ts:518
+send @ provider-jsonrpc.ts:1120
+send @ provider-browser.ts:161
+await in send
+_perform @ provider-jsonrpc.ts:682
+#call @ abstract-provider.ts:985
+call @ abstract-provider.ts:1056
+await in call
+call @ abstract-signer.ts:241
+await in call
+staticCallResult @ contract.ts:337
+await in staticCallResult
+staticCall @ contract.ts:303
+ownerOf @ contract.ts:351
+onClick @ WalletConnection.tsx:1001
+await in onClick
+executeDispatch @ react-dom-client.development.js:16501
+runWithFiberInDEV @ react-dom-client.development.js:844
+processDispatchQueue @ react-dom-client.development.js:16551
+(anonymous) @ react-dom-client.development.js:17149
+batchedUpdates$1 @ react-dom-client.development.js:3262
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16705
+dispatchEvent @ react-dom-client.development.js:20815
+dispatchDiscreteEvent @ react-dom-client.development.js:20783Understand this warning
+WalletConnection.tsx:1016 Adding 1 NFTs to MetaMask...
+WalletConnection.tsx:1026 Attempting to add Founder's Pass #31 to MetaMask...
+WalletConnection.tsx:1042 Request params for token #31: {type: 'ERC721', options: {…}}
+inpage.js:1 MetaMask: The RPC method 'wallet_watchAsset' is experimental for ERC721/ERC1155 assets and may change in the future.
+For more information, see: https://github.com/MetaMask/metamask-improvement-proposals/blob/main/MIPs/mip-1.md and https://github.com/MetaMask/metamask-improvement-proposals/blob/main/PROCESS-GUIDE.md#proposal-lifecycle
+(anonymous) @ inpage.js:1
+(anonymous) @ inpage.js:1
+h @ inpage.js:1
+d @ inpage.js:1
+await in d
+f @ inpage.js:1
+l @ inpage.js:1
+handle @ inpage.js:1
+_rpcRequest @ inpage.js:1
+(anonymous) @ inpage.js:1
+request @ inpage.js:1
+onClick @ WalletConnection.tsx:1044
+await in onClick
+executeDispatch @ react-dom-client.development.js:16501
+runWithFiberInDEV @ react-dom-client.development.js:844
+processDispatchQueue @ react-dom-client.development.js:16551
+(anonymous) @ react-dom-client.development.js:17149
+batchedUpdates$1 @ react-dom-client.development.js:3262
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16705
+dispatchEvent @ react-dom-client.development.js:20815
+dispatchDiscreteEvent @ react-dom-client.development.js:20783Understand this warning
+WalletConnection.tsx:1051 ✅ Added Founder's Pass #31 to MetaMask
+WalletConnection.tsx:1079 ✅ Successfully added 1 NFT(s) to MetaMask
+WalletConnection.tsx:98 WalletConnection Debug: {account: '0x1305025d7c6a44a43a82f593106aeb280f88e88e', wrongNetwork: false, currentChainId: '0x46f', currentChainIdNumber: undefined, selectedNetwork: 'mainnet', …}
+WalletConnection.tsx:98 WalletConnection Debug: {account: '0x1305025d7c6a44a43a82f593106aeb280f88e88e', wrongNetwork: false, currentChainId: '0x46f', currentChainIdNumber: undefined, selectedNetwork: 'mainnet', …}
