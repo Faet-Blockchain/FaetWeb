@@ -294,7 +294,7 @@ export default function StakingPage() {
         setTokenBalance("0");
       }
 
-      // Calculate active staking weight from locked stakes only
+      // Calculate active staking weight from all stakes (locked and unlocked)
       let totalActiveWeight = BigInt(0);
       try {
         const stakeCount = await staking.getStakeCount(userAddress);
@@ -305,12 +305,9 @@ export default function StakingPage() {
             try {
               const stakeView = await staking.getStakeView(userAddress, i);
               const weightedAmount = stakeView[1]; // weightedAmount is at index 1
-              const lockEndBlock = Number(stakeView[3]); // lockEndBlock is at index 3
 
-              // Only count stakes that are still locked (lockEndBlock > 0 AND current block < lockEndBlock)
-              if (lockEndBlock > 0 && currentBlock < lockEndBlock) {
-                totalActiveWeight += BigInt(weightedAmount.toString());
-              }
+              // Count all stakes (both locked and unlocked)
+              totalActiveWeight += BigInt(weightedAmount.toString());
             } catch {
               // Skip failed individual stake reads
             }
@@ -319,10 +316,10 @@ export default function StakingPage() {
 
         setStakedBalance(ethers.formatEther(totalActiveWeight));
       } catch {
-        // Fallback: try the contract's getActiveWeight if it exists
+        // Fallback: use the contract's weightedBalances which includes all stakes
         try {
-          const activeWeight = await staking.getActiveWeight(userAddress);
-          setStakedBalance(ethers.formatEther(activeWeight));
+          const weightedBalance = await staking.weightedBalances(userAddress);
+          setStakedBalance(ethers.formatEther(weightedBalance));
         } catch {
           setStakedBalance("0");
         }
