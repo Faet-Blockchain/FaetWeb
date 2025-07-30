@@ -584,9 +584,6 @@ const WalletConnection = ({
                           console.log(
                             "⚠️ MetaMask NFT addition not supported or failed",
                           );
-                          alert(
-                            `ℹ️ MetaMask may not support adding ERC721 tokens on this network. Your NFTs are still safely owned at ${contractAddresses.CHARACTER_NFT}. You can view them on the block explorer.`,
-                          );
                         }
                       } catch (error) {
                         console.error("Character NFT addition failed:", error);
@@ -1220,9 +1217,6 @@ const WalletConnection = ({
                         } else if (!userCancelled) {
                           console.log(
                             "⚠️ MetaMask NFT addition not supported or failed",
-                          );
-                          alert(
-                            `ℹ️ MetaMask may not support adding ERC721 tokens on this network. Your NFTs are still safely owned at ${contractAddresses.FOUNDERS_PASS}. You can view them on the block explorer.`,
                           );
                         }
                       } catch (error) {
