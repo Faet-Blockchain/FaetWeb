@@ -495,7 +495,7 @@ const WalletConnection = ({
                             try {
                               const wasAdded = await window.ethereum.request({
                                 method: "wallet_watchAsset",
-                                params: [params],
+                                params: params,
                               });
 
                               if (wasAdded) {
@@ -1133,7 +1133,7 @@ const WalletConnection = ({
                             try {
                               const wasAdded = await window.ethereum.request({
                                 method: "wallet_watchAsset",
-                                params: [params],
+                                params: params,
                               });
 
                               if (wasAdded) {
