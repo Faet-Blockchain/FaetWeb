@@ -383,79 +383,139 @@ const WalletConnection = ({
 
                       try {
                         console.log(
-                          "📝 Attempting to add Character NFTs to MetaMask...",
+                          "📝 Attempting to add owned Character NFTs to MetaMask...",
                         );
 
-                        let successCount = 0;
-                        const { min, max } =
-                          SECURITY_CONFIG.TOKEN_RANGES.CHARACTER_NFT;
+                        // Initialize web3 provider to check ownership
+                        const { ethers } = await import("ethers");
+                        const provider = new ethers.BrowserProvider(window.ethereum);
+                        const signer = await provider.getSigner();
 
-                        // Security: Validate token range
-                        for (let tokenId = min; tokenId <= max; tokenId++) {
+                        // Character NFT contract setup
+                        const characterNftABI = [
+                          "function balanceOf(address owner) view returns (uint256)",
+                          "function ownerOf(uint256 tokenId) view returns (address)",
+                          "function name() view returns (string)",
+                          "function symbol() view returns (string)",
+                        ];
+
+                        const characterNftContract = new ethers.Contract(
+                          contractAddresses.CHARACTER_NFT,
+                          characterNftABI,
+                          signer,
+                        );
+
+                        console.log(`🔍 Connecting to Character NFT contract at: ${contractAddresses.CHARACTER_NFT}`);
+
+                        // First, verify the contract exists and is accessible
+                        try {
+                          const contractName = await characterNftContract.name();
+                          const contractSymbol = await characterNftContract.symbol();
+                          console.log(`✅ Contract verified: ${contractName} (${contractSymbol})`);
+                        } catch (contractError) {
+                          console.error("❌ Contract validation failed:", sanitizeError(contractError));
+                          setCharacterNftError(`Contract not found or invalid at address: ${contractAddresses.CHARACTER_NFT}`);
+                          return;
+                        }
+
+                        // Check NFT balance
+                        const nftBalance = await characterNftContract.balanceOf(account);
+                        console.log(`User owns ${nftBalance.toString()} Character NFTs`);
+
+                        if (nftBalance === 0n) {
+                          setCharacterNftError("You don't own any Character NFTs");
+                          return;
+                        }
+
+                        // Check ownership for each token ID sequentially
+                        const ownedTokenIds: number[] = [];
+                        
+                        console.log("Checking which Character NFTs you own...");
+                        
+                        for (let tokenId = SECURITY_CONFIG.TOKEN_RANGES.CHARACTER_NFT.min; 
+                             tokenId <= SECURITY_CONFIG.TOKEN_RANGES.CHARACTER_NFT.max; 
+                             tokenId++) {
                           try {
-                            // Security: Validate token ID
-                            if (tokenId < min || tokenId > max) {
-                              console.warn(
-                                `Security: Invalid token ID ${tokenId}`,
-                              );
-                              continue;
+                            const owner = await characterNftContract.ownerOf(tokenId);
+                            if (owner.toLowerCase() === account.toLowerCase()) {
+                              ownedTokenIds.push(tokenId);
+                              console.log(`Found owned Character NFT: #${tokenId}`);
                             }
-
-                            // Security: Check if ethereum is still available
-                            if (
-                              typeof window.ethereum === "undefined" ||
-                              !window.ethereum.request
-                            ) {
-                              console.warn(
-                                `Security: window.ethereum became unavailable during operation`,
-                              );
-                              break;
-                            }
-
-                            const wasAdded = await window.ethereum.request({
-                              method: "wallet_watchAsset",
-                              params: {
-                                type: "ERC721",
-                                options: {
-                                  address: contractAddresses.CHARACTER_NFT,
-                                  tokenId: tokenId.toString(),
-                                },
-                              },
-                            });
-
-                            if (wasAdded) {
-                              successCount++;
-                              console.log(
-                                `✅ Character NFT #${tokenId} added to wallet`,
-                              );
-                            }
-
-                            // Security: Rate limiting between requests
-                            await new Promise((resolve) =>
-                              setTimeout(
-                                resolve,
-                                SECURITY_CONFIG.RATE_LIMITS.NFT_ADD_DELAY,
-                              ),
-                            );
-                          } catch (error: unknown) {
-                            const errorObj = error as {
-                              code?: number | string;
-                              message?: string;
-                            };
-                            if (
-                              errorObj?.code === 4001 ||
-                              errorObj?.code === "ACTION_REJECTED"
-                            ) {
-                              console.log(
-                                `User cancelled adding Character NFT #${tokenId}`,
-                              );
-                              break; // Stop if user cancels
-                            }
-                            // Continue with other tokens on other errors
+                          } catch {
+                            // Token doesn't exist or not owned
                           }
                         }
 
-                        // Don't show error message if no NFTs were added
+                        if (ownedTokenIds.length === 0) {
+                          setCharacterNftError("No Character NFTs found in your wallet");
+                          return;
+                        }
+
+                        console.log(`Adding ${ownedTokenIds.length} Character NFTs to MetaMask...`);
+
+                        // Add all owned NFTs to MetaMask
+                        let successCount = 0;
+                        let userCancelled = false;
+                        
+                        for (const tokenId of ownedTokenIds) {
+                          if (userCancelled) break;
+                          
+                          try {
+                            console.log(`Attempting to add Character NFT #${tokenId} to MetaMask...`);
+                            
+                            // Add a small delay between requests
+                            if (ownedTokenIds.indexOf(tokenId) > 0) {
+                              await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                            
+                            const params = {
+                              type: "ERC721" as const,
+                              options: {
+                                address: contractAddresses.CHARACTER_NFT,
+                                tokenId: tokenId.toString(),
+                              },
+                            };
+                            
+                            console.log(`Request params for Character NFT #${tokenId}:`, params);
+                            
+                            const wasAdded = await window.ethereum.request({
+                              method: "wallet_watchAsset",
+                              params: params,
+                            });
+                            
+                            if (wasAdded) {
+                              successCount++;
+                              console.log(`✅ Added Character NFT #${tokenId} to MetaMask`);
+                            } else {
+                              console.log(`⚠️ MetaMask declined to add Character NFT #${tokenId}`);
+                            }
+                            
+                          } catch (error: unknown) {
+                            const errorObj = error as { 
+                              code?: number | string; 
+                              message?: string;
+                            };
+                            
+                            console.error(`Error adding Character NFT #${tokenId}:`, error);
+                            
+                            if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
+                              console.log("User cancelled Character NFT addition");
+                              userCancelled = true;
+                              break;
+                            } else if (errorObj?.code === -32603) {
+                              console.log(`Internal RPC error for Character NFT #${tokenId}, continuing with next...`);
+                              // Continue with next token instead of stopping
+                            } else {
+                              console.log(`Failed to add Character NFT #${tokenId}:`, sanitizeError(error));
+                            }
+                          }
+                        }
+                        
+                        if (successCount > 0) {
+                          console.log(`✅ Successfully added ${successCount} Character NFT(s) to MetaMask`);
+                        } else if (!userCancelled) {
+                          setCharacterNftError("Unable to add NFTs to MetaMask. This may be due to network issues or MetaMask limitations.");
+                        }
                       } catch (error) {
                         console.error("Character NFT addition failed:", error);
                         setCharacterNftError(sanitizeError(error));
