@@ -1,19 +1,6 @@
 "use client";
 import React from "react";
 
-// Security: Rate limiting for staking operations (reduced to 1 second)
-const STAKING_RATE_LIMIT = 1000; // 1 second between operations
-let lastStakingOperation = 0;
-
-const checkStakingRateLimit = (): boolean => {
-  const now = Date.now();
-  if (now - lastStakingOperation < STAKING_RATE_LIMIT) {
-    return false;
-  }
-  lastStakingOperation = now;
-  return true;
-};
-
 type StakingFormProps = {
   stakeAmount: string;
   selectedDays: number;
@@ -85,27 +72,10 @@ const StakingForm = ({
     return (userTotalWeight / totalWeight) * 100;
   };
 
-  // Security: Validate stake amount
-  const validateStakeAmount = (): { isValid: boolean; error?: string } => {
+  // Validate stake amount
+  const isValidStakeAmount = (): boolean => {
     const amount = parseFloat(stakeAmount);
-    
-    if (isNaN(amount) || amount <= 0) {
-      return { isValid: false, error: "Please enter a valid amount" };
-    }
-    
-    if (amount < MIN_STAKE_AMOUNT) {
-      return { isValid: false, error: `Minimum stake is ${MIN_STAKE_AMOUNT} FAET` };
-    }
-    
-    if (amount > MAX_STAKE_AMOUNT) {
-      return { isValid: false, error: `Maximum stake is ${MAX_STAKE_AMOUNT.toLocaleString()} FAET` };
-    }
-    
-    if (amount > parseFloat(tokenBalance)) {
-      return { isValid: false, error: "Insufficient balance" };
-    }
-    
-    return { isValid: true };
+    return !isNaN(amount) && amount >= MIN_STAKE_AMOUNT && amount <= MAX_STAKE_AMOUNT && amount <= parseFloat(tokenBalance);
   };
   return (
     <div className="bg-gray-800 p-6 rounded-lg mb-6">
@@ -194,11 +164,7 @@ const StakingForm = ({
                 min={MIN_STAKE_AMOUNT}
                 max={Math.min(MAX_STAKE_AMOUNT, parseFloat(tokenBalance) || 0)}
                 onChange={(e) => onStakeAmountChange(e.target.value)}
-                className={`w-full bg-gray-700 border rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none h-10 ${
-                  stakeAmount && !validateStakeAmount().isValid 
-                    ? "border-red-500 focus:border-red-500" 
-                    : "border-gray-600 focus:border-blue-500"
-                }`}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 h-10"
               />
               <button
                 type="button"
@@ -211,48 +177,21 @@ const StakingForm = ({
                 MAX
               </button>
             </div>
-            {stakeAmount && !validateStakeAmount().isValid && (
-              <p className="text-red-400 text-xs mt-1">
-                {validateStakeAmount().error}
-              </p>
-            )}
           </div>
           <div className="flex flex-col justify-center">
             <button
-              onClick={() => {
-                // Security: Check rate limiting
-                if (!checkStakingRateLimit()) {
-                  console.warn("Rate limit exceeded, please wait");
-                  alert("Please wait before making another staking transaction");
-                  return;
-                }
-                
-                console.log("🔘 Stake button clicked with:", {
-                  stakeAmount,
-                  isLoading,
-                  wrongNetwork,
-                  tokenBalance,
-                  isValidAmount: parseFloat(stakeAmount) > 0,
-                  hasBalance: parseFloat(stakeAmount) <= parseFloat(tokenBalance)
-                });
-                
-                try {
-                  onStake();
-                } catch (error) {
-                  console.error("Error during stake operation:", error);
-                }
-              }}
+              onClick={onStake}
               disabled={
                 !stakeAmount ||
                 isLoading ||
                 wrongNetwork ||
-                !validateStakeAmount().isValid
+                !isValidStakeAmount()
               }
               className={`font-bold py-2 px-6 rounded-lg transition-colors min-w-[140px] h-10 ${
                 !stakeAmount ||
                 isLoading ||
                 wrongNetwork ||
-                !validateStakeAmount().isValid
+                !isValidStakeAmount()
                   ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
