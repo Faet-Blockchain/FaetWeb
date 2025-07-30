@@ -60,6 +60,7 @@ const StakingInterface = ({
   onClaimRewards,
   txHash,
   totalRewardsFunded,
+  totalStakeWeight = "0",
   topStakers,
   stakingRanges,
   onBackToOverview,

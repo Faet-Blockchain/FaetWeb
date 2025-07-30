@@ -983,7 +983,7 @@ export default function StakingPage() {
             txHash={txHash}
             wrongNetwork={wrongNetwork}
             totalRewardsFunded={totalRewardsFunded}
-            totalStakeWeight={totalStakeWeight || "0"}
+            totalStakeWeight={totalStakeWeight}
             topStakers={topStakers}
             stakingRanges={stakingRanges}
             onStakeAmountChange={setStakeAmount}
