@@ -41,7 +41,7 @@ const MagicSection = () => {
 					className="mx-auto h-64 md:h-[32rem] w-auto my-10 md:my-20 animate-[spin_20s_linear_infinite]"
 				/>
 			</motion.div>
-		
+
 		</section>
 	);
 };

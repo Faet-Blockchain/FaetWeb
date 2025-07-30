@@ -441,7 +441,7 @@ const WalletConnection = ({
 
               <div className="bg-gray-800 p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-4">
-                  {selectedNetwork === 'mainnet' ? "Claim Founder's Airdrop" : "Test Airdrop Claim"}
+                  {selectedNetwork === 'mainnet' ? "Claim Founder&apos;s Airdrop" : "Test Airdrop Claim"}
                 </h3>
                 <p className="text-gray-300 mb-4">
                   {selectedNetwork === 'mainnet' 
@@ -450,7 +450,7 @@ const WalletConnection = ({
                   }
                 </p>
                 <p className="text-yellow-200 text-sm mb-4 text-center">
-                  Will claim all unclaimed Founder's Pass NFTs in your wallet
+                  Will claim all unclaimed Founder&apos;s Pass NFTs in your wallet
                 </p>
                 <div className="flex justify-center">
                   <button
@@ -474,7 +474,7 @@ const WalletConnection = ({
                         setIsClaimingAirdrop(true);
 
                         try {
-                          console.log("🎁 Attempting to claim founder's airdrop...");
+                          console.log("🎁 Attempting to claim founder&apos;s airdrop...");
 
                           // Security: Validate account format
                           if (!account || !isValidAddress(account)) {
@@ -535,10 +535,10 @@ const WalletConnection = ({
 
                           // Check NFT balance with security validation
                           const nftBalance = await foundersPassContract.balanceOf(account);
-                          console.log(`User owns ${nftBalance.toString()} Founder's Pass NFTs`);
+                          console.log(`User owns ${nftBalance.toString()} Founder&apos;s Pass NFTs`);
 
                           if (nftBalance === 0n) {
-                            alert("❌ No Founder's Pass NFTs found in your wallet.");
+                            alert("❌ No Founder&apos;s Pass NFTs found in your wallet.");
                             return;
                           }
 
@@ -593,7 +593,7 @@ const WalletConnection = ({
                           }
 
                           if (ownedTokenIds.length === 0) {
-                            alert("❌ Could not retrieve your Founder's Pass NFT token IDs. You may not own any NFTs from this collection.");
+                            alert("❌ Could not retrieve your Founder&apos;s Pass NFT token IDs. You may not own any NFTs from this collection.");
                             return;
                           }
 
@@ -637,7 +637,7 @@ const WalletConnection = ({
 
                           if (claimableTokens.length === 0) {
                             if (alreadyClaimedTokens.length > 0) {
-                              alert(`❌ All your Founder's Pass NFTs have already been claimed.`);
+                              alert(`❌ All your Founder&apos;s Pass NFTs have already been claimed.`);
                             } else {
                               alert("❌ No claimable airdrop tokens found.");
                             }
@@ -731,7 +731,7 @@ const WalletConnection = ({
                       setIsAddingFoundersPass(true);
 
                       try {
-                        console.log("📝 Attempting to add Founder's Pass NFTs to MetaMask...");
+                        console.log("📝 Attempting to add Founder&apos;s Pass NFTs to MetaMask...");
 
                         let successCount = 0;
                         const { min, max } = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS;
@@ -764,7 +764,7 @@ const WalletConnection = ({
 
                             if (wasAdded) {
                               successCount++;
-                              console.log(`✅ Founder's Pass #${tokenId} added to wallet`);
+                              console.log(`✅ Founder&apos;s Pass #${tokenId} added to wallet`);
                             }
 
                             // Security: Rate limiting between requests
@@ -774,10 +774,10 @@ const WalletConnection = ({
                           } catch (error: unknown) {
                             const errorObj = error as { code?: number | string; message?: string };
                             if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
-                              console.log(`User cancelled adding Founder's Pass #${tokenId}`);
+                              console.log(`User cancelled adding Founder&apos;s Pass #${tokenId}`);
                               break; // Stop if user cancels
                             }
-                            console.log(`Error adding Founder's Pass #${tokenId}:`, sanitizeError(error));
+                            console.log(`Error adding Founder&apos;s Pass #${tokenId}:`, sanitizeError(error));
                             // Continue with other tokens on other errors
                           }
                         }
@@ -786,7 +786,7 @@ const WalletConnection = ({
                           setFoundersPassError("No new NFTs were added");
                         }
                       } catch (error) {
-                        console.error("Founder's Pass addition failed:", error);
+                        console.error("Founder&apos;s Pass addition failed:", error);
                         setFoundersPassError(sanitizeError(error));
                       } finally {
                         setIsAddingFoundersPass(false);
@@ -812,7 +812,7 @@ const WalletConnection = ({
                   ) : (
                     !securityChecks.isValidChain
                     ? "Switch Network"
-                    : selectedNetwork === 'mainnet' ? "Add Founder's Pass to Metamask" : "Add Test Founder's Pass to Metamask"
+                    : selectedNetwork === 'mainnet' ? "Add Founder&apos;s Pass to Metamask" : "Add Test Founder&apos;s Pass to Metamask"
                   )}
                 </button>
                 {foundersPassError && (
