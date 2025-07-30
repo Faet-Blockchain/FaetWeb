@@ -414,15 +414,13 @@ const WalletConnection = ({
 
                             const wasAdded = await window.ethereum.request({
                               method: "wallet_watchAsset",
-                              params: [
-                                {
-                                  type: "ERC721",
-                                  options: {
-                                    address: contractAddresses.CHARACTER_NFT,
-                                    tokenId: tokenId.toString(),
-                                  },
+                              params: {
+                                type: "ERC721",
+                                options: {
+                                  address: contractAddresses.CHARACTER_NFT,
+                                  tokenId: tokenId.toString(),
                                 },
-                              ],
+                              },
                             });
 
                             if (wasAdded) {
@@ -1111,15 +1109,13 @@ const WalletConnection = ({
 
                             const wasAdded = await window.ethereum.request({
                               method: "wallet_watchAsset",
-                              params: [
-                                {
-                                  type: "ERC721",
-                                  options: {
-                                    address: contractAddresses.FOUNDERS_PASS,
-                                    tokenId: tokenId.toString(),
-                                  },
+                              params: {
+                                type: "ERC721",
+                                options: {
+                                  address: contractAddresses.FOUNDERS_PASS,
+                                  tokenId: tokenId.toString(),
                                 },
-                              ],
+                              },
                             });
 
                             if (wasAdded) {
