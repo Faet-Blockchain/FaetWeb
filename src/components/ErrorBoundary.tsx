@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
       message: 'Application error caught by boundary',
       extra: {
         error: error.message,
-        stack: error.stack,
+        stack: error.stack || null,
         componentStack: errorInfo.componentStack,
         errorId: this.state.errorId
       }

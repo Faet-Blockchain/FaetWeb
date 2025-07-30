@@ -88,7 +88,7 @@ const StakingForm = ({
   };
 
   // Validate stake amount with sanitization
-  const isValidStakeAmount = (): boolean => {
+  const isValidStakeAmount = useCallback((): boolean => {
     if (!stakeAmount) return false;
     
     // Sanitize numeric input
@@ -104,7 +104,7 @@ const StakingForm = ({
     }
     
     return !isNaN(amount) && amount >= MIN_STAKE_AMOUNT && amount <= MAX_STAKE_AMOUNT && amount <= parseFloat(tokenBalance);
-  };
+  }, [stakeAmount, tokenBalance]);
 
   // Enhanced stake handler with security checks
   const handleStake = useCallback(() => {
