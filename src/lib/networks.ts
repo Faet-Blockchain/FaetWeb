@@ -47,8 +47,8 @@ export const NETWORK_CONFIGS: Record<NetworkType, NetworkConfig> = {
       decimals: 18,
     },
     contracts: {
-      token: '0x885C42A8aAD3e0AB478fB9Da6Bf9eAB81Ab8c36E',
-      staking: '0x16DB31A6c553dC056b87Af221383ADd83FD6F90C'
+      token: '0xdF92bA28D17329a7284A5eC230967768D4cb7A89',
+      staking: '0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83'
     }
   }
 };
