@@ -18,7 +18,7 @@ type UserBalanceProps = {
   }>;
 };
 
-const UserBalance = ({ tokenBalance, stakedBalance, userStakesCount, totalStakeWeight = "0", userStakes = [] }: UserBalanceProps) => {
+const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", userStakes = [] }: UserBalanceProps) => {
   // Calculate user's weighted percentage share
   const calculateWeightedPercentage = (): number => {
     const totalWeight = parseFloat(totalStakeWeight) || 0;

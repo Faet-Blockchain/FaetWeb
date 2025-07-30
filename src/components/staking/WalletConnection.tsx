@@ -29,7 +29,6 @@ type WalletConnectionProps = {
   currentChainId: string | null;
   currentChainIdNumber?: number | null;
   selectedNetwork: "testnet" | "mainnet";
-  canAccessStaking: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
   onSwitchNetwork: () => void;
@@ -84,7 +83,6 @@ const WalletConnection = ({
   currentChainId,
   currentChainIdNumber,
   selectedNetwork,
-  canAccessStaking,
   onConnect,
   onDisconnect,
   onSwitchNetwork,
@@ -722,15 +720,7 @@ const WalletConnection = ({
                             return;
                           }
 
-                          // Security: Limit the number of tokens to check
-                          const maxTokensToCheck = Math.min(
-                            Number(nftBalance),
-                            150,
-                          );
                           const ownedTokenIds: number[] = [];
-
-                          // Try to get owned token IDs using tokenOfOwnerByIndex first
-                          let useEnumerableMethod = true;
 
                           // Check ownership for each token ID sequentially
                           console.log(
@@ -1120,7 +1110,7 @@ const WalletConnection = ({
                             const errorObj = error as {
                               code?: number | string;
                               message?: string;
-                              data?: any;
+                              data?: unknown;
                             };
 
                             console.error(
