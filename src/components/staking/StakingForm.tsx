@@ -57,6 +57,13 @@ const StakingForm = ({
     return amount * multiplier;
   };
 
+  // Calculate total user stake weight (existing + new stake)
+  const calculateTotalUserWeight = (): number => {
+    const existingWeight = parseFloat(stakedBalance) || 0;
+    const newWeight = calculatePotentialWeight();
+    return existingWeight + newWeight;
+  };
+
   // Calculate total stake weight including user's current stakes and potential new stake
   const calculateTotalStakeWeight = (): number => {
     const currentTotal = parseFloat(totalStakeWeight) || 0;
@@ -69,9 +76,7 @@ const StakingForm = ({
     const totalWeight = calculateTotalStakeWeight();
     if (totalWeight === 0) return 0;
     
-    const userCurrentWeight = parseFloat(stakedBalance) || 0;
-    const potentialWeight = calculatePotentialWeight();
-    const userTotalWeight = userCurrentWeight + potentialWeight;
+    const userTotalWeight = calculateTotalUserWeight();
     
     return (userTotalWeight / totalWeight) * 100;
   };
@@ -124,8 +129,11 @@ const StakingForm = ({
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-300">Your Stake Weight:</span>
                 <span className="text-sm font-bold text-green-400">
-                  {calculatePotentialWeight().toFixed(2)} FAET
+                  {calculateTotalUserWeight().toFixed(2)} FAET
                 </span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-gray-400">
+                <span>Existing: {parseFloat(stakedBalance).toFixed(2)} + New: {calculatePotentialWeight().toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center mt-1">
                 <span className="text-sm text-gray-300">Total Stake Weight:</span>
