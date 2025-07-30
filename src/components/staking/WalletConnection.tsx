@@ -912,24 +912,71 @@ const WalletConnection = ({
 
                       try {
                         console.log(
-                          "📝 Attempting to add Founder&apos;s Pass NFTs to MetaMask...",
+                          "📝 Attempting to add owned Founder's Pass NFTs to MetaMask...",
                         );
 
-                        let successCount = 0;
-                        const { min, max } =
-                          SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS;
+                        // Initialize web3 provider to check ownership
+                        const { ethers } = await import("ethers");
+                        const provider = new ethers.BrowserProvider(window.ethereum);
+                        const signer = await provider.getSigner();
 
-                        // Security: Validate and process tokens in batches
-                        for (let tokenId = min; tokenId <= max; tokenId++) {
+                        // Founder's Pass NFT contract setup
+                        const foundersPassABI = [
+                          "function balanceOf(address owner) view returns (uint256)",
+                          "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
+                          "function ownerOf(uint256 tokenId) view returns (address)",
+                        ];
+
+                        const foundersPassContract = new ethers.Contract(
+                          contractAddresses.FOUNDERS_PASS,
+                          foundersPassABI,
+                          signer,
+                        );
+
+                        // Check NFT balance
+                        const nftBalance = await foundersPassContract.balanceOf(account);
+                        console.log(`User owns ${nftBalance.toString()} Founder's Pass NFTs`);
+
+                        if (nftBalance === 0n) {
+                          setFoundersPassError("You don't own any Founder's Pass NFTs");
+                          return;
+                        }
+
+                        // Get owned token IDs
+                        const ownedTokenIds: number[] = [];
+                        const maxTokensToCheck = Math.min(Number(nftBalance), 150);
+
+                        for (let i = 0; i < maxTokensToCheck; i++) {
                           try {
-                            // Security: Validate token ID
-                            if (tokenId < min || tokenId > max) {
-                              console.warn(
-                                `Security: Invalid token ID ${tokenId}`,
-                              );
-                              continue;
+                            const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
+                            const tokenIdNumber = Number(tokenId);
+
+                            if (tokenIdNumber >= 1 && tokenIdNumber <= 150) {
+                              ownedTokenIds.push(tokenIdNumber);
                             }
 
+                            // Add delay between requests
+                            if (i < maxTokensToCheck - 1) {
+                              await new Promise((resolve) => setTimeout(resolve, 50));
+                            }
+                          } catch (error) {
+                            console.log(`Could not get token at index ${i}:`, sanitizeError(error));
+                            continue;
+                          }
+                        }
+
+                        if (ownedTokenIds.length === 0) {
+                          setFoundersPassError("Could not retrieve your NFT token IDs");
+                          return;
+                        }
+
+                        console.log(`Found ${ownedTokenIds.length} owned NFTs:`, ownedTokenIds);
+
+                        let successCount = 0;
+
+                        // Add only owned NFTs to MetaMask
+                        for (const tokenId of ownedTokenIds) {
+                          try {
                             // Security: Check if ethereum is still available
                             if (
                               typeof window.ethereum === "undefined" ||
@@ -956,17 +1003,12 @@ const WalletConnection = ({
 
                             if (wasAdded) {
                               successCount++;
-                              console.log(
-                                `✅ Founder&apos;s Pass #${tokenId} added to wallet`,
-                              );
+                              console.log(`✅ Founder's Pass #${tokenId} added to wallet`);
                             }
 
                             // Security: Rate limiting between requests
                             await new Promise((resolve) =>
-                              setTimeout(
-                                resolve,
-                                SECURITY_CONFIG.RATE_LIMITS.NFT_ADD_DELAY,
-                              ),
+                              setTimeout(resolve, SECURITY_CONFIG.RATE_LIMITS.NFT_ADD_DELAY),
                             );
                           } catch (error: unknown) {
                             const errorObj = error as {
@@ -977,25 +1019,25 @@ const WalletConnection = ({
                               errorObj?.code === 4001 ||
                               errorObj?.code === "ACTION_REJECTED"
                             ) {
-                              console.log(
-                                `User cancelled adding Founder&apos;s Pass #${tokenId}`,
-                              );
+                              console.log(`User cancelled adding Founder's Pass #${tokenId}`);
                               break; // Stop if user cancels
                             }
                             console.log(
-                              `Error adding Founder&apos;s Pass #${tokenId}:`,
+                              `Error adding Founder's Pass #${tokenId}:`,
                               sanitizeError(error),
                             );
-                            // Continue with other tokens on other errors
+                            // Continue with other tokens
                           }
                         }
 
                         if (successCount === 0) {
-                          setFoundersPassError("No new NFTs were added");
+                          setFoundersPassError("No NFTs were added - user may have cancelled");
+                        } else {
+                          console.log(`Successfully added ${successCount} NFTs to MetaMask`);
                         }
                       } catch (error) {
                         console.error(
-                          "Founder&apos;s Pass addition failed:",
+                          "Founder's Pass addition failed:",
                           error,
                         );
                         setFoundersPassError(sanitizeError(error));
