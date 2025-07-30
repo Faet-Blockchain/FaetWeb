@@ -128,16 +128,44 @@ const StakingInterface = ({
       </div>
 
       {/* Network Information */}
-      <div className="mb-6">
-        <p className="text-gray-400">
-          Network: {networkConfig.name}
-        </p>
-        <p className="text-gray-400">
-          Token Contract: {networkConfig.contracts.token}
-        </p>
-        <p className="text-gray-400">
-          Staking Contract: {networkConfig.contracts.staking}
-        </p>
+      <div className="mb-6 grid md:grid-cols-2 gap-4">
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+          <h3 className="text-lg font-semibold text-blue-400 mb-3">Network Information</h3>
+          <p className="text-gray-300 mb-1">
+            <span className="font-medium">Network:</span> {networkConfig.name}
+          </p>
+          <p className="text-gray-300">
+            <span className="font-medium">Chain ID:</span> {networkConfig.chainIdNumber}
+          </p>
+        </div>
+        
+        <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+          <h3 className="text-lg font-semibold text-green-400 mb-3">Contract Addresses</h3>
+          <div className="space-y-2">
+            <div>
+              <p className="text-gray-300 text-sm font-medium">FAET Token Contract:</p>
+              <a
+                href={`https://blockscout.lisk.com/address/${networkConfig.contracts.token}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 text-xs font-mono break-all underline"
+              >
+                {networkConfig.contracts.token}
+              </a>
+            </div>
+            <div>
+              <p className="text-gray-300 text-sm font-medium">Staking Contract:</p>
+              <a
+                href={`https://blockscout.lisk.com/address/${networkConfig.contracts.staking}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 text-xs font-mono break-all underline"
+              >
+                {networkConfig.contracts.staking}
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <UserBalance
@@ -180,6 +208,29 @@ const StakingInterface = ({
         onClaimRewards={onClaimRewards}
       />
 
+      {/* Disclaimer Section */}
+      <div className="mt-8 bg-yellow-900 border border-yellow-600 p-4 rounded-lg">
+        <h3 className="text-yellow-400 font-semibold mb-2 flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          Important Disclaimer
+        </h3>
+        <div className="text-yellow-200 text-sm space-y-2">
+          <p>
+            <strong>Use at Your Own Risk:</strong> This staking utility is provided "as is" without any guarantees or warranties. 
+            FaetStudio provides no guarantee regarding the functionality, security, or reliability of this service.
+          </p>
+          <p>
+            <strong>Transaction Responsibility:</strong> Always carefully review your transaction details before confirming any operation. 
+            Double-check contract addresses, amounts, and network settings. You are solely responsible for your transactions.
+          </p>
+          <p>
+            <strong>Smart Contract Risk:</strong> Staking involves interacting with smart contracts. While we strive for security, 
+            smart contracts may contain bugs or vulnerabilities. Only stake what you can afford to lose.
+          </p>
+        </div>
+      </div>
 
     </motion.div>
   );
