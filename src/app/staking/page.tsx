@@ -119,8 +119,8 @@ export default function StakingPage() {
         }
 
         return isCorrectNetwork;
-      } catch (_error: unknown) {
-        console.error("Network check failed:", _error);
+      } catch {
+        console.error("Network check failed");
         setWrongNetwork(true);
         setCurrentChainId(null);
         setCurrentChainIdNumber(null);
@@ -210,7 +210,7 @@ export default function StakingPage() {
               weight: weightInEther
             });
           }
-        } catch (_error: unknown) {
+        } catch {
           // Silently skip failed stakers
         }
       }
@@ -249,9 +249,8 @@ export default function StakingPage() {
       setTopStakers(top10);
       setStakingRanges(stakingRangesData);
 
-    } catch (_error: unknown) {
-      const errorMsg = (_error as { message?: string })?.message || 'Unknown error';
-      console.error("Failed to load staking data:", errorMsg);
+    } catch {
+      console.error("Failed to load staking data:");
 
       // Set empty data as fallback
       setTopStakers([]);
@@ -280,7 +279,7 @@ export default function StakingPage() {
           const tempProvider = new ethers.BrowserProvider(window.ethereum);
           currentBlock = await tempProvider.getBlockNumber();
         }
-      } catch (_blockError) {
+      } catch {
         currentBlock = 0;
       }
 
@@ -288,7 +287,7 @@ export default function StakingPage() {
       try {
         const balance = await token.balanceOf(userAddress);
         setTokenBalance(ethers.formatEther(balance));
-      } catch (_error: unknown) {
+      } catch {
         setTokenBalance("0");
       }
 
@@ -309,19 +308,19 @@ export default function StakingPage() {
               if (lockEndBlock === 0 || currentBlock >= lockEndBlock) {
                 totalActiveWeight += BigInt(weightedAmount.toString());
               }
-            } catch (_stakeError) {
+            } catch {
               // Skip failed individual stake reads
             }
           }
         }
 
         setStakedBalance(ethers.formatEther(totalActiveWeight));
-      } catch (_error: unknown) {
+      } catch {
         // Fallback: try the contract's getActiveWeight if it exists
         try {
           const activeWeight = await staking.getActiveWeight(userAddress);
           setStakedBalance(ethers.formatEther(activeWeight));
-        } catch (_fallbackError: unknown) {
+        } catch {
           setStakedBalance("0");
         }
       }
@@ -330,7 +329,7 @@ export default function StakingPage() {
       try {
         const earned = await staking.earned(userAddress);
         setPendingRewards(ethers.formatEther(earned));
-      } catch (_error: unknown) {
+      } catch {
         setPendingRewards("0");
       }
 
@@ -338,7 +337,7 @@ export default function StakingPage() {
       try {
         const totalFunded = await staking.totalRewardsFunded();
         setTotalRewardsFunded(ethers.formatEther(totalFunded));
-      } catch (_error: unknown) {
+      } catch {
         setTotalRewardsFunded("0");
       }
 
@@ -346,12 +345,12 @@ export default function StakingPage() {
       try {
         const totalWeighted = await staking.totalWeightedSupply();
         setTotalStakeWeight(ethers.formatEther(totalWeighted));
-      } catch (_error: unknown) {
+      } catch {
         // Fallback: try totalStaked if totalWeightedSupply doesn't exist
         try {
           const totalStaked = await staking.totalStaked();
           setTotalStakeWeight(ethers.formatEther(totalStaked));
-        } catch (_fallbackError: unknown) {
+        } catch {
           setTotalStakeWeight("0");
         }
       }
@@ -386,26 +385,26 @@ export default function StakingPage() {
                 isUnlocked: isUnlocked,
                 blocksRemaining: blocksRemaining,
               });
-            } catch (_stakeError) {
+            } catch {
               // Skip failed stakes
             }
           }
           setUserStakes(stakes);
         }
-      } catch (_error: unknown) {
+      } catch {
         setUserStakes([]);
       }
 
       // Load top stakers data
       try {
         await loadTopStakersData(staking);
-      } catch (_stakersError) {
+      } catch {
         setTopStakers([]);
         setStakingRanges([]);
       }
 
-    } catch (_error: unknown) {
-      console.error("Error loading user data:", (_error as { message?: string })?.message || _error);
+    } catch (error: unknown) {
+      console.error("Error loading user data:", (error as { message?: string })?.message || error);
 
       // Set fallback values but keep interface visible
       setTokenBalance("0");
@@ -417,7 +416,7 @@ export default function StakingPage() {
       setTopStakers([]);
       setStakingRanges([]);
     }
-  }, [checkNetwork, selectedNetwork]);
+  }, [checkNetwork, selectedNetwork, loadTopStakersData]);
 
   const initializeWeb3 = useCallback(async () => {
     if (typeof window.ethereum !== "undefined" && account) {
@@ -474,25 +473,25 @@ export default function StakingPage() {
         // Load user data
         try {
           await loadUserData(token, staking, signerAddress);
-        } catch (_loadError) {
+        } catch {
           // Keep interface visible even if data loading fails
         }
 
         // Load top stakers data independently
         try {
           await loadTopStakersData(staking);
-        } catch (_stakersError) {
+        } catch {
           // Silently handle stakers data failure
         }
 
-      } catch (_error: unknown) {
-        console.error("Web3 initialization failed:", (_error as { message?: string })?.message || _error);
+      } catch (error: unknown) {
+        console.error("Web3 initialization failed:", (error as { message?: string })?.message || error);
         clearWeb3State();
       }
     } else {
       clearWeb3State();
     }
-  }, [account, currentChainId, selectedNetwork, loadUserData, clearWeb3State, checkNetwork, FAET_TOKEN_ADDRESS, FAET_STAKING_ADDRESS]);
+  }, [account, selectedNetwork, loadUserData, clearWeb3State, checkNetwork, FAET_TOKEN_ADDRESS, FAET_STAKING_ADDRESS, loadTopStakersData]);
 
   const connectMetaMask = async () => {
     if (typeof window.ethereum !== "undefined") {
@@ -514,8 +513,8 @@ export default function StakingPage() {
             }, 500);
           }
         }
-      } catch (_error: unknown) {
-        console.error("Error connecting wallet:", _error);
+      } catch (error: unknown) {
+        console.error("Error connecting wallet:", error);
       } finally {
         setIsConnecting(false);
       }
@@ -565,16 +564,16 @@ export default function StakingPage() {
       }
       setStakeAmount("");
       console.log("Staking successful!");
-    } catch (_error: unknown) {
+    } catch (error: unknown) {
       // Handle different types of errors gracefully
-      if ((_error as { code?: number | string })?.code === 4001 || (_error as { code?: number | string })?.code === "ACTION_REJECTED") {
+      if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled staking transaction');
-      } else if ((_error as { code?: number })?.code === -32002) {
+      } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Staking request already pending in MetaMask');
-      } else if ((_error as { reason?: string })?.reason === "Insufficient funded rewards") {
+      } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards") {
         console.error("❌ Staking failed: Contract has insufficient rewards");
       } else {
-        console.error("Staking failed:", (_error as { reason?: string })?.reason || (_error as { message?: string })?.message || "Unknown error");
+        console.error("Staking failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
       }
     } finally {
       setIsLoading(false);
@@ -601,14 +600,14 @@ export default function StakingPage() {
         await loadUserData(tokenContract, stakingContract, account);
       }
       console.log("Withdrawal successful!");
-    } catch (_error: unknown) {
+    } catch (error: unknown) {
       // Handle different types of errors gracefully
-      if ((_error as { code?: number | string })?.code === 4001 || (_error as { code?: number | string })?.code === "ACTION_REJECTED") {
+      if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled withdrawal transaction');
-      } else if ((_error as { code?: number })?.code === -32002) {
+      } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Withdrawal request already pending in MetaMask');
       } else {
-        console.error("Withdrawal failed:", (_error as { reason?: string })?.reason || (_error as { message?: string })?.message || "Unknown error");
+        console.error("Withdrawal failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
       }
     } finally {
       setIsLoading(false);
@@ -636,24 +635,24 @@ export default function StakingPage() {
         await loadUserData(tokenContract, stakingContract, account);
       }
       console.log("Rewards claimed successfully!");
-    } catch (_error: unknown) {
+    } catch (error: unknown) {
       // Handle different types of errors gracefully
-      if ((_error as { code?: number | string })?.code === 4001 || (_error as { code?: number | string })?.code === "ACTION_REJECTED") {
+      if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
         console.log('ℹ️ User cancelled claim rewards transaction');
         // Don't show alert for user cancellation - it's expected behavior
-      } else if ((_error as { code?: number })?.code === -32002) {
+      } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Claim request already pending in MetaMask');
-      } else if ((_error as { reason?: string })?.reason === "Insufficient funded rewards" || 
-                 (_error as { message?: string })?.message?.includes("Insufficient funded rewards")) {
+      } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards" || 
+                 (error as { message?: string })?.message?.includes("Insufficient funded rewards")) {
         console.error("❌ Claim Failed: Insufficient funded rewards");
         alert("❌ Claim Failed: The reward pool is currently empty. Please wait for the pool to be refunded by the administrators.");
-      } else if ((_error as { reason?: string })?.reason === "No rewards" || 
-                 (_error as { message?: string })?.message?.includes("No rewards")) {
+      } else if ((error as { reason?: string })?.reason === "No rewards" || 
+                 (error as { message?: string })?.message?.includes("No rewards")) {
         console.error("❌ Claim Failed: No rewards available");
         alert("❌ Claim Failed: You have no rewards to claim at this time.");
       } else {
-        console.error("Claim failed:", (_error as { reason?: string })?.reason || (_error as { message?: string })?.message || "Unknown error");
-        alert(`❌ Claim Failed: ${(_error as { reason?: string })?.reason || (_error as { message?: string })?.message || "Unknown error occurred"}`);
+        console.error("Claim failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
+        alert(`❌ Claim Failed: ${(error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error occurred"}`);
       }
     } finally {
       setIsLoading(false);
@@ -708,8 +707,8 @@ export default function StakingPage() {
 
           const isCorrectNetwork = currentChainNumber === requiredChainNumber;
           setWrongNetwork(!isCorrectNetwork);
-        } catch (_error) {
-          console.error("Network check failed:", _error);
+        } catch {
+          console.error("Network check failed");
           setWrongNetwork(true);
         }
       }
@@ -728,8 +727,8 @@ export default function StakingPage() {
             actualChainId = (await window.ethereum!.request({
               method: "eth_chainId",
             })) as string;
-          } catch (_error) {
-            console.error("Error reading chain ID:", _error);
+          } catch {
+            console.error("Error reading chain ID:");
             return;
           }
 
@@ -800,7 +799,7 @@ export default function StakingPage() {
       networkCheckInterval = setInterval(async () => {
         try {
           await checkNetwork();
-        } catch (_checkError) {
+        } catch {
           // Don't let periodic network check failures disrupt the interface
         }
       }, 10000);
@@ -831,8 +830,8 @@ export default function StakingPage() {
             // No accounts connected, still check network for UI state
             await checkNetwork();
           }
-        } catch (_error: unknown) {
-          console.error("Connection check failed:", _error);
+        } catch (error: unknown) {
+          console.error("Connection check failed:", error);
           await checkNetwork();
         }
       }
@@ -866,7 +865,7 @@ export default function StakingPage() {
           const earned = await freshContract.earned(account);
           const formattedEarned = ethers.formatEther(earned);
           setPendingRewards(formattedEarned);
-        } catch (_error: unknown) {
+        } catch {
           // Silently handle rewards update failures
         }
       };
@@ -923,8 +922,7 @@ export default function StakingPage() {
   }, [account, wrongNetwork, initializeWeb3]);
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
+    const element = document.getElementById(sectionId);if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
