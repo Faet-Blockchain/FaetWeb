@@ -200,48 +200,6 @@ const RewardsSection = ({
         on their weighted staked amount.
       </p>
 
-      {/* Top Stakers Section */}
-      <div className="bg-gray-700 p-6 rounded-lg mb-6">
-        <h4 className="font-semibold text-green-400 mb-4">
-          Top Stakers
-        </h4>
-        {topStakers.length === 0 ? (
-          <div className="text-center py-4 text-gray-400">
-            <div className="animate-pulse">Loading top stakers...</div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {topStakers.map((staker, index) => (
-              <div key={staker.address} className="flex justify-between items-center p-3 bg-gray-600 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    index === 0 ? 'bg-yellow-500 text-black' :
-                    index === 1 ? 'bg-gray-400 text-black' :
-                    index === 2 ? 'bg-orange-600 text-white' :
-                    'bg-gray-500 text-white'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <div className="text-sm font-mono text-gray-300">
-                      {staker.address.slice(0, 6)}...{staker.address.slice(-4)}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-green-400 font-bold">
-                    {parseFloat(staker.weight).toLocaleString(undefined, {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
-                    })} FAET
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Staking Distribution Chart */}
       <div className="bg-gray-700 p-6 rounded-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
