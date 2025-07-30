@@ -1015,28 +1015,70 @@ const WalletConnection = ({
 
                         console.log(`Adding ${ownedTokenIds.length} NFTs to MetaMask...`);
 
-                        // Add all owned NFTs to MetaMask
+                        // Add all owned NFTs to MetaMask with better error handling
+                        let successCount = 0;
+                        let userCancelled = false;
+                        
                         for (const tokenId of ownedTokenIds) {
+                          if (userCancelled) break;
+                          
                           try {
-                            await window.ethereum.request({
-                              method: "wallet_watchAsset",
-                              params: {
-                                type: "ERC721",
-                                options: {
-                                  address: contractAddresses.FOUNDERS_PASS,
-                                  tokenId: tokenId.toString(),
-                                },
-                              },
-                            });
-                            console.log(`✅ Added Founder's Pass #${tokenId} to MetaMask`);
-                          } catch (error: unknown) {
-                            const errorObj = error as { code?: number | string };
-                            if (errorObj?.code === 4001) {
-                              console.log("User cancelled NFT addition");
-                              break;
+                            console.log(`Attempting to add Founder's Pass #${tokenId} to MetaMask...`);
+                            
+                            // Add a small delay between requests
+                            if (ownedTokenIds.indexOf(tokenId) > 0) {
+                              await new Promise(resolve => setTimeout(resolve, 1000));
                             }
-                            console.log(`Failed to add NFT #${tokenId}:`, sanitizeError(error));
+                            
+                            // Validate the request parameters
+                            const params = {
+                              type: "ERC721" as const,
+                              options: {
+                                address: contractAddresses.FOUNDERS_PASS,
+                                tokenId: tokenId.toString(),
+                              },
+                            };
+                            
+                            console.log(`Request params for token #${tokenId}:`, params);
+                            
+                            const wasAdded = await window.ethereum.request({
+                              method: "wallet_watchAsset",
+                              params: params,
+                            });
+                            
+                            if (wasAdded) {
+                              successCount++;
+                              console.log(`✅ Added Founder's Pass #${tokenId} to MetaMask`);
+                            } else {
+                              console.log(`⚠️ MetaMask declined to add Founder's Pass #${tokenId}`);
+                            }
+                            
+                          } catch (error: unknown) {
+                            const errorObj = error as { 
+                              code?: number | string; 
+                              message?: string;
+                              data?: any;
+                            };
+                            
+                            console.error(`Error adding NFT #${tokenId}:`, error);
+                            
+                            if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED") {
+                              console.log("User cancelled NFT addition");
+                              userCancelled = true;
+                              break;
+                            } else if (errorObj?.code === -32603) {
+                              console.log(`Internal RPC error for token #${tokenId}, continuing with next...`);
+                              // Continue with next token instead of stopping
+                            } else {
+                              console.log(`Failed to add NFT #${tokenId}:`, sanitizeError(error));
+                            }
                           }
+                        }
+                        
+                        if (successCount > 0) {
+                          console.log(`✅ Successfully added ${successCount} NFT(s) to MetaMask`);
+                        } else if (!userCancelled) {
+                          setFoundersPassError("Unable to add NFTs to MetaMask. This may be due to network issues or MetaMask limitations.");
                         }
                       } catch (error) {
                         console.error(
