@@ -38,12 +38,27 @@ export class RateLimiter {
   }
 }
 
-// Input sanitization
+// Enhanced input sanitization
 export const sanitizeInput = (input: string): string => {
+  if (typeof input !== 'string') return '';
+  
   return input
-    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/[<>'"]/g, '') // Remove potential HTML/script tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, '') // Remove event handlers
     .trim()
-    .substring(0, 1000); // Limit length
+    .substring(0, 50); // Limit length for numeric inputs
+};
+
+// Validate numeric input specifically for amounts
+export const sanitizeNumericInput = (input: string): string => {
+  if (typeof input !== 'string') return '';
+  
+  // Only allow numbers, decimal points, and basic arithmetic
+  return input
+    .replace(/[^0-9.]/g, '')
+    .replace(/(\..*)\./g, '$1') // Only one decimal point
+    .substring(0, 20); // Reasonable length limit
 };
 
 // Validate hex string

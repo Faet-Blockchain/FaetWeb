@@ -6,6 +6,7 @@ import WalletConnection from "@/components/staking/WalletConnection";
 import StakingInterface from "@/components/staking/StakingInterface";
 import StakingFeatures from "@/components/staking/StakingFeatures";
 import { getNetworkConfig } from "@/lib/networks";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Simplified ABI for the functions we need
 const FAET_TOKEN_ABI = [
@@ -927,77 +928,79 @@ export default function StakingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-20">
-      <div className="max-w-6xl mx-auto px-4 py-16">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease: "easeInOut" }}
-          className="text-5xl md:text-7xl font-nocturne-serif-bold mb-8"
-        >
-          {selectedNetwork === 'mainnet' ? 'FAET STAKING - MAINNET' : 'FAET STAKING - TESTNET'}
-        </motion.h1>
+    <ErrorBoundary>
+      <div className="min-h-screen bg-black text-white pt-20">
+        <div className="max-w-6xl mx-auto px-4 py-16">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, ease: "easeInOut" }}
+            className="text-5xl md:text-7xl font-nocturne-serif-bold mb-8"
+          >
+            {selectedNetwork === 'mainnet' ? 'FAET STAKING - MAINNET' : 'FAET STAKING - TESTNET'}
+          </motion.h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease: "easeInOut", delay: 0.1 }}
-          className="text-lg mb-6 max-w-3xl"
-        >
-          {selectedNetwork === 'mainnet'
-            ? 'Stake your FAET tokens to earn real rewards on the Lisk mainnet. All transactions involve actual tokens and have real value. Connect your MetaMask wallet to get started with mainnet staking.'
-            : 'Test the FAET staking system on the Lisk Sepolia testnet. This is a safe environment to test staking functionality with test tokens. Perfect for learning how the system works before mainnet.'
-          }
-        </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75, ease: "easeInOut", delay: 0.1 }}
+            className="text-lg mb-6 max-w-3xl"
+          >
+            {selectedNetwork === 'mainnet'
+              ? 'Stake your FAET tokens to earn real rewards on the Lisk mainnet. All transactions involve actual tokens and have real value. Connect your MetaMask wallet to get started with mainnet staking.'
+              : 'Test the FAET staking system on the Lisk Sepolia testnet. This is a safe environment to test staking functionality with test tokens. Perfect for learning how the system works before mainnet.'
+            }
+          </motion.p>
 
-        {!showTokenStaking && (
-          <WalletConnection
-            account={account}
-            isConnecting={isConnecting}
-            wrongNetwork={wrongNetwork}
-            currentChainId={currentChainId}
-            selectedNetwork={selectedNetwork}
-            canAccessStaking={canAccessStaking}
-            onConnect={connectMetaMask}
-            onDisconnect={disconnectWallet}
-            onSwitchNetwork={switchToCurrentNetwork}
-            onGoToStaking={handleGoToStaking}
-            onNetworkChange={handleNetworkChange}
-          />
-        )}
+          {!showTokenStaking && (
+            <WalletConnection
+              account={account}
+              isConnecting={isConnecting}
+              wrongNetwork={wrongNetwork}
+              currentChainId={currentChainId}
+              selectedNetwork={selectedNetwork}
+              canAccessStaking={canAccessStaking}
+              onConnect={connectMetaMask}
+              onDisconnect={disconnectWallet}
+              onSwitchNetwork={switchToCurrentNetwork}
+              onGoToStaking={handleGoToStaking}
+              onNetworkChange={handleNetworkChange}
+            />
+          )}
 
-        {showTokenStaking && account && (
-          <StakingInterface
-            account={account!}
-            selectedNetwork={selectedNetwork}
-            tokenBalance={tokenBalance}
-            stakedBalance={stakedBalance}
-            pendingRewards={pendingRewards}
-            stakeAmount={stakeAmount}
-            selectedDays={selectedDays}
-            userStakes={userStakes}
-            isLoading={isLoading}
-            txHash={txHash}
-            wrongNetwork={wrongNetwork}
-            totalRewardsFunded={totalRewardsFunded}
-            totalStakeWeight={totalStakeWeight}
-            topStakers={topStakers}
-            stakingRanges={stakingRanges}
-            onStakeAmountChange={setStakeAmount}
-            onSelectedDaysChange={setSelectedDays}
-            onStake={handleStake}
-            onWithdraw={handleWithdraw}
-            onClaimRewards={handleClaimRewards}
-            onBackToOverview={() => {
-              setShowTokenStaking(false);
-              // Scroll back to top when returning to overview
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
-        )}
+          {showTokenStaking && account && (
+            <StakingInterface
+              account={account!}
+              selectedNetwork={selectedNetwork}
+              tokenBalance={tokenBalance}
+              stakedBalance={stakedBalance}
+              pendingRewards={pendingRewards}
+              stakeAmount={stakeAmount}
+              selectedDays={selectedDays}
+              userStakes={userStakes}
+              isLoading={isLoading}
+              txHash={txHash}
+              wrongNetwork={wrongNetwork}
+              totalRewardsFunded={totalRewardsFunded}
+              totalStakeWeight={totalStakeWeight}
+              topStakers={topStakers}
+              stakingRanges={stakingRanges}
+              onStakeAmountChange={setStakeAmount}
+              onSelectedDaysChange={setSelectedDays}
+              onStake={handleStake}
+              onWithdraw={handleWithdraw}
+              onClaimRewards={handleClaimRewards}
+              onBackToOverview={() => {
+                setShowTokenStaking(false);
+                // Scroll back to top when returning to overview
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          )}
 
-        {!showTokenStaking && <StakingFeatures />}
+          {!showTokenStaking && <StakingFeatures />}
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

@@ -1,5 +1,20 @@
 "use client";
-import React from "react";
+import React, { useState, useCallback } from "react";
+import { sanitizeInput, sanitizeNumericInput } from "@/lib/security";
+import { SecurityLogger } from "@/lib/logger";
+
+// Rate limiting for staking operations
+const STAKING_RATE_LIMIT = 3000; // 3 seconds between operations
+let lastStakingOperation = 0;
+
+const checkStakingRateLimit = (): boolean => {
+  const now = Date.now();
+  if (now - lastStakingOperation < STAKING_RATE_LIMIT) {
+    return false;
+  }
+  lastStakingOperation = now;
+  return true;
+};
 
 type StakingFormProps = {
   stakeAmount: string;
@@ -72,11 +87,65 @@ const StakingForm = ({
     return (userTotalWeight / totalWeight) * 100;
   };
 
-  // Validate stake amount
+  // Validate stake amount with sanitization
   const isValidStakeAmount = (): boolean => {
-    const amount = parseFloat(stakeAmount);
+    if (!stakeAmount) return false;
+    
+    // Sanitize numeric input
+    const sanitized = sanitizeNumericInput(stakeAmount);
+    const amount = parseFloat(sanitized);
+    
+    // Security: Log suspicious input patterns
+    if (sanitized !== stakeAmount) {
+      SecurityLogger.logSecurityEvent('Potentially malicious input detected in stake amount', {
+        original: stakeAmount,
+        sanitized: sanitized
+      });
+    }
+    
     return !isNaN(amount) && amount >= MIN_STAKE_AMOUNT && amount <= MAX_STAKE_AMOUNT && amount <= parseFloat(tokenBalance);
   };
+
+  // Enhanced stake handler with security checks
+  const handleStake = useCallback(() => {
+    // Rate limiting check
+    if (!checkStakingRateLimit()) {
+      SecurityLogger.logSecurityEvent('Rate limit exceeded for staking operation');
+      alert('Please wait before making another staking transaction');
+      return;
+    }
+
+    // Input validation
+    if (!isValidStakeAmount()) {
+      SecurityLogger.logSecurityEvent('Invalid stake amount attempted', {
+        amount: stakeAmount,
+        balance: tokenBalance
+      });
+      return;
+    }
+
+    // Log successful operation attempt
+    SecurityLogger.log({
+      level: 'info',
+      message: 'Stake operation initiated',
+      extra: {
+        amount: parseFloat(stakeAmount),
+        days: selectedDays
+      }
+    });
+
+    try {
+      onStake();
+    } catch (error) {
+      SecurityLogger.log({
+        level: 'error',
+        message: 'Stake operation failed',
+        extra: {
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
+    }
+  }, [stakeAmount, selectedDays, tokenBalance, onStake]);
   return (
     <div className="bg-gray-800 p-6 rounded-lg mb-6">
       <h3 className="text-xl font-nocturne-serif-bold mb-4">
@@ -163,7 +232,10 @@ const StakingForm = ({
                 value={stakeAmount}
                 min={MIN_STAKE_AMOUNT}
                 max={Math.min(MAX_STAKE_AMOUNT, parseFloat(tokenBalance) || 0)}
-                onChange={(e) => onStakeAmountChange(e.target.value)}
+                onChange={(e) => {
+                  const sanitized = sanitizeNumericInput(e.target.value);
+                  onStakeAmountChange(sanitized);
+                }}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 h-10"
               />
               <button
@@ -180,7 +252,7 @@ const StakingForm = ({
           </div>
           <div className="flex flex-col justify-center">
             <button
-              onClick={onStake}
+              onClick={handleStake}
               disabled={
                 !stakeAmount ||
                 isLoading ||
