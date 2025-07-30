@@ -913,10 +913,7 @@ export default function StakingPage() {
     validateNetwork();
   }, [currentChainId, currentChainIdNumber, selectedNetwork]);
 
-  // Only allow staking interface if connected to correct network
-  const canAccessStaking = Boolean(
-    account && !wrongNetwork && currentChainId
-  );
+  
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {
