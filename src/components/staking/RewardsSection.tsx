@@ -239,14 +239,23 @@ const RewardsSection = ({
             </button>
           </div>
         </div>
-        {(stakingRanges.length === 0 && chartView === 'ranges') || (topStakers.length === 0 && chartView !== 'ranges') ? (
+        {((stakingRanges.length === 0 && chartView === 'ranges') || (topStakers.length === 0 && chartView !== 'ranges')) ? (
           <div className="text-center py-8 text-gray-400">
             <div className="animate-pulse">Loading staking distribution data...</div>
             <div className="text-xs mt-2">Fetching data from blockchain...</div>
+            {/* Debug info */}
+            <div className="text-xs mt-2 text-gray-500">
+              Debug: Ranges: {stakingRanges.length}, Stakers: {topStakers.length}, View: {chartView}
+            </div>
+          </div>
+        ) : getCurrentChartData().length === 0 ? (
+          <div className="text-center py-8 text-gray-400">
+            <div>No staking data available</div>
+            <div className="text-xs mt-2">There are currently no active stakes to display.</div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-64">
+            <div className="h-64 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
