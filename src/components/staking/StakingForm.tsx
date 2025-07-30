@@ -237,7 +237,7 @@ const StakingForm = ({
         <div className="mt-4 p-3 bg-blue-900 border border-blue-600 rounded-lg">
           <p className="text-blue-300 text-sm">Transaction Hash:</p>
           <a
-            href={`https://sepolia-blockscout.lisk.com/tx/${txHash}`}
+            href={`https://blockscout.lisk.com/tx/${txHash}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 hover:text-blue-300 text-sm font-mono break-all"
