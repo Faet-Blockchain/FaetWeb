@@ -635,102 +635,42 @@ const WalletConnection = ({
                           let useEnumerableMethod = true;
                           
 
-                          // If enumerable method failed or we need to get more tokens, use fallback
-                           {
-                            console.log(
-                              "Using fallback method to find owned tokens...",
-                            );
-                            ownedTokenIds.length = 0; // Clear any partial results
-
-                            // Optimized fallback: Check ownership more efficiently
-                            console.log("Using optimized fallback method for airdrop claim...");
+                          // Use fast Transfer events method
+                          console.log("Using Transfer events to find owned tokens...");
+                          
+                          try {
+                            const transferFilter = foundersPassContract.filters.Transfer(null, account);
+                            const events = await foundersPassContract.queryFilter(transferFilter, -10000);
                             
-                            // Strategy 1: Try Transfer events first
-                            try {
-                              console.log("Attempting to use Transfer events for airdrop...");
-                              const transferFilter = foundersPassContract.filters.Transfer(null, account);
-                              const events = await foundersPassContract.queryFilter(transferFilter, -10000);
-                              
-                              const potentialTokens = new Set<number>();
-                              for (const event of events) {
-                                if (event.args && event.args[2]) {
-                                  const tokenId = Number(event.args[2]);
-                                  if (tokenId >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
-                                      tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
-                                    potentialTokens.add(tokenId);
-                                  }
+                            const potentialTokens = new Set<number>();
+                            for (const event of events) {
+                              if (event.args && event.args[2]) {
+                                const tokenId = Number(event.args[2]);
+                                if (tokenId >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
+                                    tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
+                                  potentialTokens.add(tokenId);
                                 }
-                              }
-                              
-                              // Verify current ownership
-                              for (const tokenId of potentialTokens) {
-                                try {
-                                  const owner = await foundersPassContract.ownerOf(tokenId);
-                                  if (owner.toLowerCase() === account.toLowerCase()) {
-                                    ownedTokenIds.push(tokenId);
-                                    console.log(`Found owned token via events: ${tokenId}`);
-                                  }
-                                } catch {
-                                  // Token transferred away or doesn't exist
-                                }
-                              }
-                              
-                              if (ownedTokenIds.length === 0) {
-                                throw new Error("No tokens found via events");
-                              }
-                            } catch (eventError) {
-                              console.log("Event method failed, using concurrent batch checking...");
-                              
-                              // Strategy 2: Concurrent batch processing
-                              const totalMinted = Number(await foundersPassContract.totalMinted());
-                              const maxToCheck = Math.min(totalMinted, SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max);
-                              const batchSize = 25;
-                              const maxConcurrent = 4;
-                              
-                              const checkBatch = async (startId: number, endId: number): Promise<number[]> => {
-                                const found: number[] = [];
-                                for (let tokenId = startId; tokenId <= endId; tokenId++) {
-                                  try {
-                                    const owner = await foundersPassContract.ownerOf(tokenId);
-                                    if (owner.toLowerCase() === account.toLowerCase()) {
-                                      found.push(tokenId);
-                                      console.log(`Found owned token: ${tokenId}`);
-                                    }
-                                  } catch (error) {
-                                    const errorMessage = sanitizeError(error);
-                                    if (!errorMessage.includes('ERC721: invalid token ID') && 
-                                        !errorMessage.includes('owner query for nonexistent token')) {
-                                      console.log(`Error checking token ${tokenId}:`, errorMessage);
-                                    }
-                                  }
-                                }
-                                return found;
-                              };
-                              
-                              // Process in concurrent batches
-                              const batches: Promise<number[]>[] = [];
-                              for (let startId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min; 
-                                   startId <= maxToCheck; 
-                                   startId += batchSize) {
-                                const endId = Math.min(startId + batchSize - 1, maxToCheck);
-                                batches.push(checkBatch(startId, endId));
-                                
-                                if (batches.length >= maxConcurrent) {
-                                  const results = await Promise.all(batches);
-                                  results.forEach(batch => ownedTokenIds.push(...batch));
-                                  batches.length = 0;
-                                  
-                                  // Brief pause between concurrent groups
-                                  await new Promise(resolve => setTimeout(resolve, 150));
-                                }
-                              }
-                              
-                              // Process remaining batches
-                              if (batches.length > 0) {
-                                const results = await Promise.all(batches);
-                                results.forEach(batch => ownedTokenIds.push(...batch));
                               }
                             }
+                            
+                            // Verify current ownership
+                            for (const tokenId of potentialTokens) {
+                              try {
+                                const owner = await foundersPassContract.ownerOf(tokenId);
+                                if (owner.toLowerCase() === account.toLowerCase()) {
+                                  ownedTokenIds.push(tokenId);
+                                  console.log(`Found owned NFT: #${tokenId}`);
+                                }
+                              } catch {
+                                // Token transferred away or doesn't exist
+                              }
+                            }
+                            
+                            if (ownedTokenIds.length === 0) {
+                              console.log("No tokens found via Transfer events");
+                            }
+                          } catch (eventError) {
+                            console.error("Transfer events method failed:", sanitizeError(eventError));
                           }
 
                           if (ownedTokenIds.length === 0) {
@@ -990,22 +930,42 @@ const WalletConnection = ({
                           return;
                         }
 
-                        // Simple approach: Check which tokens the user owns
+                        // Use fast Transfer events method to find owned tokens
                         const ownedTokenIds: number[] = [];
                         
-                        // Check tokens 1-150 (standard Founder's Pass range)
-                        console.log("Checking which Founder's Pass NFTs you own...");
+                        console.log("Using Transfer events to find your Founder's Pass NFTs...");
                         
-                        for (let tokenId = 1; tokenId <= 150; tokenId++) {
-                          try {
-                            const owner = await foundersPassContract.ownerOf(tokenId);
-                            if (owner.toLowerCase() === account.toLowerCase()) {
-                              ownedTokenIds.push(tokenId);
-                              console.log(`Found owned NFT: #${tokenId}`);
+                        try {
+                          const transferFilter = foundersPassContract.filters.Transfer(null, account);
+                          const events = await foundersPassContract.queryFilter(transferFilter, -10000);
+                          
+                          const potentialTokens = new Set<number>();
+                          for (const event of events) {
+                            if (event.args && event.args[2]) {
+                              const tokenId = Number(event.args[2]);
+                              if (tokenId >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
+                                  tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
+                                potentialTokens.add(tokenId);
+                              }
                             }
-                          } catch {
-                            // Token doesn't exist or not owned
                           }
+                          
+                          // Verify current ownership
+                          for (const tokenId of potentialTokens) {
+                            try {
+                              const owner = await foundersPassContract.ownerOf(tokenId);
+                              if (owner.toLowerCase() === account.toLowerCase()) {
+                                ownedTokenIds.push(tokenId);
+                                console.log(`Found owned NFT: #${tokenId}`);
+                              }
+                            } catch {
+                              // Token transferred away or doesn't exist
+                            }
+                          }
+                        } catch (eventError) {
+                          console.error("Transfer events method failed:", sanitizeError(eventError));
+                          setFoundersPassError("Unable to retrieve NFT ownership information");
+                          return;
                         }
 
                         if (ownedTokenIds.length === 0) {
