@@ -635,42 +635,21 @@ const WalletConnection = ({
                           let useEnumerableMethod = true;
                           
 
-                          // Use fast Transfer events method
-                          console.log("Using Transfer events to find owned tokens...");
+                          // Check ownership for each token ID sequentially
+                          console.log("Checking which Founder's Pass NFTs you own...");
                           
-                          try {
-                            const transferFilter = foundersPassContract.filters.Transfer(null, account);
-                            const events = await foundersPassContract.queryFilter(transferFilter, -10000);
-                            
-                            const potentialTokens = new Set<number>();
-                            for (const event of events) {
-                              if (event.args && event.args[2]) {
-                                const tokenId = Number(event.args[2]);
-                                if (tokenId >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
-                                    tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
-                                  potentialTokens.add(tokenId);
-                                }
+                          for (let tokenId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min; 
+                               tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max; 
+                               tokenId++) {
+                            try {
+                              const owner = await foundersPassContract.ownerOf(tokenId);
+                              if (owner.toLowerCase() === account.toLowerCase()) {
+                                ownedTokenIds.push(tokenId);
+                                console.log(`Found owned NFT: #${tokenId}`);
                               }
+                            } catch {
+                              // Token doesn't exist or not owned
                             }
-                            
-                            // Verify current ownership
-                            for (const tokenId of potentialTokens) {
-                              try {
-                                const owner = await foundersPassContract.ownerOf(tokenId);
-                                if (owner.toLowerCase() === account.toLowerCase()) {
-                                  ownedTokenIds.push(tokenId);
-                                  console.log(`Found owned NFT: #${tokenId}`);
-                                }
-                              } catch {
-                                // Token transferred away or doesn't exist
-                              }
-                            }
-                            
-                            if (ownedTokenIds.length === 0) {
-                              console.log("No tokens found via Transfer events");
-                            }
-                          } catch (eventError) {
-                            console.error("Transfer events method failed:", sanitizeError(eventError));
                           }
 
                           if (ownedTokenIds.length === 0) {
@@ -930,42 +909,23 @@ const WalletConnection = ({
                           return;
                         }
 
-                        // Use fast Transfer events method to find owned tokens
+                        // Check ownership for each token ID sequentially
                         const ownedTokenIds: number[] = [];
                         
-                        console.log("Using Transfer events to find your Founder's Pass NFTs...");
+                        console.log("Checking which Founder's Pass NFTs you own...");
                         
-                        try {
-                          const transferFilter = foundersPassContract.filters.Transfer(null, account);
-                          const events = await foundersPassContract.queryFilter(transferFilter, -10000);
-                          
-                          const potentialTokens = new Set<number>();
-                          for (const event of events) {
-                            if (event.args && event.args[2]) {
-                              const tokenId = Number(event.args[2]);
-                              if (tokenId >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
-                                  tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
-                                potentialTokens.add(tokenId);
-                              }
+                        for (let tokenId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min; 
+                             tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max; 
+                             tokenId++) {
+                          try {
+                            const owner = await foundersPassContract.ownerOf(tokenId);
+                            if (owner.toLowerCase() === account.toLowerCase()) {
+                              ownedTokenIds.push(tokenId);
+                              console.log(`Found owned NFT: #${tokenId}`);
                             }
+                          } catch {
+                            // Token doesn't exist or not owned
                           }
-                          
-                          // Verify current ownership
-                          for (const tokenId of potentialTokens) {
-                            try {
-                              const owner = await foundersPassContract.ownerOf(tokenId);
-                              if (owner.toLowerCase() === account.toLowerCase()) {
-                                ownedTokenIds.push(tokenId);
-                                console.log(`Found owned NFT: #${tokenId}`);
-                              }
-                            } catch {
-                              // Token transferred away or doesn't exist
-                            }
-                          }
-                        } catch (eventError) {
-                          console.error("Transfer events method failed:", sanitizeError(eventError));
-                          setFoundersPassError("Unable to retrieve NFT ownership information");
-                          return;
                         }
 
                         if (ownedTokenIds.length === 0) {
