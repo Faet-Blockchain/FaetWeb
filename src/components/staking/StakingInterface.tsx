@@ -89,7 +89,7 @@ const StakingInterface = ({
               try {
                 const wasAdded = await window.ethereum.request({
                   method: 'wallet_watchAsset',
-                  params: {
+                  params: [{
                     type: 'ERC20',
                     options: {
                       address: networkConfig.contracts.token,
@@ -97,7 +97,7 @@ const StakingInterface = ({
                       decimals: 18,
                       image: 'https://your-domain.com/faet-token-icon.png',
                     },
-                  } as { type: string; options: { address: string; symbol: string; decimals: number; image: string } },
+                  }],
                 });
 
                 if (wasAdded) {
