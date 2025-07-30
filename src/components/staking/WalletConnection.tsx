@@ -41,7 +41,7 @@ type WalletConnectionProps = {
 const SECURITY_CONFIG = {
   // Rate limiting
   RATE_LIMITS: {
-    NFT_ADD_DELAY: 200, // ms between NFT add requests
+    NFT_ADD_DELAY: 2000, // ms between NFT add requests
     MAX_RETRIES: 3,
     COOLDOWN_PERIOD: 5000, // 5 seconds between major operations
   },
@@ -457,9 +457,7 @@ const WalletConnection = ({
                           }
                         }
 
-                        if (successCount === 0) {
-                          setCharacterNftError("No new NFTs were added");
-                        }
+                        // Don't show error message if no NFTs were added
                       } catch (error) {
                         console.error("Character NFT addition failed:", error);
                         setCharacterNftError(sanitizeError(error));
@@ -1030,9 +1028,8 @@ const WalletConnection = ({
                           }
                         }
 
-                        if (successCount === 0) {
-                          setFoundersPassError("No NFTs were added - user may have cancelled");
-                        } else {
+                        // Don't show error message if no NFTs were added
+                        if (successCount > 0) {
                           console.log(`Successfully added ${successCount} NFTs to MetaMask`);
                         }
                       } catch (error) {
