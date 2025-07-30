@@ -593,6 +593,7 @@ const WalletConnection = ({
                             "function totalMinted() view returns (uint256)",
                             "function name() view returns (string)",
                             "function symbol() view returns (string)",
+                            "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
                           ];
 
                           const foundersPassContract = new ethers.Contract(
@@ -643,52 +644,93 @@ const WalletConnection = ({
                             );
                             ownedTokenIds.length = 0; // Clear any partial results
 
-                            // Fallback: Check ownership of all possible token IDs
-                            // Use a smaller batch size and better error handling
-                            const batchSize = 10;
-                            const totalMinted = Number(await foundersPassContract.totalMinted());
-
-                            for (
-                              let tokenId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min;
-                              tokenId <= Math.min(totalMinted, SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max);
-                               tokenId += batchSize
-                            ) {
-                              const endTokenId = Math.min(
-                                tokenId + batchSize - 1,
-                                Math.min(totalMinted, SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max)
-                              );
-
-                              console.log(`Checking tokens ${tokenId} to ${endTokenId}...`);
-
-                              for (let j = tokenId; j <= endTokenId; j++) {
-                                try {
-                                  const owner = await foundersPassContract.ownerOf(j);
-                                  if (owner.toLowerCase() === account.toLowerCase()) {
-                                    ownedTokenIds.push(j);
-                                    console.log(`Found owned token: ${j}`);
+                            // Optimized fallback: Check ownership more efficiently
+                            console.log("Using optimized fallback method for airdrop claim...");
+                            
+                            // Strategy 1: Try Transfer events first
+                            try {
+                              console.log("Attempting to use Transfer events for airdrop...");
+                              const transferFilter = foundersPassContract.filters.Transfer(null, account);
+                              const events = await foundersPassContract.queryFilter(transferFilter, -10000);
+                              
+                              const potentialTokens = new Set<number>();
+                              for (const event of events) {
+                                if (event.args && event.args[2]) {
+                                  const tokenId = Number(event.args[2]);
+                                  if (tokenId >= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min && 
+                                      tokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
+                                    potentialTokens.add(tokenId);
                                   }
-
-                                  // Rate limiting - smaller delay within batch
-                                  await new Promise((resolve) =>
-                                    setTimeout(resolve, 100),
-                                  );
-                                } catch (error) {  
-                                  // Token doesn't exist, not owned, or other error - continue
-                                  // Only log if it's not a common "token doesn't exist" error
-                                  const errorMessage = sanitizeError(error);
-                                  if (!errorMessage.includes('ERC721: invalid token ID') && 
-                                      !errorMessage.includes('owner query for nonexistent token')) {
-                                    console.log(`Error checking token ${j}:`, errorMessage);
-                                  }
-                                  continue;
                                 }
                               }
-
-                              // Longer delay between batches to avoid rate limiting
-                              if (endTokenId < Math.min(totalMinted, SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max)) {
-                                await new Promise((resolve) =>
-                                  setTimeout(resolve, 500),
-                                );
+                              
+                              // Verify current ownership
+                              for (const tokenId of potentialTokens) {
+                                try {
+                                  const owner = await foundersPassContract.ownerOf(tokenId);
+                                  if (owner.toLowerCase() === account.toLowerCase()) {
+                                    ownedTokenIds.push(tokenId);
+                                    console.log(`Found owned token via events: ${tokenId}`);
+                                  }
+                                } catch {
+                                  // Token transferred away or doesn't exist
+                                }
+                              }
+                              
+                              if (ownedTokenIds.length === 0) {
+                                throw new Error("No tokens found via events");
+                              }
+                            } catch (eventError) {
+                              console.log("Event method failed, using concurrent batch checking...");
+                              
+                              // Strategy 2: Concurrent batch processing
+                              const totalMinted = Number(await foundersPassContract.totalMinted());
+                              const maxToCheck = Math.min(totalMinted, SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max);
+                              const batchSize = 25;
+                              const maxConcurrent = 4;
+                              
+                              const checkBatch = async (startId: number, endId: number): Promise<number[]> => {
+                                const found: number[] = [];
+                                for (let tokenId = startId; tokenId <= endId; tokenId++) {
+                                  try {
+                                    const owner = await foundersPassContract.ownerOf(tokenId);
+                                    if (owner.toLowerCase() === account.toLowerCase()) {
+                                      found.push(tokenId);
+                                      console.log(`Found owned token: ${tokenId}`);
+                                    }
+                                  } catch (error) {
+                                    const errorMessage = sanitizeError(error);
+                                    if (!errorMessage.includes('ERC721: invalid token ID') && 
+                                        !errorMessage.includes('owner query for nonexistent token')) {
+                                      console.log(`Error checking token ${tokenId}:`, errorMessage);
+                                    }
+                                  }
+                                }
+                                return found;
+                              };
+                              
+                              // Process in concurrent batches
+                              const batches: Promise<number[]>[] = [];
+                              for (let startId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min; 
+                                   startId <= maxToCheck; 
+                                   startId += batchSize) {
+                                const endId = Math.min(startId + batchSize - 1, maxToCheck);
+                                batches.push(checkBatch(startId, endId));
+                                
+                                if (batches.length >= maxConcurrent) {
+                                  const results = await Promise.all(batches);
+                                  results.forEach(batch => ownedTokenIds.push(...batch));
+                                  batches.length = 0;
+                                  
+                                  // Brief pause between concurrent groups
+                                  await new Promise(resolve => setTimeout(resolve, 150));
+                                }
+                              }
+                              
+                              // Process remaining batches
+                              if (batches.length > 0) {
+                                const results = await Promise.all(batches);
+                                results.forEach(batch => ownedTokenIds.push(...batch));
                               }
                             }
                           }
@@ -917,6 +959,7 @@ const WalletConnection = ({
                           "function totalMinted() view returns (uint256)",
                           "function name() view returns (string)",
                           "function symbol() view returns (string)",
+                          "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
                         ];
 
                         const foundersPassContract = new ethers.Contract(
@@ -956,32 +999,89 @@ const WalletConnection = ({
                         // Try enumerable method first with limited attempts
                         
 
-                        // Use fallback method if enumerable failed
+                        // Use optimized fallback method
                         
-                          console.log("Using fallback method for Add NFT...");
+                          console.log("Using optimized fallback method for Add NFT...");
                           ownedTokenIds.length = 0; // Clear partial results
 
-                          // Check ownership by iterating through possible token IDs
-                          const batchSize = 10;
-                          const totalMinted = Number(await foundersPassContract.totalMinted());
-                          for (let startTokenId = 1; startTokenId <= Math.min(totalMinted, 150); startTokenId += batchSize) {
-                            const endTokenId = Math.min(startTokenId + batchSize - 1, Math.min(totalMinted, 150));
-
-                            for (let tokenId = startTokenId; tokenId <= endTokenId; tokenId++) {
+                          // Strategy 1: Try to use Transfer events to find owned tokens (fastest)
+                          try {
+                            console.log("Attempting to use Transfer events...");
+                            const transferFilter = foundersPassContract.filters.Transfer(null, account);
+                            const events = await foundersPassContract.queryFilter(transferFilter, -10000); // Last ~10k blocks
+                            
+                            const potentialTokens = new Set<number>();
+                            for (const event of events) {
+                              if (event.args && event.args[2]) {
+                                potentialTokens.add(Number(event.args[2]));
+                              }
+                            }
+                            
+                            // Verify current ownership of these tokens
+                            console.log(`Found ${potentialTokens.size} potential tokens from events`);
+                            for (const tokenId of potentialTokens) {
                               try {
                                 const owner = await foundersPassContract.ownerOf(tokenId);
                                 if (owner.toLowerCase() === account.toLowerCase()) {
                                   ownedTokenIds.push(tokenId);
                                 }
-                                await new Promise((resolve) => setTimeout(resolve, 100));
                               } catch {
-                                continue;
+                                // Token might not exist or transferred away
                               }
                             }
-
-                            // Delay between batches
-                            if (endTokenId < Math.min(totalMinted,150)) {
-                              await new Promise((resolve) => setTimeout(resolve, 500));
+                            
+                            if (ownedTokenIds.length > 0) {
+                              console.log(`Found ${ownedTokenIds.length} owned tokens via events`);
+                            } else {
+                              throw new Error("No tokens found via events");
+                            }
+                          } catch (eventError) {
+                            console.log("Event-based detection failed, using direct checking...");
+                            
+                            // Strategy 2: Smart range checking based on common NFT patterns
+                            const totalMinted = Number(await foundersPassContract.totalMinted());
+                            const maxToCheck = Math.min(totalMinted, 150);
+                            
+                            // Use concurrent batch processing for faster results
+                            const batchSize = 20; // Larger batch size
+                            const maxConcurrent = 5; // Process multiple batches concurrently
+                            
+                            const checkTokenBatch = async (startId: number, endId: number): Promise<number[]> => {
+                              const found: number[] = [];
+                              for (let tokenId = startId; tokenId <= endId; tokenId++) {
+                                try {
+                                  const owner = await foundersPassContract.ownerOf(tokenId);
+                                  if (owner.toLowerCase() === account.toLowerCase()) {
+                                    found.push(tokenId);
+                                  }
+                                } catch {
+                                  // Token doesn't exist or other error
+                                }
+                              }
+                              return found;
+                            };
+                            
+                            // Process batches concurrently
+                            const batches: Promise<number[]>[] = [];
+                            for (let startId = 1; startId <= maxToCheck; startId += batchSize) {
+                              const endId = Math.min(startId + batchSize - 1, maxToCheck);
+                              batches.push(checkTokenBatch(startId, endId));
+                              
+                              // Limit concurrent batches to avoid rate limiting
+                              if (batches.length >= maxConcurrent) {
+                                const results = await Promise.all(batches);
+                                results.forEach(batch => ownedTokenIds.push(...batch));
+                                batches.length = 0; // Clear processed batches
+                                
+                                // Small delay between concurrent groups
+                                await new Promise(resolve => setTimeout(resolve, 200));
+                              }
+                            }
+                            
+                            // Process remaining batches
+                            if (batches.length > 0) {
+                              const results = await Promise.all(batches);
+                              results.forEach(batch => ownedTokenIds.push(...batch));
                             }
                           }
                         
