@@ -1031,7 +1031,8 @@ const WalletConnection = ({
 
                         for (
                           let tokenId =
-                            SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min                          tokenId <=
+                            SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min;
+                          tokenId <=
                           SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max;
                           tokenId++
                         ) {
