@@ -27,7 +27,7 @@ const FAET_STAKING_ABI = [
   "function getMultiplier(uint256 daysLocked) view returns (uint256)",
   "function getActiveWeight(address user) view returns (uint256)",
   "function totalStaked() view returns (uint256)",
-  "function totalWeightedSupply() view returns (uint256)",
+  "uint256 public totalWeightedSupply",
   "function totalRewardsFunded() view returns (uint256)",
   "function rewardPerToken() view returns (uint256)",
   "event Staked(address indexed user, uint256 amount, uint256 duration, uint256 stakeIndex)",
@@ -342,12 +342,12 @@ export default function StakingPage() {
         setTotalRewardsFunded("0");
       }
 
-      // Get total stake weight
+      // Get total stake weight from totalWeightedSupply public variable
       try {
         const totalWeighted = await staking.totalWeightedSupply();
         setTotalStakeWeight(ethers.formatEther(totalWeighted));
       } catch (error: unknown) {
-        // Fallback: try weightedBalances if totalWeightedSupply doesn't exist
+        // Fallback: try totalStaked if totalWeightedSupply doesn't exist
         try {
           const totalStaked = await staking.totalStaked();
           setTotalStakeWeight(ethers.formatEther(totalStaked));
