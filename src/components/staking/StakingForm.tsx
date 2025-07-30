@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
+import { sanitizeInput, isValidHex } from "@/lib/security";
 
-// Security: Rate limiting for staking operations (reduced to 1 second)
-const STAKING_RATE_LIMIT = 1000; // 1 second between operations
+// Security: Rate limiting for staking operations (increased to 5 seconds)
+const STAKING_RATE_LIMIT = 5000; // 5 seconds between operations
 let lastStakingOperation = 0;
 
 const checkStakingRateLimit = (): boolean => {
@@ -85,9 +86,16 @@ const StakingForm = ({
     return (userTotalWeight / totalWeight) * 100;
   };
 
-  // Security: Validate stake amount
+  // Security: Comprehensive input validation
   const validateStakeAmount = (): { isValid: boolean; error?: string } => {
-    const amount = parseFloat(stakeAmount);
+    // Sanitize input first
+    const sanitizedAmount = sanitizeInput(stakeAmount.toString());
+    const amount = parseFloat(sanitizedAmount);
+    
+    // Check for malicious input patterns
+    if (stakeAmount.includes('<script>') || stakeAmount.includes('javascript:')) {
+      return { isValid: false, error: "Invalid input detected" };
+    }
     
     if (isNaN(amount) || amount <= 0) {
       return { isValid: false, error: "Please enter a valid amount" };
@@ -103,6 +111,12 @@ const StakingForm = ({
     
     if (amount > parseFloat(tokenBalance)) {
       return { isValid: false, error: "Insufficient balance" };
+    }
+    
+    // Additional security: Check for decimal precision attacks
+    const decimalPlaces = (sanitizedAmount.split('.')[1] || '').length;
+    if (decimalPlaces > 18) {
+      return { isValid: false, error: "Too many decimal places" };
     }
     
     return { isValid: true };
@@ -193,7 +207,11 @@ const StakingForm = ({
                 value={stakeAmount}
                 min={MIN_STAKE_AMOUNT}
                 max={Math.min(MAX_STAKE_AMOUNT, parseFloat(tokenBalance) || 0)}
-                onChange={(e) => onStakeAmountChange(e.target.value)}
+                onChange={(e) => {
+                  // Security: Sanitize input on change
+                  const sanitized = sanitizeInput(e.target.value);
+                  onStakeAmountChange(sanitized);
+                }}
                 className={`w-full bg-gray-700 border rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none h-10 ${
                   stakeAmount && !validateStakeAmount().isValid 
                     ? "border-red-500 focus:border-red-500" 
@@ -220,26 +238,45 @@ const StakingForm = ({
           <div className="flex flex-col justify-center">
             <button
               onClick={() => {
-                // Security: Check rate limiting
+                // Security: Enhanced rate limiting and validation
                 if (!checkStakingRateLimit()) {
                   console.warn("Rate limit exceeded, please wait");
-                  alert("Please wait before making another staking transaction");
+                  alert("Please wait 5 seconds before making another staking transaction");
                   return;
                 }
                 
+                // Security: Additional validation before staking
+                const validation = validateStakeAmount();
+                if (!validation.isValid) {
+                  console.error("Validation failed:", validation.error);
+                  alert(`Validation error: ${validation.error}`);
+                  return;
+                }
+                
+                // Security: Check for network tampering
+                if (wrongNetwork) {
+                  console.error("Network validation failed");
+                  alert("Please connect to the correct network");
+                  return;
+                }
+                
+                // Security: Sanitize amount before processing
+                const sanitizedAmount = sanitizeInput(stakeAmount.toString());
+                
                 console.log("🔘 Stake button clicked with:", {
-                  stakeAmount,
+                  sanitizedAmount,
                   isLoading,
                   wrongNetwork,
                   tokenBalance,
-                  isValidAmount: parseFloat(stakeAmount) > 0,
-                  hasBalance: parseFloat(stakeAmount) <= parseFloat(tokenBalance)
+                  isValidAmount: parseFloat(sanitizedAmount) > 0,
+                  hasBalance: parseFloat(sanitizedAmount) <= parseFloat(tokenBalance)
                 });
                 
                 try {
                   onStake();
                 } catch (error) {
                   console.error("Error during stake operation:", error);
+                  alert("Transaction failed. Please try again.");
                 }
               }}
               disabled={
