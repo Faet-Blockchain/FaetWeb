@@ -166,7 +166,7 @@ export default function StakingPage() {
     }
   };
 
-  const loadTopStakersData = async (staking: ethers.Contract) => {
+  const loadTopStakersData = useCallback(async (staking: ethers.Contract) => {
     try {
       // Set initial loading state
       setTopStakers([]);
@@ -256,7 +256,7 @@ export default function StakingPage() {
       setTopStakers([]);
       setStakingRanges([]);
     }
-  };
+  }, []);
 
   const loadUserData = useCallback(async (
     token: ethers.Contract,
@@ -718,7 +718,7 @@ export default function StakingPage() {
   // Network detection and event handling
   useEffect(() => {
     if (typeof window.ethereum !== "undefined" && window.ethereum.on) {
-      const handleChainChanged = async (...args: unknown[]) => {
+      const handleChainChanged = async () => {
         // Add delay to ensure wallet state is fully updated
         setTimeout(async () => {
           // Force fresh read from wallet instead of using event data
@@ -760,8 +760,7 @@ export default function StakingPage() {
         }, 500); // 500ms delay to let wallet update
       };
 
-      const handleAccountsChanged = async (...args: unknown[]) => {
-        const accounts = args[0] as string[];
+      const handleAccountsChanged = async (accounts: string[]) => {
         if (accounts.length === 0) {
           disconnectWallet();
         } else {
