@@ -19,6 +19,20 @@ const sanitizeError = (error: unknown): string => {
   if (typeof error === "string") {
     return error;
   }
+  if (typeof error === "object" && error !== null) {
+    const errorObj = error as Record<string, unknown>;
+    if (errorObj.message && typeof errorObj.message === "string") {
+      return errorObj.message;
+    }
+    if (errorObj.reason && typeof errorObj.reason === "string") {
+      return errorObj.reason;
+    }
+    // If it's an empty object or no useful properties, return a generic message
+    if (Object.keys(errorObj).length === 0) {
+      return "MetaMask operation failed";
+    }
+    return JSON.stringify(error);
+  }
   return "An unknown error occurred";
 };
 
