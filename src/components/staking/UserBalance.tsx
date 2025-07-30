@@ -28,15 +28,12 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
     return (userWeight / totalWeight) * 100;
   };
 
-  // Calculate average multiplier from active stakes
+  // Calculate average multiplier from all stakes (including locked and unlocked)
   const calculateAverageMultiplier = (): number => {
     if (userStakes.length === 0) return 1.0;
     
-    const activeStakes = userStakes.filter(stake => stake.isUnlocked || stake.lockEndBlock === 0);
-    if (activeStakes.length === 0) return 1.0;
-    
-    const totalWeight = activeStakes.reduce((sum, stake) => sum + parseFloat(stake.weightedAmount), 0);
-    const totalAmount = activeStakes.reduce((sum, stake) => sum + parseFloat(stake.amount), 0);
+    const totalWeight = userStakes.reduce((sum, stake) => sum + parseFloat(stake.weightedAmount), 0);
+    const totalAmount = userStakes.reduce((sum, stake) => sum + parseFloat(stake.amount), 0);
     
     if (totalAmount === 0) return 1.0;
     return totalWeight / totalAmount;
@@ -63,7 +60,7 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
         </p>
         <div className="space-y-1">
           <p className="text-gray-400 text-sm">
-            {userStakes.filter(stake => !stake.isUnlocked).length} locked stakes
+            {userStakes.length} total stakes ({userStakes.filter(stake => !stake.isUnlocked).length} locked, {userStakes.filter(stake => stake.isUnlocked).length} unlocked)
           </p>
           {userStakes.length > 0 && (
             <>
