@@ -38,45 +38,12 @@ export class RateLimiter {
   }
 }
 
-// Enhanced input sanitization
+// Input sanitization
 export const sanitizeInput = (input: string): string => {
-  if (!input || typeof input !== 'string') return '';
-  
   return input
     .replace(/[<>]/g, '') // Remove potential HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/data:/gi, '') // Remove data: protocol
-    .replace(/vbscript:/gi, '') // Remove vbscript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .replace(/[^\w\s\.\-\+]/g, '') // Only allow alphanumeric, spaces, dots, dashes, plus
     .trim()
-    .substring(0, 100); // Limit length for stake amounts
-};
-
-// Validate Ethereum address
-export const isValidEthAddress = (address: string): boolean => {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
-};
-
-// Validate transaction hash
-export const isValidTxHash = (hash: string): boolean => {
-  return /^0x[a-fA-F0-9]{64}$/.test(hash);
-};
-
-// Check for suspicious patterns
-export const containsSuspiciousContent = (input: string): boolean => {
-  const suspiciousPatterns = [
-    /<script/i,
-    /javascript:/i,
-    /data:/i,
-    /vbscript:/i,
-    /on\w+=/i,
-    /eval\(/i,
-    /function\(/i,
-    /\$\(/i // jQuery
-  ];
-  
-  return suspiciousPatterns.some(pattern => pattern.test(input));
+    .substring(0, 1000); // Limit length
 };
 
 // Validate hex string
