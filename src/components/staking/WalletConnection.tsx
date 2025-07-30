@@ -630,8 +630,9 @@ const WalletConnection = ({
                           );
                           const ownedTokenIds: number[] = [];
 
-                          // Get owned token IDs with error handling
-                          for (let i = 0; i < maxTokensToCheck; i++) {
+                          // Try to get owned token IDs using tokenOfOwnerByIndex first
+                          let useEnumerableMethod = true;
+                          for (let i = 0; i < Math.min(maxTokensToCheck, 3); i++) {
                             try {
                               const tokenId =
                                 await foundersPassContract.tokenOfOwnerByIndex(
@@ -652,7 +653,7 @@ const WalletConnection = ({
                               }
 
                               // Add delay between requests to prevent rate limiting
-                              if (i < maxTokensToCheck - 1) {
+                              if (i < Math.min(maxTokensToCheck, 3) - 1) {
                                 await new Promise((resolve) =>
                                   setTimeout(resolve, 50),
                                 );
@@ -662,41 +663,65 @@ const WalletConnection = ({
                                 `Could not get token at index ${i}:`,
                                 sanitizeError(error),
                               );
-                              // If we get an error, try to continue with remaining tokens
-                              continue;
+                              // If we get errors on the first few attempts, switch to fallback method
+                              if (i < 2) {
+                                useEnumerableMethod = false;
+                                break;
+                              }
                             }
                           }
 
-                          // If we couldn't get tokens using tokenOfOwnerByIndex, try a fallback method
-                          if (ownedTokenIds.length === 0) {
+                          // If enumerable method failed or we need to get more tokens, use fallback
+                          if (!useEnumerableMethod || ownedTokenIds.length === 0) {
                             console.log(
-                              "Trying fallback method to find owned tokens...",
+                              "Using fallback method to find owned tokens...",
                             );
+                            ownedTokenIds.length = 0; // Clear any partial results
 
                             // Fallback: Check ownership of all possible token IDs
+                            // Use a smaller batch size and better error handling
+                            const batchSize = 10;
                             for (
-                              let tokenId =
-                                SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min;
-                              tokenId <=
-                              SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max;
-                              tokenId++
+                              let startTokenId = SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.min;
+                              startTokenId <= SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max;
+                              startTokenId += batchSize
                             ) {
-                              try {
-                                const owner =
-                                  await foundersPassContract.ownerOf(tokenId);
-                                if (
-                                  owner.toLowerCase() === account.toLowerCase()
-                                ) {
-                                  ownedTokenIds.push(tokenId);
-                                }
+                              const endTokenId = Math.min(
+                                startTokenId + batchSize - 1,
+                                SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max
+                              );
 
-                                // Rate limiting
+                              console.log(`Checking tokens ${startTokenId} to ${endTokenId}...`);
+
+                              for (let tokenId = startTokenId; tokenId <= endTokenId; tokenId++) {
+                                try {
+                                  const owner = await foundersPassContract.ownerOf(tokenId);
+                                  if (owner.toLowerCase() === account.toLowerCase()) {
+                                    ownedTokenIds.push(tokenId);
+                                    console.log(`Found owned token: ${tokenId}`);
+                                  }
+
+                                  // Rate limiting - smaller delay within batch
+                                  await new Promise((resolve) =>
+                                    setTimeout(resolve, 100),
+                                  );
+                                } catch (error) {  
+                                  // Token doesn't exist, not owned, or other error - continue
+                                  // Only log if it's not a common "token doesn't exist" error
+                                  const errorMessage = sanitizeError(error);
+                                  if (!errorMessage.includes('ERC721: invalid token ID') && 
+                                      !errorMessage.includes('owner query for nonexistent token')) {
+                                    console.log(`Error checking token ${tokenId}:`, errorMessage);
+                                  }
+                                  continue;
+                                }
+                              }
+
+                              // Longer delay between batches to avoid rate limiting
+                              if (endTokenId < SECURITY_CONFIG.TOKEN_RANGES.FOUNDERS_PASS.max) {
                                 await new Promise((resolve) =>
-                                  setTimeout(resolve, 25),
+                                  setTimeout(resolve, 500),
                                 );
-                              } catch {
-                                // Token doesn't exist or other error, continue
-                                continue;
                               }
                             }
                           }
@@ -940,11 +965,13 @@ const WalletConnection = ({
                           return;
                         }
 
-                        // Get owned token IDs
+                        // Get owned token IDs using improved method
                         const ownedTokenIds: number[] = [];
                         const maxTokensToCheck = Math.min(Number(nftBalance), 150);
 
-                        for (let i = 0; i < maxTokensToCheck; i++) {
+                        // Try enumerable method first with limited attempts
+                        let useEnumerableMethod = true;
+                        for (let i = 0; i < Math.min(maxTokensToCheck, 3); i++) {
                           try {
                             const tokenId = await foundersPassContract.tokenOfOwnerByIndex(account, i);
                             const tokenIdNumber = Number(tokenId);
@@ -954,17 +981,49 @@ const WalletConnection = ({
                             }
 
                             // Add delay between requests
-                            if (i < maxTokensToCheck - 1) {
+                            if (i < Math.min(maxTokensToCheck, 3) - 1) {
                               await new Promise((resolve) => setTimeout(resolve, 50));
                             }
                           } catch (error) {
                             console.log(`Could not get token at index ${i}:`, sanitizeError(error));
-                            continue;
+                            if (i < 2) {
+                              useEnumerableMethod = false;
+                              break;
+                            }
+                          }
+                        }
+
+                        // Use fallback method if enumerable failed
+                        if (!useEnumerableMethod || ownedTokenIds.length === 0) {
+                          console.log("Using fallback method for Add NFT...");
+                          ownedTokenIds.length = 0; // Clear partial results
+
+                          // Check ownership by iterating through possible token IDs
+                          const batchSize = 10;
+                          for (let startTokenId = 1; startTokenId <= 150; startTokenId += batchSize) {
+                            const endTokenId = Math.min(startTokenId + batchSize - 1, 150);
+
+                            for (let tokenId = startTokenId; tokenId <= endTokenId; tokenId++) {
+                              try {
+                                const owner = await foundersPassContract.ownerOf(tokenId);
+                                if (owner.toLowerCase() === account.toLowerCase()) {
+                                  ownedTokenIds.push(tokenId);
+                                }
+                                await new Promise((resolve) => setTimeout(resolve, 100));
+                              } catch {
+                                continue;
+                              }
+                            }
+
+                            // Delay between batches
+                            if (endTokenId < 150) {
+                              await new Promise((resolve) => setTimeout(resolve, 500));
+                            }
                           }
                         }
 
                         if (ownedTokenIds.length === 0) {
-                          setFoundersPassError("Could not retrieve your NFT token IDs");
+                          setFoundersPassError("Could not retrieve your NFT token IDs. The contract may not support enumeration.");
                           return;
                         }
 
