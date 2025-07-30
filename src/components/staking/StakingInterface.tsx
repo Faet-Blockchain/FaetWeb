@@ -97,7 +97,7 @@ const StakingInterface = ({
                       decimals: 18,
                       image: 'https://your-domain.com/faet-token-icon.png',
                     },
-                  },
+                  } as { type: string; options: { address: string; symbol: string; decimals: number; image: string } },
                 });
 
                 if (wasAdded) {
