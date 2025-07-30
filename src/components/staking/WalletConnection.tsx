@@ -361,6 +361,11 @@ const WalletConnection = ({
 
                         // Initialize web3 provider to check ownership
                         const { ethers } = await import("ethers");
+
+                        if (!window.ethereum) {
+                          throw new Error("MetaMask not available");
+                        }
+
                         const provider = new ethers.BrowserProvider(
                           window.ethereum,
                         );
@@ -953,6 +958,11 @@ const WalletConnection = ({
 
                         // Initialize web3 provider to check ownership
                         const { ethers } = await import("ethers");
+
+                        if (!window.ethereum) {
+                          throw new Error("MetaMask not available");
+                        }
+
                         const provider = new ethers.BrowserProvider(
                           window.ethereum,
                         );
