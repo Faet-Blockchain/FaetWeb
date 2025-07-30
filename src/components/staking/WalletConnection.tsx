@@ -990,124 +990,35 @@ const WalletConnection = ({
                           return;
                         }
 
-                        // Get owned token IDs using improved method
+                        // Simple approach: Check which tokens the user owns
                         const ownedTokenIds: number[] = [];
-                        const maxTokensToCheck = Math.min(Number(nftBalance), 150);
-
-                        // Try enumerable method first with limited attempts
                         
-
-                        // Use optimized fallback method
+                        // Check tokens 1-150 (standard Founder's Pass range)
+                        console.log("Checking which Founder's Pass NFTs you own...");
                         
-                          console.log("Using optimized fallback method for Add NFT...");
-                          ownedTokenIds.length = 0; // Clear partial results
-
-                          // Strategy 1: Try to use Transfer events to find owned tokens (fastest)
+                        for (let tokenId = 1; tokenId <= 150; tokenId++) {
                           try {
-                            console.log("Attempting to use Transfer events...");
-                            const transferFilter = foundersPassContract.filters.Transfer(null, account);
-                            const events = await foundersPassContract.queryFilter(transferFilter, -10000); // Last ~10k blocks
-                            
-                            const potentialTokens = new Set<number>();
-                            for (const event of events) {
-                              if (event.args && event.args[2]) {
-                                potentialTokens.add(Number(event.args[2]));
-                              }
+                            const owner = await foundersPassContract.ownerOf(tokenId);
+                            if (owner.toLowerCase() === account.toLowerCase()) {
+                              ownedTokenIds.push(tokenId);
+                              console.log(`Found owned NFT: #${tokenId}`);
                             }
-                            
-                            // Verify current ownership of these tokens
-                            console.log(`Found ${potentialTokens.size} potential tokens from events`);
-                            for (const tokenId of potentialTokens) {
-                              try {
-                                const owner = await foundersPassContract.ownerOf(tokenId);
-                                if (owner.toLowerCase() === account.toLowerCase()) {
-                                  ownedTokenIds.push(tokenId);
-                                }
-                              } catch {
-                                // Token might not exist or transferred away
-                              }
-                            }
-                            
-                            if (ownedTokenIds.length > 0) {
-                              console.log(`Found ${ownedTokenIds.length} owned tokens via events`);
-                            } else {
-                              throw new Error("No tokens found via events");
-                            }
-                          } catch (eventError) {
-                            console.log("Event-based detection failed, using direct checking...");
-                            
-                            // Strategy 2: Smart range checking based on common NFT patterns
-                            const totalMinted = Number(await foundersPassContract.totalMinted());
-                            const maxToCheck = Math.min(totalMinted, 150);
-                            
-                            // Use concurrent batch processing for faster results
-                            const batchSize = 20; // Larger batch size
-                            const maxConcurrent = 5; // Process multiple batches concurrently
-                            
-                            const checkTokenBatch = async (startId: number, endId: number): Promise<number[]> => {
-                              const found: number[] = [];
-                              for (let tokenId = startId; tokenId <= endId; tokenId++) {
-                                try {
-                                  const owner = await foundersPassContract.ownerOf(tokenId);
-                                  if (owner.toLowerCase() === account.toLowerCase()) {
-                                    found.push(tokenId);
-                                  }
-                                } catch {
-                                  // Token doesn't exist or other error
-                                }
-                              }
-                              return found;
-                            };
-                            
-                            // Process batches concurrently
-                            const batches: Promise<number[]>[] = [];
-                            for (let startId = 1; startId <= maxToCheck; startId += batchSize) {
-                              const endId = Math.min(startId + batchSize - 1, maxToCheck);
-                              batches.push(checkTokenBatch(startId, endId));
-                              
-                              // Limit concurrent batches to avoid rate limiting
-                              if (batches.length >= maxConcurrent) {
-                                const results = await Promise.all(batches);
-                                results.forEach(batch => ownedTokenIds.push(...batch));
-                                batches.length = 0; // Clear processed batches
-                                
-                                // Small delay between concurrent groups
-                                await new Promise(resolve => setTimeout(resolve, 200));
-                              }
-                            }
-                            
-                            // Process remaining batches
-                            if (batches.length > 0) {
-                              const results = await Promise.all(batches);
-                              results.forEach(batch => ownedTokenIds.push(...batch));
-                            }
+                          } catch {
+                            // Token doesn't exist or not owned
                           }
-                        
+                        }
 
                         if (ownedTokenIds.length === 0) {
-                          setFoundersPassError("Could not retrieve your NFT token IDs. The contract may not support enumeration.");
+                          setFoundersPassError("No Founder's Pass NFTs found in your wallet");
                           return;
                         }
 
-                        console.log(`Found ${ownedTokenIds.length} owned NFTs:`, ownedTokenIds);
+                        console.log(`Adding ${ownedTokenIds.length} NFTs to MetaMask...`);
 
-                        let successCount = 0;
-
-                        // Add only owned NFTs to MetaMask
+                        // Add all owned NFTs to MetaMask
                         for (const tokenId of ownedTokenIds) {
                           try {
-                            // Security: Check if ethereum is still available
-                            if (
-                              typeof window.ethereum === "undefined" ||
-                              !window.ethereum.request
-                            ) {
-                              console.warn(
-                                `Security: window.ethereum became unavailable during operation`,
-                              );
-                              break;
-                            }
-
-                            const wasAdded = await window.ethereum.request({
+                            await window.ethereum.request({
                               method: "wallet_watchAsset",
                               params: {
                                 type: "ERC721",
@@ -1117,39 +1028,15 @@ const WalletConnection = ({
                                 },
                               },
                             });
-
-                            if (wasAdded) {
-                              successCount++;
-                              console.log(`✅ Founder's Pass #${tokenId} added to wallet`);
-                            }
-
-                            // Security: Rate limiting between requests
-                            await new Promise((resolve) =>
-                              setTimeout(resolve, SECURITY_CONFIG.RATE_LIMITS.NFT_ADD_DELAY),
-                            );
+                            console.log(`✅ Added Founder's Pass #${tokenId} to MetaMask`);
                           } catch (error: unknown) {
-                            const errorObj = error as {
-                              code?: number | string;
-                              message?: string;
-                            };
-                            if (
-                              errorObj?.code === 4001 ||
-                              errorObj?.code === "ACTION_REJECTED"
-                            ) {
-                              console.log(`User cancelled adding Founder's Pass #${tokenId}`);
-                              break; // Stop if user cancels
+                            const errorObj = error as { code?: number | string };
+                            if (errorObj?.code === 4001) {
+                              console.log("User cancelled NFT addition");
+                              break;
                             }
-                            console.log(
-                              `Error adding Founder's Pass #${tokenId}:`,
-                              sanitizeError(error),
-                            );
-                            // Continue with other tokens
+                            console.log(`Failed to add NFT #${tokenId}:`, sanitizeError(error));
                           }
-                        }
-
-                        // Don't show error message if no NFTs were added
-                        if (successCount > 0) {
-                          console.log(`Successfully added ${successCount} NFTs to MetaMask`);
                         }
                       } catch (error) {
                         console.error(
