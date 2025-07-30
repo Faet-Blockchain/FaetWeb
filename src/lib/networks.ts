@@ -1,4 +1,3 @@
-
 // Network configuration for staking
 export type NetworkType = 'testnet' | 'mainnet';
 
