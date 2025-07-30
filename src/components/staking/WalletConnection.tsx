@@ -94,22 +94,7 @@ const WalletConnection = ({
   // Get dynamic contract addresses based on selected network
   const contractAddresses = getContractAddresses(selectedNetwork);
 
-  // Debug logging to understand network state
-  console.log("WalletConnection Debug:", {
-    account,
-    wrongNetwork,
-    currentChainId,
-    currentChainIdNumber,
-    selectedNetwork,
-    canAccessStaking,
-    expectedChainId: selectedNetwork === "mainnet" ? "0x46f" : "0x106a",
-    expectedChainNumber: selectedNetwork === "mainnet" ? 1135 : 4202,
-    isNetworkValid: isValidChainId(
-      currentChainId,
-      selectedNetwork,
-      currentChainIdNumber,
-    ),
-  });
+  
   const [characterNftError, setCharacterNftError] = useState<string>("");
   const [foundersPassError, setFoundersPassError] = useState<string>("");
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
