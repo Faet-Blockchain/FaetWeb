@@ -1,0 +1,214 @@
+✅ Contract verified: FAET Founders Pass (FAET)
+WalletConnection.tsx:1052 User owns 1 Founder's Pass NFTs
+WalletConnection.tsx:1066 Checking which Founder's Pass NFTs you own...
+WalletConnection.tsx:1082 Found owned NFT: #31
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. {code: -32603, message: 'Internal JSON-RPC error.', data: {…}, stack: '{\n  "code": -32603,\n  "message": "Internal JSON-RP…ihfbeogaeaoehlefnkodbefgpgknn/common-2.js:3:64047'}
+(anonymous) @ inpage.js:1
+(anonymous) @ inpage.js:1
+p @ inpage.js:1
+f @ inpage.js:1
+await in f
+l @ inpage.js:1
+handle @ inpage.js:1
+_rpcRequest @ inpage.js:1
+(anonymous) @ inpage.js:1
+request @ inpage.js:1
+BrowserProvider.#request @ provider-browser.ts:140
+_send @ provider-browser.ts:168
+(anonymous) @ provider-jsonrpc.ts:545
+(anonymous) @ provider-jsonrpc.ts:587
+setTimeout
+#scheduleDrain @ provider-jsonrpc.ts:518
+send @ provider-jsonrpc.ts:1120
+send @ provider-browser.ts:161
+await in send
+_perform @ provider-jsonrpc.ts:682
+#call @ abstract-provider.ts:985
+call @ abstract-provider.ts:1056
+await in call
+call @ abstract-signer.ts:241
+await in call
+staticCallResult @ contract.ts:337
+await in staticCallResult
+staticCall @ contract.ts:303
+ownerOf @ contract.ts:351
+onClick @ WalletConnection.tsx:1079
+setTimeout
+(anonymous) @ inpage.js:1
+write @ inpage.js:1
+I @ inpage.js:12
+(anonymous) @ inpage.js:12
+j.write @ inpage.js:12
+d @ inpage.js:12
+a.emit @ inpage.js:10
+A @ inpage.js:12
+I @ inpage.js:12
+j.push @ inpage.js:12
+_write @ inpage.js:1
+I @ inpage.js:12
+(anonymous) @ inpage.js:12
+j.write @ inpage.js:12
+d @ inpage.js:12
+a.emit @ inpage.js:10
+A @ inpage.js:12
+I @ inpage.js:12
+j.push @ inpage.js:12
+_onData @ inpage.js:1
+_onMessage @ inpage.js:1
+postMessage
+_postMessage @ contentscript.js:1
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+h @ contentscript.js:55
+a.emit @ contentscript.js:44
+T @ contentscript.js:55
+k @ contentscript.js:55
+_.push @ contentscript.js:55
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+h @ contentscript.js:55
+a.emit @ contentscript.js:44
+T @ contentscript.js:55
+k @ contentscript.js:55
+_.push @ contentscript.js:55
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+d @ contentscript.js:44
+a.emit @ contentscript.js:44
+Z @ contentscript.js:44
+Y @ contentscript.js:44
+X.push @ contentscript.js:44
+_onMessage @ contentscript.js:44
+(anonymous) @ contentscript.js:44Understand this warning
+WalletConnection.tsx:1096 Adding 1 NFTs to MetaMask...
+WalletConnection.tsx:1108 Attempting to add Founder's Pass #31 to MetaMask...
+WalletConnection.tsx:1128 Request params for token #31: {type: 'ERC721', options: {…}}
+inpage.js:1 MetaMask - RPC Error: Cannot destructure property 'tokenId' of 'r' as it is undefined. {code: -32603, message: "Cannot destructure property 'tokenId' of 'r' as it is undefined.", data: {…}}
+(anonymous) @ inpage.js:1
+(anonymous) @ inpage.js:1
+p @ inpage.js:1
+f @ inpage.js:1
+await in f
+l @ inpage.js:1
+handle @ inpage.js:1
+_rpcRequest @ inpage.js:1
+(anonymous) @ inpage.js:1
+request @ inpage.js:1
+onClick @ WalletConnection.tsx:1134
+setTimeout
+(anonymous) @ inpage.js:1
+write @ inpage.js:1
+I @ inpage.js:12
+(anonymous) @ inpage.js:12
+j.write @ inpage.js:12
+d @ inpage.js:12
+a.emit @ inpage.js:10
+A @ inpage.js:12
+I @ inpage.js:12
+j.push @ inpage.js:12
+_write @ inpage.js:1
+I @ inpage.js:12
+(anonymous) @ inpage.js:12
+j.write @ inpage.js:12
+d @ inpage.js:12
+a.emit @ inpage.js:10
+A @ inpage.js:12
+I @ inpage.js:12
+j.push @ inpage.js:12
+_onData @ inpage.js:1
+_onMessage @ inpage.js:1
+postMessage
+_postMessage @ contentscript.js:1
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+h @ contentscript.js:55
+a.emit @ contentscript.js:44
+T @ contentscript.js:55
+k @ contentscript.js:55
+_.push @ contentscript.js:55
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+h @ contentscript.js:55
+a.emit @ contentscript.js:44
+T @ contentscript.js:55
+k @ contentscript.js:55
+_.push @ contentscript.js:55
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+d @ contentscript.js:44
+a.emit @ contentscript.js:44
+Z @ contentscript.js:44
+Y @ contentscript.js:44
+X.push @ contentscript.js:44
+_onMessage @ contentscript.js:44
+(anonymous) @ contentscript.js:44Understand this warning
+WalletConnection.tsx:1156 Error adding NFT #31: {code: -32603, message: "Cannot destructure property 'tokenId' of 'r' as it is undefined.", data: {…}}
+error @ intercept-console-error.ts:40
+onClick @ WalletConnection.tsx:1156
+setTimeout
+(anonymous) @ inpage.js:1
+write @ inpage.js:1
+I @ inpage.js:12
+(anonymous) @ inpage.js:12
+j.write @ inpage.js:12
+d @ inpage.js:12
+a.emit @ inpage.js:10
+A @ inpage.js:12
+I @ inpage.js:12
+j.push @ inpage.js:12
+_write @ inpage.js:1
+I @ inpage.js:12
+(anonymous) @ inpage.js:12
+j.write @ inpage.js:12
+d @ inpage.js:12
+a.emit @ inpage.js:10
+A @ inpage.js:12
+I @ inpage.js:12
+j.push @ inpage.js:12
+_onData @ inpage.js:1
+_onMessage @ inpage.js:1
+postMessage
+_postMessage @ contentscript.js:1
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+h @ contentscript.js:55
+a.emit @ contentscript.js:44
+T @ contentscript.js:55
+k @ contentscript.js:55
+_.push @ contentscript.js:55
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+h @ contentscript.js:55
+a.emit @ contentscript.js:44
+T @ contentscript.js:55
+k @ contentscript.js:55
+_.push @ contentscript.js:55
+_write @ contentscript.js:1
+k @ contentscript.js:55
+(anonymous) @ contentscript.js:55
+_.write @ contentscript.js:55
+d @ contentscript.js:44
+a.emit @ contentscript.js:44
+Z @ contentscript.js:44
+Y @ contentscript.js:44
+X.push @ contentscript.js:44
+_onMessage @ contentscript.js:44
+(anonymous) @ contentscript.js:44Understand this error
+WalletConnection.tsx:1163 ⚠️ MetaMask internal error for token #31 - this is common with ERC721 tokens on some networks
+WalletConnection.tsx:1221 ⚠️ MetaMask NFT addition not supported or failed
