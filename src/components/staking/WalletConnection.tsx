@@ -106,7 +106,6 @@ const WalletConnection = ({
   // Get dynamic contract addresses based on selected network
   const contractAddresses = getContractAddresses(selectedNetwork);
 
-  const [foundersPassError, setFoundersPassError] = useState<string>("");
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
   const [lastOperationTime, setLastOperationTime] = useState<number>(0);
 
@@ -369,7 +368,7 @@ const WalletConnection = ({
                         securityChecks.isValidAccount &&
                         securityChecks.isValidChain
                       ) {
-                        setFoundersPassError("");
+                        
 
                         // Security: Validate prerequisites
                         if (!validateContractInteraction()) {
