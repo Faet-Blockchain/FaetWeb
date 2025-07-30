@@ -93,7 +93,7 @@ export default function StakingPage() {
   }, []);
 
   const checkNetwork = useCallback(async (): Promise<boolean> => {
-    if (typeof window.ethereum !== "undefined") {
+    if (typeof window.ethereum !== "undefined" && window.ethereum.request) {
       try {
         const chainId = (await window.ethereum.request({
           method: "eth_chainId",
@@ -138,7 +138,7 @@ export default function StakingPage() {
   }, [clearWeb3State, selectedNetwork]); // Add selectedNetwork to dependencies
 
   const switchToCurrentNetwork = async () => {
-    if (typeof window.ethereum !== "undefined") {
+    if (typeof window.ethereum !== "undefined" && window.ethereum.request) {
       try {
         await window.ethereum.request({
           method: "wallet_switchEthereumChain",
@@ -147,16 +147,18 @@ export default function StakingPage() {
       } catch (switchError: unknown) {
         if ((switchError as { code?: number })?.code === 4902) {
           try {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [{
+            if (window.ethereum?.request) {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [{
                 chainId: currentNetworkConfig.chainId,
                 chainName: currentNetworkConfig.name,
                 nativeCurrency: currentNetworkConfig.nativeCurrency,
                 rpcUrls: [currentNetworkConfig.rpcUrl],
                 blockExplorerUrls: [currentNetworkConfig.blockExplorerUrl],
               }],
-            });
+              });
+            }
           } catch (addError) {
             console.error("Error adding network:", addError);
           }
@@ -495,7 +497,7 @@ export default function StakingPage() {
   }, [account, selectedNetwork, loadUserData, clearWeb3State, checkNetwork, FAET_TOKEN_ADDRESS, FAET_STAKING_ADDRESS, loadTopStakersData]);
 
   const connectMetaMask = async () => {
-    if (typeof window.ethereum !== "undefined") {
+    if (typeof window.ethereum !== "undefined" && window.ethereum.request) {
       setIsConnecting(true);
       try {
         const accounts = (await window.ethereum.request({
@@ -725,9 +727,14 @@ export default function StakingPage() {
           // Force fresh read from wallet instead of using event data
           let actualChainId;
           try {
-            actualChainId = (await window.ethereum!.request({
-              method: "eth_chainId",
-            })) as string;
+            if (window.ethereum?.request) {
+              actualChainId = (await window.ethereum.request({
+                method: "eth_chainId",
+              })) as string;
+            } else {
+              console.error("Error reading chain ID: window.ethereum not available");
+              return;
+            }
           } catch {
             console.error("Error reading chain ID:");
             return;
@@ -817,7 +824,7 @@ export default function StakingPage() {
   useEffect(() => {
     const initialize = async () => {
       // Check if already connected
-      if (typeof window.ethereum !== "undefined") {
+      if (typeof window.ethereum !== "undefined" && window.ethereum.request) {
         try {
           const accounts = await window.ethereum.request({ method: "eth_accounts" }) as string[];
           if (accounts.length > 0) {

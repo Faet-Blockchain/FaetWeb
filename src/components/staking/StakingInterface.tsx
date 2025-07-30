@@ -85,9 +85,9 @@ const StakingInterface = ({
         </button>
         <button
           onClick={async () => {
-            if (typeof window.ethereum !== "undefined") {
-              try {
-                const wasAdded = await window.ethereum.request({
+          if (typeof window.ethereum !== "undefined" && window.ethereum.request) {
+            try {
+              const wasAdded = await window.ethereum.request({
                   method: 'wallet_watchAsset',
                   params: [{
                     type: 'ERC20',
@@ -140,7 +140,7 @@ const StakingInterface = ({
             {networkConfig.contracts.token}
           </a>
         </div>
-        
+
         <div className="bg-gray-800 p-4 rounded-lg border border-gray-600">
           <h3 className="text-lg font-semibold text-green-400 mb-3">FaetStaking CA</h3>
           <a

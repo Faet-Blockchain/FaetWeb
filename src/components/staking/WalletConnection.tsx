@@ -366,7 +366,7 @@ const WalletConnection = ({
                             }
 
                             // Security: Check if ethereum is still available
-                            if (typeof window.ethereum === "undefined") {
+                            if (typeof window.ethereum === "undefined" || !window.ethereum.request) {
                               console.warn(`Security: window.ethereum became unavailable during operation`);
                               break;
                             }
@@ -490,7 +490,7 @@ const WalletConnection = ({
                           }
 
                           const provider = new ethers.BrowserProvider(window.ethereum);
-                          const signer = await provider.getSigner();
+                          const signer = await await provider.getSigner();
 
                           // Security: Validate signer address matches connected account
                           const signerAddress = await signer.getAddress();
@@ -746,7 +746,7 @@ const WalletConnection = ({
                             }
 
                             // Security: Check if ethereum is still available
-                            if (typeof window.ethereum === "undefined") {
+                            if (typeof window.ethereum === "undefined" || !window.ethereum.request) {
                               console.warn(`Security: window.ethereum became unavailable during operation`);
                               break;
                             }
