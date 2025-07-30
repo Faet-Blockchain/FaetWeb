@@ -670,7 +670,7 @@ const WalletConnection = ({
                         } catch (error: unknown) {
                           // Handle different types of errors gracefully
                           const errorObj = error as { code?: number | string; message?: string; reason?: string };
-                          
+
                           if (errorObj?.code === 4001 || errorObj?.code === "ACTION_REJECTED" || 
                               errorObj?.reason === "rejected" || errorObj?.message?.includes("User denied")) {
                             console.log('ℹ️ User cancelled airdrop claim transaction');
