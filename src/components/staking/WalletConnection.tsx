@@ -449,7 +449,10 @@ const WalletConnection = ({
                     : "Test the airdrop claiming functionality"
                   }
                 </p>
-                <div className="flex justify-center">
+                <p className="text-yellow-200 text-sm mb-4 text-center">
+                  Will claim all unclaimed Founder's Pass NFTs in your wallet
+                </p>
+                <div className="flex justify-center"></div>
                   <button
                     onClick={async () => {
                       if (!account) {
