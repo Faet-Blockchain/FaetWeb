@@ -197,8 +197,8 @@ export default function StakingPage() {
         }
       }
 
-      // Calculate current active weights for each staker
-      const stakersWithWeights: Array<{ address: string; weight: string }> = [];
+      // Calculate current active weights and raw amounts for each staker
+      const stakersWithWeights: Array<{ address: string; weight: string; rawAmount: string }> = [];
 
       for (const staker of uniqueStakers) {
         if (!staker || staker === '') continue;
@@ -207,10 +207,31 @@ export default function StakingPage() {
           const activeWeight = await staking.getActiveWeight(staker);
           const weightInEther = ethers.formatEther(activeWeight);
 
+          // Also get the raw stake amount by summing all user stakes
+          let totalRawAmount = BigInt(0);
+          try {
+            const stakeCount = await staking.getStakeCount(staker);
+            for (let i = 0; i < stakeCount; i++) {
+              try {
+                const stakeView = await staking.getStakeView(staker, i);
+                const amount = stakeView[0]; // amount is at index 0
+                totalRawAmount += BigInt(amount.toString());
+              } catch {
+                // Skip failed individual stake reads
+              }
+            }
+          } catch {
+            // If we can't get individual stakes, skip this staker
+            continue;
+          }
+
+          const rawAmountInEther = ethers.formatEther(totalRawAmount);
+
           if (parseFloat(weightInEther) > 0) {
             stakersWithWeights.push({
               address: staker,
-              weight: weightInEther
+              weight: weightInEther,
+              rawAmount: rawAmountInEther
             });
           }
         } catch {
@@ -218,7 +239,7 @@ export default function StakingPage() {
         }
       }
 
-      // Sort by weight (highest first) and take top 10
+      // Sort by weight (highest first) for the main topStakers array
       stakersWithWeights.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
       const top10 = stakersWithWeights.slice(0, 10);
 

@@ -15,7 +15,7 @@ type RewardsSectionProps = {
   stakedBalance: string;
   isLoading: boolean;
   wrongNetwork: boolean;
-  topStakers: Array<{ address: string; weight: string }>;
+  topStakers: Array<{ address: string; weight: string; rawAmount?: string }>;
   stakingRanges: Array<{ range: string; count: number; totalWeight: string }>;
   onClaimRewards: () => void;
 };
@@ -32,23 +32,30 @@ const RewardsSection = ({
 }: RewardsSectionProps) => {
   const [chartView, setChartView] = useState<ChartView>('ranges');
 
-  // Process data for top 10 accounts by amount
+  // Process data for top 10 accounts by raw stake amount
   const getTopAccountsData = () => {
     if (topStakers.length === 0) return [];
     
-    const top10 = topStakers.slice(0, 10);
-    const othersWeight = topStakers.slice(10).reduce((sum, staker) => sum + parseFloat(staker.weight), 0);
+    // Sort by raw amount instead of weighted amount for this view
+    const sortedByRawAmount = [...topStakers].sort((a, b) => 
+      parseFloat(b.rawAmount || b.weight) - parseFloat(a.rawAmount || a.weight)
+    );
+    
+    const top10 = sortedByRawAmount.slice(0, 10);
+    const othersAmount = sortedByRawAmount.slice(10).reduce((sum, staker) => 
+      sum + parseFloat(staker.rawAmount || staker.weight), 0
+    );
     
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
-      value: parseFloat(staker.weight),
-      fill: `hsl(${(index * 360) / (top10.length + (othersWeight > 0 ? 1 : 0))}, 70%, 50%)`,
+      value: parseFloat(staker.rawAmount || staker.weight),
+      fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
     }));
 
-    if (othersWeight > 0) {
+    if (othersAmount > 0) {
       data.push({
         name: `Others (${topStakers.length - 10} accounts)`,
-        value: othersWeight,
+        value: othersAmount,
         fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
       });
     }
@@ -56,9 +63,9 @@ const RewardsSection = ({
     return data;
   };
 
-  // Process data for top 10 accounts by weighted amount (same as above for now since we use weight)
+  // Process data for top 10 accounts by weighted amount 
   const getTopWeightedData = () => {
-    return getTopAccountsData(); // Using same data since topStakers is already sorted by weight
+    return getTopAccountsData(); // topStakers is already sorted by weighted amount
   };
 
   // Get current chart data based on view
@@ -85,9 +92,9 @@ const RewardsSection = ({
       case 'ranges':
         return 'Staking Distribution by Amount Range';
       case 'topAccounts':
-        return 'Staking Distribution by Amount - Top 10 Accounts';
+        return 'Top 10 Accounts by Raw Stake Amount';
       case 'topWeighted':
-        return 'Staking Distribution by Weighted Amount - Top 10 Accounts';
+        return 'Top 10 Accounts by Weighted Stake Amount';
       default:
         return '';
     }
@@ -99,9 +106,15 @@ const RewardsSection = ({
       case 'ranges':
         return stakingRanges;
       case 'topAccounts':
-      case 'topWeighted':
         const accountsData = getTopAccountsData();
         return accountsData.map(item => ({
+          range: item.name,
+          count: item.name.includes('Others') ? topStakers.length - 10 : 1,
+          totalWeight: item.value.toString(),
+        }));
+      case 'topWeighted':
+        const weightedData = getTopWeightedData();
+        return weightedData.map(item => ({
           range: item.name,
           count: item.name.includes('Others') ? topStakers.length - 10 : 1,
           totalWeight: item.value.toString(),

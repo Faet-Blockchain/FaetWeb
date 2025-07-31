@@ -35,7 +35,7 @@ type StakingInterfaceProps = {
   txHash: string;
   totalRewardsFunded: string;
   totalStakeWeight: string;
-  topStakers: Array<{ address: string; weight: string }>;
+  topStakers: Array<{ address: string; weight: string; rawAmount?: string }>;
   stakingRanges: Array<{ range: string; count: number; totalWeight: string }>;
   onBackToOverview: () => void;
 };
