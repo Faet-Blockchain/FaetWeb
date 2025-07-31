@@ -688,34 +688,53 @@ const WalletConnection = ({
                   window.ethereum.request
                 ) {
                   try {
+                    console.log("Adding FAET token to MetaMask...");
+                    console.log("Token address:", contractAddresses.FAET_TOKEN);
+                    
                     const wasAdded = await window.ethereum.request({
                       method: "wallet_watchAsset",
-                      params: [
-                        {
-                          type: "ERC20",
-                          options: {
-                            address: contractAddresses.FAET_TOKEN,
-                            symbol: "FAET",
-                            decimals: 18,
-                            image: "https://your-domain.com/faet-token-icon.png",
-                          },
+                      params: {
+                        type: "ERC20",
+                        options: {
+                          address: contractAddresses.FAET_TOKEN,
+                          symbol: "FAET",
+                          decimals: 18,
                         },
-                      ],
+                      },
                     });
 
                     if (wasAdded) {
-                      console.log("Thanks for your interest!");
+                      console.log("FAET token successfully added to MetaMask!");
+                      alert("✅ FAET token added to MetaMask!");
                     } else {
-                      console.log("Your loss!");
+                      console.log("User declined to add FAET token");
                     }
                   } catch (error) {
-                    console.error(error);
+                    console.error("Error adding FAET token:", error);
+                    // More detailed error handling
+                    if (error && typeof error === 'object') {
+                      const errorObj = error as Record<string, unknown>;
+                      if (errorObj.code === 4001) {
+                        console.log("User rejected the request");
+                      } else if (errorObj.code === -32002) {
+                        alert("⚠️ Request already pending in MetaMask. Please check your wallet.");
+                      } else {
+                        alert("❌ Failed to add token. Please try again or add it manually using the contract address: " + contractAddresses.FAET_TOKEN);
+                      }
+                    } else {
+                      alert("❌ Failed to add token. Please try again.");
+                    }
                   }
                 } else {
-                  console.log("MetaMask is not installed!");
+                  alert("❌ MetaMask is not installed or not available!");
                 }
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+              disabled={!account || wrongNetwork}
+              className={`font-bold py-2 px-6 rounded-lg transition-colors ${
+                !account || wrongNetwork
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
+              }`}
             >
               Add FAET Token to MetaMask
             </button>
