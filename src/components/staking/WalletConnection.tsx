@@ -368,7 +368,7 @@ const WalletConnection = ({
                         securityChecks.isValidAccount &&
                         securityChecks.isValidChain
                       ) {
-                        
+
 
                         // Security: Validate prerequisites
                         if (!validateContractInteraction()) {
@@ -681,7 +681,44 @@ const WalletConnection = ({
                 </p>
               </div>
             </div>
+            <button
+              onClick={async () => {
+                if (
+                  typeof window.ethereum !== "undefined" &&
+                  window.ethereum.request
+                ) {
+                  try {
+                    const wasAdded = await window.ethereum.request({
+                      method: "wallet_watchAsset",
+                      params: [
+                        {
+                          type: "ERC20",
+                          options: {
+                            address: contractAddresses.FAET_TOKEN,
+                            symbol: "FAET",
+                            decimals: 18,
+                            image: "https://your-domain.com/faet-token-icon.png",
+                          },
+                        },
+                      ],
+                    });
 
+                    if (wasAdded) {
+                      console.log("Thanks for your interest!");
+                    } else {
+                      console.log("Your loss!");
+                    }
+                  } catch (error) {
+                    console.error(error);
+                  }
+                } else {
+                  console.log("MetaMask is not installed!");
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+            >
+              Add FAET Token to MetaMask
+            </button>
             <button
               type="button"
               onClick={onDisconnect}
