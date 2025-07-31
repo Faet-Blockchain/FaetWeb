@@ -36,19 +36,21 @@ const RewardsSection = ({
   const getTopAccountsData = () => {
     if (topStakers.length === 0) return [];
     
-    // Sort by raw amount instead of weighted amount for this view
-    const sortedByRawAmount = [...topStakers].sort((a, b) => 
-      parseFloat(b.rawAmount || b.weight) - parseFloat(a.rawAmount || a.weight)
-    );
+    // Sort by raw amount (actual staked amount without multipliers)
+    const sortedByRawAmount = [...topStakers].sort((a, b) => {
+      const aRaw = parseFloat(a.rawAmount || '0');
+      const bRaw = parseFloat(b.rawAmount || '0');
+      return bRaw - aRaw;
+    });
     
     const top10 = sortedByRawAmount.slice(0, 10);
     const othersAmount = sortedByRawAmount.slice(10).reduce((sum, staker) => 
-      sum + parseFloat(staker.rawAmount || staker.weight), 0
+      sum + parseFloat(staker.rawAmount || '0'), 0
     );
     
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
-      value: parseFloat(staker.rawAmount || staker.weight),
+      value: parseFloat(staker.rawAmount || '0'),
       fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
     }));
 
@@ -65,7 +67,35 @@ const RewardsSection = ({
 
   // Process data for top 10 accounts by weighted amount 
   const getTopWeightedData = () => {
-    return getTopAccountsData(); // topStakers is already sorted by weighted amount
+    if (topStakers.length === 0) return [];
+    
+    // Sort by weighted amount (includes multipliers for rewards calculation)
+    const sortedByWeight = [...topStakers].sort((a, b) => {
+      const aWeight = parseFloat(a.weight || '0');
+      const bWeight = parseFloat(b.weight || '0');
+      return bWeight - aWeight;
+    });
+    
+    const top10 = sortedByWeight.slice(0, 10);
+    const othersAmount = sortedByWeight.slice(10).reduce((sum, staker) => 
+      sum + parseFloat(staker.weight || '0'), 0
+    );
+    
+    const data = top10.map((staker, index) => ({
+      name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
+      value: parseFloat(staker.weight || '0'),
+      fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
+    }));
+
+    if (othersAmount > 0) {
+      data.push({
+        name: `Others (${topStakers.length - 10} accounts)`,
+        value: othersAmount,
+        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+      });
+    }
+
+    return data;
   };
 
   // Get current chart data based on view

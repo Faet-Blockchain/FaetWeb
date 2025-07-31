@@ -204,10 +204,11 @@ export default function StakingPage() {
         if (!staker || staker === '') continue;
 
         try {
-          const activeWeight = await staking.getActiveWeight(staker);
+          // Get weighted amount (for rewards calculation)
+          const activeWeight = await staking.weightedBalances(staker);
           const weightInEther = ethers.formatEther(activeWeight);
 
-          // Also get the raw stake amount by summing all user stakes
+          // Get raw stake amount by summing all user stakes
           let totalRawAmount = BigInt(0);
           try {
             const stakeCount = await staking.getStakeCount(staker);
@@ -227,7 +228,8 @@ export default function StakingPage() {
 
           const rawAmountInEther = ethers.formatEther(totalRawAmount);
 
-          if (parseFloat(weightInEther) > 0) {
+          // Include stakers with either weighted amount or raw amount > 0
+          if (parseFloat(weightInEther) > 0 || parseFloat(rawAmountInEther) > 0) {
             stakersWithWeights.push({
               address: staker,
               weight: weightInEther,
