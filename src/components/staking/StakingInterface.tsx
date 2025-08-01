@@ -125,9 +125,10 @@ const StakingInterface = ({
 
                 console.log("Token params:", tokenParams);
 
+                // @ts-ignore - MetaMask types are inconsistent, bypassing TypeScript check
                 const wasAdded = await window.ethereum.request({
                   method: "wallet_watchAsset",
-                  params: tokenParams as unknown,
+                  params: tokenParams,
                 });
 
                 if (wasAdded) {
