@@ -128,10 +128,10 @@ const StakingInterface = ({
 
               console.log("Adding token with params:", tokenParams);
 
-              // Request to add token - note the params should be wrapped in an array
+              // Request to add token - MetaMask expects params in an array
               const wasAdded = await window.ethereum.request({
                 method: "wallet_watchAsset",
-                params: tokenParams, // Try without array first
+                params: [tokenParams],
               });
 
               if (wasAdded) {
@@ -139,7 +139,7 @@ const StakingInterface = ({
                 alert(`✅ ${selectedNetwork === "mainnet" ? "FAET" : "Test FAET"} token added to MetaMask!`);
               } else {
                 console.log("ℹ️ User declined to add FAET token");
-                alert("ℹ️ Token addition was cancelled.");
+                // Don't show alert for user cancellation - it's expected behavior
               }
             } catch (error) {
               console.error("❌ Error adding FAET token:", error);
@@ -147,23 +147,16 @@ const StakingInterface = ({
               // Handle different error types
               const err = error as any;
               
-              if (err?.code === 4001 || err?.message?.includes("User rejected")) {
-                alert("ℹ️ Token addition was cancelled by user.");
+              if (err?.code === 4001 || err?.message?.includes("User rejected") || err?.message?.includes("User denied")) {
+                console.log("ℹ️ User cancelled token addition");
+                // Don't show alert for user cancellation - it's expected behavior
               } else if (err?.code === -32002) {
                 alert("⚠️ Request already pending in MetaMask. Please check your wallet.");
               } else if (err?.code === -32603) {
                 alert("❌ Internal error occurred. The token contract may not exist on this network.");
               } else {
-                // Fallback with manual instructions
-                const manualInstructions = `You can manually add the token in MetaMask:
-1. Open MetaMask
-2. Go to "Import tokens"
-3. Use these details:
-   • Address: ${networkConfig.contracts.token}
-   • Symbol: ${selectedNetwork === "mainnet" ? "FAET" : "tFAET"}
-   • Decimals: 18`;
-                
-                alert(`❌ Failed to add token automatically.\n\n${manualInstructions}`);
+                // Show a simple error message and allow retry
+                alert(`❌ Failed to add token. Please try again or add manually in MetaMask.\n\nToken Address: ${networkConfig.contracts.token}`);
               }
             }
           }}
