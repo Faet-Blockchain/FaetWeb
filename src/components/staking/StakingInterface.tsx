@@ -94,79 +94,77 @@ const StakingInterface = ({
               return;
             }
 
-            if (
-              typeof window.ethereum !== "undefined" &&
-              window.ethereum.request
-            ) {
-              try {
-                console.log("Adding FAET token to MetaMask...");
-                console.log("Selected network:", selectedNetwork);
-                console.log("Token address:", networkConfig.contracts.token);
-                
-                // Validate token address
-                const isValidAddress = (address: string): boolean => {
-                  return /^0x[a-fA-F0-9]{40}$/.test(address);
-                };
-
-                if (!networkConfig.contracts.token || !isValidAddress(networkConfig.contracts.token)) {
-                  throw new Error("Invalid token contract address");
-                }
-
-                // Use the correct params format for wallet_watchAsset
-                const tokenParams = {
-                  type: "ERC20" as const,
-                  options: {
-                    address: networkConfig.contracts.token,
-                    symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
-                    decimals: 18,
-                    name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
-                  },
-                };
-
-                console.log("Token params:", tokenParams);
-
-                const wasAdded = await window.ethereum.request({
-                  method: "wallet_watchAsset",
-                  params: [tokenParams],
-                });
-
-                if (wasAdded) {
-                  console.log("FAET token successfully added to MetaMask!");
-                  alert(`✅ ${selectedNetwork === "mainnet" ? "FAET" : "Test FAET"} token added to MetaMask!`);
-                } else {
-                  console.log("User declined to add FAET token");
-                  alert("ℹ️ Token addition was cancelled.");
-                }
-              } catch (error) {
-                console.error("Error adding FAET token:", error);
-                
-                // Enhanced error handling
-                if (error && typeof error === 'object') {
-                  const errorObj = error as Record<string, unknown>;
-                  
-                  // Check for specific error codes
-                  if (errorObj.code === 4001 || errorObj.message?.toString().includes("User rejected")) {
-                    console.log("User rejected the request");
-                    alert("ℹ️ Token addition was cancelled by user.");
-                  } else if (errorObj.code === -32002) {
-                    alert("⚠️ Request already pending in MetaMask. Please check your wallet.");
-                  } else if (errorObj.code === -32603) {
-                    alert("❌ Internal error occurred. The token contract may not exist on this network.");
-                  } else if (errorObj.message?.toString().includes("Invalid token contract address")) {
-                    alert("❌ Invalid token contract address. Please contact support.");
-                  } else {
-                    // For any other error, provide detailed info
-                    const errorMessage = errorObj.message?.toString() || 
-                                       errorObj.reason?.toString() || 
-                                       JSON.stringify(errorObj);
-                    alert(`❌ Failed to add token: ${errorMessage}\n\nYou can manually add it using:\nAddress: ${networkConfig.contracts.token}\nSymbol: ${selectedNetwork === "mainnet" ? "FAET" : "tFAET"}\nDecimals: 18`);
-                  }
-                } else {
-                  alert(`❌ Failed to add token. You can manually add it using:\nAddress: ${networkConfig.contracts.token}\nSymbol: ${selectedNetwork === "mainnet" ? "FAET" : "tFAET"}\nDecimals: 18`);
-                }
-              }
-            } else {
+            // Check if MetaMask is available
+            if (typeof window === "undefined" || !window.ethereum) {
               alert("❌ MetaMask is not installed or not available!");
+              return;
+            }
+
+            try {
+              console.log("Adding FAET token to MetaMask...");
+              console.log("Selected network:", selectedNetwork);
+              console.log("Token address:", networkConfig.contracts.token);
+              
+              // Validate token address
+              const isValidAddress = (address: string): boolean => {
+                return /^0x[a-fA-F0-9]{40}$/.test(address);
+              };
+
+              const tokenAddress = networkConfig.contracts.token;
+              if (!tokenAddress || !isValidAddress(tokenAddress)) {
+                throw new Error("Invalid token contract address");
+              }
+
+              // Prepare token parameters
+              const tokenParams = {
+                type: "ERC20" as const,
+                options: {
+                  address: tokenAddress,
+                  symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
+                  decimals: 18,
+                  name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
+                },
+              };
+
+              console.log("Adding token with params:", tokenParams);
+
+              // Request to add token - note the params should be wrapped in an array
+              const wasAdded = await window.ethereum.request({
+                method: "wallet_watchAsset",
+                params: tokenParams, // Try without array first
+              });
+
+              if (wasAdded) {
+                console.log("✅ FAET token successfully added to MetaMask!");
+                alert(`✅ ${selectedNetwork === "mainnet" ? "FAET" : "Test FAET"} token added to MetaMask!`);
+              } else {
+                console.log("ℹ️ User declined to add FAET token");
+                alert("ℹ️ Token addition was cancelled.");
+              }
+            } catch (error) {
+              console.error("❌ Error adding FAET token:", error);
+              
+              // Handle different error types
+              const err = error as any;
+              
+              if (err?.code === 4001 || err?.message?.includes("User rejected")) {
+                alert("ℹ️ Token addition was cancelled by user.");
+              } else if (err?.code === -32002) {
+                alert("⚠️ Request already pending in MetaMask. Please check your wallet.");
+              } else if (err?.code === -32603) {
+                alert("❌ Internal error occurred. The token contract may not exist on this network.");
+              } else {
+                // Fallback with manual instructions
+                const manualInstructions = `You can manually add the token in MetaMask:
+1. Open MetaMask
+2. Go to "Import tokens"
+3. Use these details:
+   • Address: ${networkConfig.contracts.token}
+   • Symbol: ${selectedNetwork === "mainnet" ? "FAET" : "tFAET"}
+   • Decimals: 18`;
+                
+                alert(`❌ Failed to add token automatically.\n\n${manualInstructions}`);
+              }
             }
           }}
           disabled={!account || wrongNetwork}
