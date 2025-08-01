@@ -42,17 +42,6 @@ type StakingInterfaceProps = {
 
 import { getNetworkConfig } from "@/lib/networks";
 
-// TypeScript interface for MetaMask wallet_watchAsset method
-interface WalletWatchAssetParams {
-  type: 'ERC20';
-  options: {
-    address: string;
-    symbol: string;
-    decimals: number;
-    name: string;
-  };
-}
-
 const StakingInterface = ({
   account,
   wrongNetwork,
@@ -138,7 +127,7 @@ const StakingInterface = ({
 
                 const wasAdded = await window.ethereum.request({
                   method: "wallet_watchAsset",
-                  params: tokenParams as WalletWatchAssetParams,
+                  params: [tokenParams],
                 });
 
                 if (wasAdded) {
