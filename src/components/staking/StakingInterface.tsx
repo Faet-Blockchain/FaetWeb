@@ -127,7 +127,7 @@ const StakingInterface = ({
 
                 const wasAdded = await window.ethereum.request({
                   method: "wallet_watchAsset",
-                  params: tokenParams,
+                  params: tokenParams as any,
                 });
 
                 if (wasAdded) {
