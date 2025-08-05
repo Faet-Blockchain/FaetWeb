@@ -258,17 +258,6 @@ const StakingInterface = ({
           selectedNetwork={selectedNetwork}
           networkConfig={networkConfig}
         />
-          disabled={!account || wrongNetwork}
-          className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
-            !account || wrongNetwork
-              ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
-          }`}
-        >
-          {selectedNetwork === "mainnet"
-            ? "Add FAET Token to MetaMask"
-            : "Add Test FAET Token to MetaMask"}
-        </button>
       </div>
 
       <div className="mb-6">
