@@ -1,0 +1,12 @@
+Network valid, going to staking
+browser.pipe.aria.microsoft.com/Collector/3.0/?qsp=true&content-type=application%2Fbond-compact-binary&client-id=NO_AUTH&sdk-version=AWT-Web-JS-1.8.4&x-apikey=9cf7b68164b34e7e995562121503c72a-72856c17-5747-49e6-bd96-fde5bb08a4f4-7006&client-time-epoch-millis=1754415758863&time-delta-to-apply-millis=use-collector-delta:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+inpage.js:1 MetaMask - RPC Error: Cannot destructure property 'tokenId' of 'r' as it is undefined. Object
+(anonymous) @ inpage.js:1
+StakingInterface.tsx:73 Add token request cancelled or failed
+browser.pipe.aria.microsoft.com/Collector/3.0/?qsp=true&content-type=application%2Fbond-compact-binary&client-id=NO_AUTH&sdk-version=AWT-Web-JS-1.8.4&x-apikey=9cf7b68164b34e7e995562121503c72a-72856c17-5747-49e6-bd96-fde5bb08a4f4-7006&client-time-epoch-millis=1754415761889:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+browser.pipe.aria.microsoft.com/Collector/3.0/?qsp=true&content-type=application%2Fbond-compact-binary&client-id=NO_AUTH&sdk-version=AWT-Web-JS-1.8.4&x-apikey=9cf7b68164b34e7e995562121503c72a-72856c17-5747-49e6-bd96-fde5bb08a4f4-7006&client-time-epoch-millis=1754415767906:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+browser.pipe.aria.microsoft.com/Collector/3.0/?qsp=true&content-type=application%2Fbond-compact-binary&client-id=NO_AUTH&sdk-version=AWT-Web-JS-1.8.4&x-apikey=9cf7b68164b34e7e995562121503c72a-72856c17-5747-49e6-bd96-fde5bb08a4f4-7006&client-time-epoch-millis=1754415770467:1  Failed to load resource: net::ERR_BLOCKED_BY_CLIENT
+inpage.js:1 MetaMask - RPC Error: Cannot destructure property 'tokenId' of 'r' as it is undefined. Object
+(anonymous) @ inpage.js:1
+StakingInterface.tsx:73 Add token request cancelled or failed
+logHelper.js:4580  POST https://browser.pipe.aria.microsoft.com/Collector/3.0/?qsp=true&content-type=application%2Fbond-compact-binary&client-id=NO_AUTH&sdk-version=AWT-Web-JS-1.8.4&x-apikey=9cf7b68164b34e7e995562121503c72a-72856c17-5747-49e6-bd96-fde5bb08a4f4-7006&client-time-epoch-millis=1754415782478 net::ERR_BLOCKED_BY_CLIENT
