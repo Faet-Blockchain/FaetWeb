@@ -50,165 +50,39 @@ type AddTokenButtonProps = {
 };
 
 const AddTokenButton = ({ account, wrongNetwork, selectedNetwork, networkConfig }: AddTokenButtonProps) => {
-  const [status, setStatus] = React.useState<'idle' | 'adding' | 'success' | 'error' | 'cancelled'>('idle');
-  const [errorMessage, setErrorMessage] = React.useState<string>('');
-
   const handleAddToken = async () => {
-    if (!account) {
-      setStatus('error');
-      setErrorMessage('Please connect your wallet first');
-      setTimeout(() => setStatus('idle'), 3000);
-      return;
-    }
-
-    if (wrongNetwork) {
-      setStatus('error');
-      setErrorMessage('Please switch to the correct network first');
-      setTimeout(() => setStatus('idle'), 3000);
-      return;
-    }
-
-    if (typeof window === "undefined" || !window.ethereum) {
-      setStatus('error');
-      setErrorMessage('MetaMask is not installed or not available');
-      setTimeout(() => setStatus('idle'), 3000);
-      return;
-    }
-
-    setStatus('adding');
-    setErrorMessage('');
-
-    try {
-      const isValidAddress = (address: string): boolean => {
-        return /^0x[a-fA-F0-9]{40}$/.test(address);
-      };
-
-      const tokenAddress = networkConfig.contracts.token;
-      if (!tokenAddress || !isValidAddress(tokenAddress)) {
-        throw new Error("Invalid token contract address");
-      }
-
-      const tokenParams = {
-        type: "ERC20" as const,
-        options: {
-          address: tokenAddress,
-          symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
-          decimals: 18,
-          name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
-        },
-      };
-
-      const wasAdded = await window.ethereum.request({
-        method: "wallet_watchAsset",
-        params: [tokenParams],
-      });
-
-      if (wasAdded) {
-        setStatus('success');
-        setTimeout(() => setStatus('idle'), 3000);
-      } else {
-        setStatus('cancelled');
-        setTimeout(() => setStatus('idle'), 2000);
-      }
-    } catch (error) {
-      const err = error as any;
-      
-      if (err?.code === 4001 || err?.message?.includes("User rejected") || err?.message?.includes("User denied")) {
-        setStatus('cancelled');
-        setTimeout(() => setStatus('idle'), 2000);
-      } else if (err?.code === -32002) {
-        setStatus('error');
-        setErrorMessage('Request already pending in MetaMask');
-        setTimeout(() => setStatus('idle'), 3000);
-      } else if (err?.code === -32603) {
-        setStatus('error');
-        setErrorMessage('Token contract may not exist on this network');
-        setTimeout(() => setStatus('idle'), 3000);
-      } else {
-        setStatus('error');
-        setErrorMessage('Failed to add token. Please try again');
-        setTimeout(() => setStatus('idle'), 3000);
-      }
-    }
-  };
-
-  const getButtonContent = () => {
-    switch (status) {
-      case 'adding':
-        return (
-          <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            Adding Token...
-          </>
-        );
-      case 'success':
-        return (
-          <>
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            Token Added!
-          </>
-        );
-      case 'cancelled':
-        return (
-          <>
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            Cancelled
-          </>
-        );
-      case 'error':
-        return (
-          <>
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            Error
-          </>
-        );
-      default:
-        return `Add ${selectedNetwork === "mainnet" ? "FAET" : "Test FAET"} Token to MetaMask`;
-    }
-  };
-
-  const getButtonClass = () => {
-    const baseClass = "font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center";
+    const tokenAddress = networkConfig.contracts.token;
     
-    if (!account || wrongNetwork) {
-      return `${baseClass} bg-gray-600 text-gray-400 cursor-not-allowed`;
-    }
+    const tokenParams = {
+      type: "ERC20" as const,
+      options: {
+        address: tokenAddress,
+        symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
+        decimals: 18,
+        name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
+      },
+    };
 
-    switch (status) {
-      case 'adding':
-        return `${baseClass} bg-yellow-600 text-white cursor-wait`;
-      case 'success':
-        return `${baseClass} bg-green-600 text-white`;
-      case 'cancelled':
-        return `${baseClass} bg-gray-600 text-gray-300`;
-      case 'error':
-        return `${baseClass} bg-red-600 text-white`;
-      default:
-        return `${baseClass} bg-blue-600 hover:bg-blue-700 text-white`;
-    }
+    await window.ethereum.request({
+      method: "wallet_watchAsset",
+      params: [tokenParams],
+    });
   };
 
   return (
-    <div className="flex flex-col items-end">
-      <button
-        onClick={handleAddToken}
-        disabled={!account || wrongNetwork || status === 'adding'}
-        className={getButtonClass()}
-      >
-        {getButtonContent()}
-      </button>
-      {status === 'error' && errorMessage && (
-        <div className="mt-2 text-red-400 text-xs text-right max-w-xs">
-          {errorMessage}
-        </div>
-      )}
-    </div>
+    <button
+      onClick={handleAddToken}
+      disabled={!account || wrongNetwork}
+      className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
+        !account || wrongNetwork
+          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700 text-white"
+      }`}
+    >
+      {selectedNetwork === "mainnet"
+        ? "Add FAET Token to MetaMask"
+        : "Add Test FAET Token to MetaMask"}
+    </button>
   );
 };
 
