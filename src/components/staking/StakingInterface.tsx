@@ -55,7 +55,7 @@ const AddTokenButton = ({ account, wrongNetwork, selectedNetwork, networkConfig 
       const tokenAddress = networkConfig.contracts.token;
       
       const tokenParams = {
-        type: "ERC20" as const,
+        type: "ERC20",
         options: {
           address: tokenAddress,
           symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
@@ -66,7 +66,7 @@ const AddTokenButton = ({ account, wrongNetwork, selectedNetwork, networkConfig 
 
       await window.ethereum.request({
         method: "wallet_watchAsset",
-        params: [tokenParams],
+        params: tokenParams,
       });
     } catch (error) {
       // Silently handle errors - user may have cancelled or other issues
