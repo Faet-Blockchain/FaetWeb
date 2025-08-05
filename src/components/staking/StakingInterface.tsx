@@ -51,22 +51,27 @@ type AddTokenButtonProps = {
 
 const AddTokenButton = ({ account, wrongNetwork, selectedNetwork, networkConfig }: AddTokenButtonProps) => {
   const handleAddToken = async () => {
-    const tokenAddress = networkConfig.contracts.token;
-    
-    const tokenParams = {
-      type: "ERC20" as const,
-      options: {
-        address: tokenAddress,
-        symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
-        decimals: 18,
-        name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
-      },
-    };
+    try {
+      const tokenAddress = networkConfig.contracts.token;
+      
+      const tokenParams = {
+        type: "ERC20" as const,
+        options: {
+          address: tokenAddress,
+          symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
+          decimals: 18,
+          name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
+        },
+      };
 
-    await window.ethereum.request({
-      method: "wallet_watchAsset",
-      params: [tokenParams],
-    });
+      await window.ethereum.request({
+        method: "wallet_watchAsset",
+        params: [tokenParams],
+      });
+    } catch (error) {
+      // Silently handle errors - user may have cancelled or other issues
+      console.log("Add token request cancelled or failed");
+    }
   };
 
   return (
