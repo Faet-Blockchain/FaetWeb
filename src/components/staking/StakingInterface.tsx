@@ -121,7 +121,6 @@ const StakingInterface = ({
   totalRewardsFunded,
   totalStakeWeight = "0",
   topStakers,
-  stakingRanges,
   onBackToOverview,
 }: StakingInterfaceProps) => {
   const networkConfig = getNetworkConfig(selectedNetwork);
