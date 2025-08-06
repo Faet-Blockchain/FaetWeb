@@ -2,6 +2,11 @@
 import React from "react";
 import { PieChart, Pie, ResponsiveContainer, Tooltip } from "recharts";
 
+// Import types from global definitions
+type LabelProps = {
+  percent?: number;
+};
+
 type RewardsSectionProps = {
   pendingRewards: string;
   totalRewardsFunded: string;
