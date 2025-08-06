@@ -7,9 +7,15 @@ type LabelProps = {
   percent?: number;
 };
 
-// Use the ValueType from global.d.ts
+// Use types from global.d.ts
 declare global {
   type ValueType = string | number | (string | number)[];
+  interface TooltipProps {
+    payload?: {
+      percentage?: number;
+      [key: string]: unknown;
+    };
+  }
 }
 
 type RewardsSectionProps = {
