@@ -42,51 +42,57 @@ type StakingInterfaceProps = {
 
 import { getNetworkConfig } from "@/lib/networks";
 
-type AddTokenButtonProps = {
-  account: string | null;
-  wrongNetwork: boolean;
-  selectedNetwork: "testnet" | "mainnet";
-  networkConfig: any;
+type NetworkConfig = {
+  name: string;
+  contracts: {
+    token: string;
+    staking: string;
+  };
 };
 
-const AddTokenButton = ({ account, wrongNetwork, selectedNetwork, networkConfig }: AddTokenButtonProps) => {
-  const handleAddToken = async () => {
-    try {
-      const tokenAddress = networkConfig.contracts.token;
-      
-      const tokenParams = {
-        type: "ERC20",
-        options: {
-          address: tokenAddress,
-          symbol: selectedNetwork === "mainnet" ? "FAET" : "tFAET",
-          decimals: 18,
-          name: selectedNetwork === "mainnet" ? "FAET Token" : "Test FAET Token",
-        },
-      };
+const AddTokenButton = () => {
+  const getMetaMaskProvider = () => {
+    const eth = window.ethereum;
+    if (!eth) return null;
+    return Array.isArray(eth.providers)
+      ? eth.providers.find((p) => p.isMetaMask)
+      : eth.isMetaMask
+        ? eth
+        : null;
+  };
 
-      await window.ethereum.request({
+  const handleAddToken = async () => {
+    const metaMask = getMetaMaskProvider();
+    if (!metaMask) {
+      console.error("MetaMask not detected");
+      return;
+    }
+
+    try {
+      await metaMask.request({
         method: "wallet_watchAsset",
-        params: tokenParams,
+        params: {
+          type: "ERC20",
+          options: {
+            address: "0xdF92bA28D17329a7284A5eC230967768D4cb7A89",
+            symbol: "FAET",
+            decimals: 18,
+            image: "https://www.faet.io/images/faeticonblk.png",
+          },
+        },
       });
-    } catch (error) {
-      // Silently handle errors - user may have cancelled or other issues
-      console.log("Add token request cancelled or failed");
+    } catch (err: any) {
+      if (err?.code === 4001) {
+        console.log("User rejected the add token request.");
+      } else {
+        console.error("Add token failed", err);
+      }
     }
   };
 
   return (
-    <button
-      onClick={handleAddToken}
-      disabled={!account || wrongNetwork}
-      className={`font-bold py-2 px-4 rounded-lg text-sm transition-colors ${
-        !account || wrongNetwork
-          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-          : "bg-blue-600 hover:bg-blue-700 text-white"
-      }`}
-    >
-      {selectedNetwork === "mainnet"
-        ? "Add FAET Token to MetaMask"
-        : "Add Test FAET Token to MetaMask"}
+    <button onClick={handleAddToken} className="your-button-class">
+      Add FAET to Wallet
     </button>
   );
 };
