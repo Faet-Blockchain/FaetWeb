@@ -218,7 +218,6 @@ const StakingInterface = ({
         isLoading={isLoading}
         wrongNetwork={wrongNetwork}
         topStakers={topStakers}
-        stakingRanges={stakingRanges}
         onClaimRewards={onClaimRewards}
       />
 
