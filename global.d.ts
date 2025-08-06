@@ -3,7 +3,15 @@ declare global {
     ethereum?: {
       request: (args: {
         method: string;
-        params?: unknown[];
+        params?: unknown[] | {
+          type: string;
+          options: {
+            address: string;
+            symbol: string;
+            decimals: number;
+            image: string;
+          };
+        };
       }) => Promise<unknown>;
       on?: (event: string, handler: (...args: unknown[]) => void) => void;
       removeListener?: (
