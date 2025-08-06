@@ -211,7 +211,7 @@ const RewardsSection = ({
                   />
                   <Tooltip
                     formatter={(value: number, name: string, props: TooltipFormatterProps) => [
-                      `${parseFloat(value.toString()).toFixed(2)} FAET (${props.payload.percentage?.toFixed(2)}%)`,
+                      `${Math.round(parseFloat(value.toString())).toLocaleString()} FAET (${props.payload.percentage?.toFixed(2)}%)`,
                       "Total Weight",
                     ]}
                   />
@@ -243,7 +243,7 @@ const RewardsSection = ({
                     </div>
                     <div className="text-right">
                       <div className="text-white font-medium">
-                        {parseFloat(item.totalWeight).toFixed(2)} FAET
+                        {Math.round(parseFloat(item.totalWeight)).toLocaleString()} FAET
                       </div>
                       <div className="text-gray-400 text-xs">
                         {item.percentage?.toFixed(2)}% • {item.count}{" "}
