@@ -63,15 +63,17 @@ const AddTokenButton = () => {
     try {
       await metaMask.request({
         method: "wallet_watchAsset",
-        params: {
-          type: "ERC20",
-          options: {
-            address: "0xdF92bA28D17329a7284A5eC230967768D4cb7A89",
-            symbol: "FAET",
-            decimals: 18,
-            image: "https://www.faet.io/images/faeticonblk.png",
+        params: [
+          {
+            type: "ERC20",
+            options: {
+              address: "0xdF92bA28D17329a7284A5eC230967768D4cb7A89",
+              symbol: "FAET",
+              decimals: 18,
+              image: "https://www.faet.io/images/faeticonblk.png",
+            },
           },
-        },
+        ],
       });
     } catch (err: unknown) {
       const error = err as { code?: number };
@@ -84,12 +86,16 @@ const AddTokenButton = () => {
   };
 
   return (
-    <button 
-      onClick={handleAddToken} 
+    <button
+      onClick={handleAddToken}
       className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
     >
       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
       </svg>
       Add FAET to Wallet
     </button>
