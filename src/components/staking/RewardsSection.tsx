@@ -215,7 +215,7 @@ const RewardsSection = ({
                     labelLine={false}
                   />
                   <Tooltip
-                    formatter={(value: number | undefined, name: string, props: any) => [
+                    formatter={(value: number | undefined, name: string, props: TooltipProps) => [
                       `${Math.round(parseFloat((value || 0).toString())).toLocaleString()} FAET (${props.payload?.percentage?.toFixed(2)}%)`,
                       "Total Weight",
                     ]}

@@ -44,6 +44,13 @@ interface TooltipFormatterProps {
   };
 }
 
+interface TooltipProps {
+  payload?: {
+    percentage?: number;
+    [key: string]: unknown;
+  };
+}
+
 interface ChartDataItem {
   name: string;
   value: number;
