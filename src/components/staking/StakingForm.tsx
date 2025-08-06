@@ -79,13 +79,16 @@ const StakingForm = ({
   // Calculate user's weighted percentage share
   const calculateUserWeightedPercentage = (): number => {
     const totalUserWeight = calculateTotalUserWeight();
-    const totalStake = parseFloat(totalStakeWeight || "0"); // Use actual total from contract, not including new stake
+    const currentTotalStake = parseFloat(totalStakeWeight || "0");
 
-    if (totalStake === 0) return 0;
+    if (currentTotalStake === 0) return 0;
 
-    // Calculate percentage: user's total weight (existing + new) / (total network weight + new stake weight)
-    const totalNetworkWeightWithNewStake = totalStake + calculatePotentialWeight();
-    return (totalUserWeight / totalNetworkWeightWithNewStake) * 100;
+    // The total network weight after the new stake would be:
+    // current total + new stake weight (since user's existing weight is already in the total)
+    const newStakeWeight = calculatePotentialWeight();
+    const totalNetworkWeightAfterStake = currentTotalStake + newStakeWeight;
+
+    return (totalUserWeight / totalNetworkWeightAfterStake) * 100;
   };
 
   // Validate stake amount with sanitization

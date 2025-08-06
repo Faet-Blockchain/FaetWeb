@@ -25,6 +25,9 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
     const userWeight = parseFloat(stakedBalance) || 0;
     
     if (totalWeight === 0 || userWeight === 0) return 0;
+    
+    // User's percentage of the total network weight
+    // (user weight is already included in total weight from contract)
     return (userWeight / totalWeight) * 100;
   };
 
