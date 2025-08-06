@@ -215,10 +215,15 @@ const RewardsSection = ({
                     labelLine={false}
                   />
                   <Tooltip
-                    formatter={(value: string | number | undefined, name: string, props: TooltipProps) => [
-                      `${Math.round(parseFloat((value || 0).toString())).toLocaleString()} FAET (${props.payload?.percentage?.toFixed(2)}%)`,
-                      "Total Weight",
-                    ]}
+                    formatter={(value: ValueType, name: string, props: TooltipProps) => {
+                      // Handle array values by taking the first element, or use the value directly
+                      const numericValue = Array.isArray(value) ? value[0] : value;
+                      const finalValue = numericValue || 0;
+                      return [
+                        `${Math.round(parseFloat(finalValue.toString())).toLocaleString()} FAET (${props.payload?.percentage?.toFixed(2)}%)`,
+                        "Total Weight",
+                      ];
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>

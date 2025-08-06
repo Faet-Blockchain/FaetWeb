@@ -51,6 +51,9 @@ interface TooltipProps {
   };
 }
 
+// Recharts ValueType can be string, number, or arrays of these
+type ValueType = string | number | (string | number)[];
+
 interface ChartDataItem {
   name: string;
   value: number;
