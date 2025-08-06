@@ -30,28 +30,29 @@ const RewardsSection = ({
   stakingRanges,
   onClaimRewards,
 }: RewardsSectionProps) => {
-  const [chartView, setChartView] = useState<ChartView>('ranges');
+  const [chartView, setChartView] = useState<ChartView>('topWeighted'); // Default to 'topWeighted'
 
   // Process data for top 10 accounts by raw stake amount
   const getTopAccountsData = () => {
     if (topStakers.length === 0) return [];
-    
+
     // Sort by raw amount (actual staked amount without multipliers)
     const sortedByRawAmount = [...topStakers].sort((a, b) => {
       const aRaw = parseFloat(a.rawAmount || '0');
       const bRaw = parseFloat(b.rawAmount || '0');
       return bRaw - aRaw;
     });
-    
+
     const top10 = sortedByRawAmount.slice(0, 10);
-    const othersAmount = sortedByRawAmount.slice(10).reduce((sum, staker) => 
+    const othersAmount = sortedByRawAmount.slice(10).reduce((sum, staker) =>
       sum + parseFloat(staker.rawAmount || '0'), 0
     );
-    
+
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
       value: parseFloat(staker.rawAmount || '0'),
       fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
+      percentage: (parseFloat(staker.rawAmount || '0') / (sortedByRawAmount.reduce((sum, staker) => sum + parseFloat(staker.rawAmount || '0'), 0) || 1)) * 100,
     }));
 
     if (othersAmount > 0) {
@@ -59,32 +60,36 @@ const RewardsSection = ({
         name: `Others (${topStakers.length - 10} accounts)`,
         value: othersAmount,
         fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+        percentage: (othersAmount / (sortedByRawAmount.reduce((sum, staker) => sum + parseFloat(staker.rawAmount || '0'), 0) || 1)) * 100,
       });
     }
 
     return data;
   };
 
-  // Process data for top 10 accounts by weighted amount 
+  // Process data for top 10 accounts by weighted amount
   const getTopWeightedData = () => {
     if (topStakers.length === 0) return [];
-    
+
     // Sort by weighted amount (includes multipliers for rewards calculation)
     const sortedByWeight = [...topStakers].sort((a, b) => {
       const aWeight = parseFloat(a.weight || '0');
       const bWeight = parseFloat(b.weight || '0');
       return bWeight - aWeight;
     });
-    
+
     const top10 = sortedByWeight.slice(0, 10);
-    const othersAmount = sortedByWeight.slice(10).reduce((sum, staker) => 
+    const othersAmount = sortedByWeight.slice(10).reduce((sum, staker) =>
       sum + parseFloat(staker.weight || '0'), 0
     );
-    
+
+    const totalWeight = sortedByWeight.reduce((sum, staker) => sum + parseFloat(staker.weight || '0'), 0);
+
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
       value: parseFloat(staker.weight || '0'),
       fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
+      percentage: (parseFloat(staker.weight || '0') / (totalWeight || 1)) * 100,
     }));
 
     if (othersAmount > 0) {
@@ -92,6 +97,7 @@ const RewardsSection = ({
         name: `Others (${topStakers.length - 10} accounts)`,
         value: othersAmount,
         fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+        percentage: (othersAmount / (totalWeight || 1)) * 100,
       });
     }
 
@@ -106,6 +112,7 @@ const RewardsSection = ({
           name: `${range.range} (${range.count} addresses)`,
           value: parseFloat(range.totalWeight),
           fill: `hsl(${(index * 360) / stakingRanges.length}, 70%, 50%)`,
+          percentage: (parseFloat(range.totalWeight) / (stakingRanges.reduce((sum, r) => sum + parseFloat(r.totalWeight), 0) || 1)) * 100,
         }));
       case 'topAccounts':
         return getTopAccountsData();
@@ -134,13 +141,17 @@ const RewardsSection = ({
   const getCurrentBreakdownData = () => {
     switch (chartView) {
       case 'ranges':
-        return stakingRanges;
+        return stakingRanges.map(item => ({
+          ...item,
+          percentage: (parseFloat(item.totalWeight) / (stakingRanges.reduce((sum, r) => sum + parseFloat(r.totalWeight), 0) || 1)) * 100,
+        }));
       case 'topAccounts':
         const accountsData = getTopAccountsData();
         return accountsData.map(item => ({
           range: item.name,
           count: item.name.includes('Others') ? topStakers.length - 10 : 1,
           totalWeight: item.value.toString(),
+          percentage: item.percentage,
         }));
       case 'topWeighted':
         const weightedData = getTopWeightedData();
@@ -148,6 +159,7 @@ const RewardsSection = ({
           range: item.name,
           count: item.name.includes('Others') ? topStakers.length - 10 : 1,
           totalWeight: item.value.toString(),
+          percentage: item.percentage,
         }));
       default:
         return [];
@@ -206,7 +218,7 @@ const RewardsSection = ({
               wrongNetwork,
               canClaim: parseFloat(pendingRewards) > 0 && parseFloat(totalRewardsFunded) > 0
             });
-            
+
             try {
               onClaimRewards();
             } catch (error) {
@@ -313,12 +325,9 @@ const RewardsSection = ({
                     labelLine={false}
                   />
                   <Tooltip
-                    formatter={(value: number) => [
-                      `${value.toLocaleString(undefined, {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2,
-                      })} FAET`,
-                      "Total Weight",
+                    formatter={(value: any, name: any, props: any) => [
+                      `${parseFloat(value).toFixed(2)} FAET (${props.payload.percentage?.toFixed(2)}%)`,
+                      'Weighted Amount'
                     ]}
                   />
                 </PieChart>
@@ -328,36 +337,29 @@ const RewardsSection = ({
               <h5 className="font-medium text-gray-300 mb-3">
                 {chartView === 'ranges' ? 'Range Breakdown' : 'Account Breakdown'}
               </h5>
-              <div className="space-y-2">
-                {getCurrentBreakdownData().map((item, index) => (
-                  <div
-                    key={chartView === 'ranges' ? item.range : `${item.range}-${index}`}
-                    className="flex justify-between items-center text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          backgroundColor: getCurrentChartData()[index]?.fill || `hsl(${(index * 360) / getCurrentBreakdownData().length}, 70%, 50%)`,
-                        }}
-                      ></div>
-                      <span className="text-gray-300">{item.range}</span>
+              <div className="space-y-3 text-sm">
+              {getCurrentBreakdownData().map((item, index) => (
+                <div key={chartView === 'ranges' ? item.range : `${item.range}-${index}`} className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{
+                        backgroundColor: getCurrentChartData()[index]?.fill || `hsl(${(index * 360) / getCurrentBreakdownData().length}, 70%, 50%)`,
+                      }}
+                    ></div>
+                    <span className="text-gray-300 text-xs">{item.range}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-white font-medium">
+                      {parseFloat(item.totalWeight).toFixed(2)} FAET
                     </div>
-                    <div className="text-right">
-                      <div className="text-gray-300">
-                        {chartView === 'ranges' ? `${item.count} addresses` : `${item.count} account${item.count > 1 ? 's' : ''}`}
-                      </div>
-                      <div className="text-purple-400 font-mono text-xs">
-                        {parseFloat(item.totalWeight).toLocaleString(undefined, {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        FAET
-                      </div>
+                    <div className="text-gray-400 text-xs">
+                      {item.percentage?.toFixed(2)}% • {item.count} {item.count === 1 ? 'account' : 'accounts'}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
             </div>
           </div>
         )}
