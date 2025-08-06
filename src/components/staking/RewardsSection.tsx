@@ -7,6 +7,15 @@ type LabelProps = {
   percent?: number;
 };
 
+type TooltipFormatterProps = {
+  value: number;
+  name: string;
+  payload: {
+    percentage?: number;
+    [key: string]: unknown;
+  };
+};
+
 type RewardsSectionProps = {
   pendingRewards: string;
   totalRewardsFunded: string;
