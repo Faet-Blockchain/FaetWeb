@@ -7,15 +7,6 @@ type LabelProps = {
   percent?: number;
 };
 
-type TooltipFormatterProps = {
-  value: number;
-  name: string;
-  payload: {
-    percentage?: number;
-    [key: string]: unknown;
-  };
-};
-
 type RewardsSectionProps = {
   pendingRewards: string;
   totalRewardsFunded: string;
@@ -224,8 +215,8 @@ const RewardsSection = ({
                     labelLine={false}
                   />
                   <Tooltip
-                    formatter={(value: number, name: string, props: TooltipFormatterProps) => [
-                      `${Math.round(parseFloat(value.toString())).toLocaleString()} FAET (${props.payload.percentage?.toFixed(2)}%)`,
+                    formatter={(value: number | undefined, name: string, props: any) => [
+                      `${Math.round(parseFloat((value || 0).toString())).toLocaleString()} FAET (${props.payload?.percentage?.toFixed(2)}%)`,
                       "Total Weight",
                     ]}
                   />
