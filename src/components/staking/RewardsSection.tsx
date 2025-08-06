@@ -1,11 +1,6 @@
 "use client";
 import React from "react";
-import {
-  PieChart,
-  Pie,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, ResponsiveContainer, Tooltip } from "recharts";
 
 type RewardsSectionProps = {
   pendingRewards: string;
@@ -15,7 +10,6 @@ type RewardsSectionProps = {
   isLoading: boolean;
   wrongNetwork: boolean;
   topStakers: Array<{ address: string; weight: string; rawAmount?: string }>;
-  stakingRanges: Array<{ range: string; count: number; totalWeight: string }>;
   onClaimRewards: () => void;
 };
 
@@ -27,34 +21,36 @@ const RewardsSection = ({
   isLoading,
   wrongNetwork,
   topStakers,
-  stakingRanges,
   onClaimRewards,
 }: RewardsSectionProps) => {
-
   // Process data for all stakers by weighted amount, showing top 10 individually and grouping others
   const getTopWeightedData = () => {
     if (topStakers.length === 0) return [];
 
     // Sort by weighted amount (includes multipliers for rewards calculation)
     const sortedByWeight = [...topStakers].sort((a, b) => {
-      const aWeight = parseFloat(a.weight || '0');
-      const bWeight = parseFloat(b.weight || '0');
+      const aWeight = parseFloat(a.weight || "0");
+      const bWeight = parseFloat(b.weight || "0");
       return bWeight - aWeight;
     });
 
     const top10 = sortedByWeight.slice(0, 10);
     const others = sortedByWeight.slice(10);
-    const othersAmount = others.reduce((sum, staker) =>
-      sum + parseFloat(staker.weight || '0'), 0
+    const othersAmount = others.reduce(
+      (sum, staker) => sum + parseFloat(staker.weight || "0"),
+      0,
     );
 
-    const totalWeight = sortedByWeight.reduce((sum, staker) => sum + parseFloat(staker.weight || '0'), 0);
+    const totalWeight = sortedByWeight.reduce(
+      (sum, staker) => sum + parseFloat(staker.weight || "0"),
+      0,
+    );
 
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
-      value: parseFloat(staker.weight || '0'),
+      value: parseFloat(staker.weight || "0"),
       fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
-      percentage: (parseFloat(staker.weight || '0') / (totalWeight || 1)) * 100,
+      percentage: (parseFloat(staker.weight || "0") / (totalWeight || 1)) * 100,
     }));
 
     if (othersAmount > 0) {
@@ -72,9 +68,9 @@ const RewardsSection = ({
   // Get current breakdown data for the right panel
   const getCurrentBreakdownData = () => {
     const weightedData = getTopWeightedData();
-    return weightedData.map(item => ({
+    return weightedData.map((item) => ({
       range: item.name,
-      count: item.name.includes('Others') ? topStakers.length - 10 : 1,
+      count: item.name.includes("Others") ? topStakers.length - 10 : 1,
       totalWeight: item.value.toString(),
       percentage: item.percentage,
     }));
@@ -118,7 +114,7 @@ const RewardsSection = ({
               ? (() => {
                   const userWeight = parseFloat(stakedBalance);
                   const totalWeight = parseFloat(totalStakeWeight);
-                  return totalWeight > 0 
+                  return totalWeight > 0
                     ? ((userWeight / totalWeight) * 1.0).toFixed(6)
                     : "0.000000";
                 })()
@@ -133,7 +129,9 @@ const RewardsSection = ({
               totalRewardsFunded,
               isLoading,
               wrongNetwork,
-              canClaim: parseFloat(pendingRewards) > 0 && parseFloat(totalRewardsFunded) > 0
+              canClaim:
+                parseFloat(pendingRewards) > 0 &&
+                parseFloat(totalRewardsFunded) > 0,
             });
 
             try {
@@ -168,8 +166,8 @@ const RewardsSection = ({
         </button>
       </div>
       <p className="text-gray-400 text-sm mb-6">
-        Rate: Each block (~2 seconds) 1 Faet is distributed to all stakers based
-        on their weighted staked amount.
+        Rate: Each block (~2 seconds) 1 Faet is distributed among stakers,
+        divided by their weighted staked amount.
       </p>
 
       {/* Staking Distribution Chart */}
@@ -181,13 +179,17 @@ const RewardsSection = ({
         </div>
         {topStakers.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
-            <div className="animate-pulse">Loading staking distribution data...</div>
+            <div className="animate-pulse">
+              Loading staking distribution data...
+            </div>
             <div className="text-xs mt-2">Fetching data from blockchain...</div>
           </div>
         ) : getTopWeightedData().length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <div>No staking data available</div>
-            <div className="text-xs mt-2">There are currently no active stakes to display.</div>
+            <div className="text-xs mt-2">
+              There are currently no active stakes to display.
+            </div>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
@@ -201,14 +203,16 @@ const RewardsSection = ({
                     outerRadius={80}
                     dataKey="value"
                     label={({ percent }: { percent?: number }) =>
-                      percent && percent > 0.05 ? `${(percent * 100).toFixed(1)}%` : ""
+                      percent && percent > 0.05
+                        ? `${(percent * 100).toFixed(1)}%`
+                        : ""
                     }
                     labelLine={false}
                   />
                   <Tooltip
                     formatter={(value: any, name: any, props: any) => [
                       `${parseFloat(value).toFixed(2)} FAET (${props.payload.percentage?.toFixed(2)}%)`,
-                      'Total Weight'
+                      "Total Weight",
                     ]}
                   />
                 </PieChart>
@@ -219,28 +223,36 @@ const RewardsSection = ({
                 Account Breakdown
               </h5>
               <div className="space-y-3 text-sm">
-              {getCurrentBreakdownData().map((item, index) => (
-                <div key={`${item.range}-${index}`} className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        backgroundColor: getTopWeightedData()[index]?.fill || `hsl(${(index * 360) / getCurrentBreakdownData().length}, 70%, 50%)`,
-                      }}
-                    ></div>
-                    <span className="text-gray-300 text-xs">{item.range}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white font-medium">
-                      {parseFloat(item.totalWeight).toFixed(2)} FAET
+                {getCurrentBreakdownData().map((item, index) => (
+                  <div
+                    key={`${item.range}-${index}`}
+                    className="flex justify-between items-center"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{
+                          backgroundColor:
+                            getTopWeightedData()[index]?.fill ||
+                            `hsl(${(index * 360) / getCurrentBreakdownData().length}, 70%, 50%)`,
+                        }}
+                      ></div>
+                      <span className="text-gray-300 text-xs">
+                        {item.range}
+                      </span>
                     </div>
-                    <div className="text-gray-400 text-xs">
-                      {item.percentage?.toFixed(2)}% • {item.count} {item.count === 1 ? 'account' : 'accounts'}
+                    <div className="text-right">
+                      <div className="text-white font-medium">
+                        {parseFloat(item.totalWeight).toFixed(2)} FAET
+                      </div>
+                      <div className="text-gray-400 text-xs">
+                        {item.percentage?.toFixed(2)}% • {item.count}{" "}
+                        {item.count === 1 ? "account" : "accounts"}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
