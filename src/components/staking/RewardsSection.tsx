@@ -7,6 +7,11 @@ type LabelProps = {
   percent?: number;
 };
 
+// Use the ValueType from global.d.ts
+declare global {
+  type ValueType = string | number | (string | number)[];
+}
+
 type RewardsSectionProps = {
   pendingRewards: string;
   totalRewardsFunded: string;
