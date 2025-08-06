@@ -202,7 +202,7 @@ const RewardsSection = ({
                     cy="50%"
                     outerRadius={80}
                     dataKey="value"
-                    label={({ percent }: { percent?: number }) =>
+                    label={({ percent }: LabelProps) =>
                       percent && percent > 0.05
                         ? `${(percent * 100).toFixed(1)}%`
                         : ""
@@ -210,8 +210,8 @@ const RewardsSection = ({
                     labelLine={false}
                   />
                   <Tooltip
-                    formatter={(value: any, name: any, props: any) => [
-                      `${parseFloat(value).toFixed(2)} FAET (${props.payload.percentage?.toFixed(2)}%)`,
+                    formatter={(value: number, name: string, props: TooltipFormatterProps) => [
+                      `${parseFloat(value.toString()).toFixed(2)} FAET (${props.payload.percentage?.toFixed(2)}%)`,
                       "Total Weight",
                     ]}
                   />

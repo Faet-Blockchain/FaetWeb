@@ -81,8 +81,9 @@ const AddTokenButton = () => {
           },
         },
       });
-    } catch (err: any) {
-      if (err?.code === 4001) {
+    } catch (err: unknown) {
+      const error = err as { code?: number };
+      if (error?.code === 4001) {
         console.log("User rejected the add token request.");
       } else {
         console.error("Add token failed", err);

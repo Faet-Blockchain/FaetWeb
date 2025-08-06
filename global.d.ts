@@ -34,4 +34,34 @@ interface EthereumWindow extends Window {
 
 declare const window: EthereumWindow;
 
+// Chart component types
+interface TooltipFormatterProps {
+  value: number;
+  name: string;
+  payload: {
+    percentage?: number;
+    [key: string]: unknown;
+  };
+}
+
+interface ChartDataItem {
+  name: string;
+  value: number;
+  fill: string;
+  percentage: number;
+}
+
+interface LabelProps {
+  percent?: number;
+}
+
+// Network configuration types
+interface NetworkConfig {
+  name: string;
+  contracts: {
+    token: string;
+    staking: string;
+  };
+}
+
 export {};
