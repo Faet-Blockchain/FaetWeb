@@ -245,6 +245,15 @@ export default function StakingPage() {
       stakersWithWeights.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
       const top10 = stakersWithWeights.slice(0, 10);
 
+      // Calculate total stake weight from all stakers (not just top 10)
+      const totalNetworkWeight = stakersWithWeights.reduce((sum, staker) => {
+        return sum + parseFloat(staker.weight);
+      }, 0);
+
+      setTotalStakeWeight(totalNetworkWeight.toString());
+      setTopStakers(top10);
+
+
       // Create staking ranges
       const ranges = [
         { min: 0, max: 1000, range: "0 - 1K FAET" },
@@ -272,7 +281,6 @@ export default function StakingPage() {
       }).filter(range => range.count > 0); // Only include ranges with stakers
 
       // Update state
-      setTopStakers(top10);
       setStakingRanges(stakingRangesData);
 
     } catch {
@@ -665,11 +673,11 @@ export default function StakingPage() {
         // Don't show alert for user cancellation - it's expected behavior
       } else if ((error as { code?: number })?.code === -32002) {
         console.log('⚠️ Claim request already pending in MetaMask');
-      } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards" || 
+      } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards" ||
                  (error as { message?: string })?.message?.includes("Insufficient funded rewards")) {
         console.error("❌ Claim Failed: Insufficient funded rewards");
         alert("❌ Claim Failed: The reward pool is currently empty. Please wait for the pool to be refunded by the administrators.");
-      } else if ((error as { reason?: string })?.reason === "No rewards" || 
+      } else if ((error as { reason?: string })?.reason === "No rewards" ||
                  (error as { message?: string })?.message?.includes("No rewards")) {
         console.error("❌ Claim Failed: No rewards available");
         alert("❌ Claim Failed: You have no rewards to claim at this time.");
@@ -933,7 +941,7 @@ export default function StakingPage() {
     validateNetwork();
   }, [currentChainId, currentChainIdNumber, selectedNetwork]);
 
-  
+
 
   // Initialize Web3 when account and network are both correct
   useEffect(() => {

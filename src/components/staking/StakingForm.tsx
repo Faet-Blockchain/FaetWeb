@@ -54,7 +54,7 @@ const StakingForm = ({
   onSelectedDaysChange,
   onStake,
 }: StakingFormProps) => {
-  
+
   // Calculate potential weighted amount for current input
   const calculatePotentialWeight = (): number => {
     if (!stakeAmount || parseFloat(stakeAmount) <= 0) return 0;
@@ -72,29 +72,30 @@ const StakingForm = ({
 
   // Calculate total stake weight including user's current stakes and potential new stake
   const calculateTotalStakeWeight = (): number => {
-    const currentTotal = parseFloat(totalStakeWeight) || 0;
-    const potentialWeight = calculatePotentialWeight();
-    return currentTotal + potentialWeight;
+    const newStakeWeight = calculatePotentialWeight();
+    return parseFloat(totalStakeWeight || "0") + newStakeWeight;
   };
 
   // Calculate user's weighted percentage share
-  const calculateWeightedPercentage = (): number => {
-    const totalWeight = calculateTotalStakeWeight();
-    if (totalWeight === 0) return 0;
-    
-    const userTotalWeight = calculateTotalUserWeight();
-    
-    return (userTotalWeight / totalWeight) * 100;
+  const calculateUserWeightedPercentage = (): number => {
+    const totalUserWeight = calculateTotalUserWeight();
+    const totalStake = parseFloat(totalStakeWeight || "0"); // Use actual total from contract, not including new stake
+
+    if (totalStake === 0) return 0;
+
+    // Calculate percentage: user's total weight (existing + new) / (total network weight + new stake weight)
+    const totalNetworkWeightWithNewStake = totalStake + calculatePotentialWeight();
+    return (totalUserWeight / totalNetworkWeightWithNewStake) * 100;
   };
 
   // Validate stake amount with sanitization
   const isValidStakeAmount = useCallback((): boolean => {
     if (!stakeAmount) return false;
-    
+
     // Sanitize numeric input
     const sanitized = sanitizeNumericInput(stakeAmount);
     const amount = parseFloat(sanitized);
-    
+
     // Security: Log suspicious input patterns
     if (sanitized !== stakeAmount) {
       SecurityLogger.logSecurityEvent('Potentially malicious input detected in stake amount', {
@@ -102,7 +103,7 @@ const StakingForm = ({
         sanitized: sanitized
       });
     }
-    
+
     return !isNaN(amount) && amount >= MIN_STAKE_AMOUNT && amount <= MAX_STAKE_AMOUNT && amount <= parseFloat(tokenBalance);
   }, [stakeAmount, tokenBalance]);
 
@@ -210,7 +211,7 @@ const StakingForm = ({
               <div className="flex justify-between items-center mt-1">
                 <span className="text-sm text-gray-300">Your Weighted %:</span>
                 <span className="text-sm font-bold text-orange-400">
-                  {calculateWeightedPercentage().toFixed(4)}%
+                  {calculateUserWeightedPercentage().toFixed(4)}%
                 </span>
               </div>
             </>
