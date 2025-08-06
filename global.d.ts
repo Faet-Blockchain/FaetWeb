@@ -10,6 +10,8 @@ declare global {
         event: string,
         handler: (...args: unknown[]) => void,
       ) => void;
+      providers?: EthereumProvider[];
+      isMetaMask?: boolean;
     } & EventTarget;
     grecaptcha: Grecaptcha;
   }
