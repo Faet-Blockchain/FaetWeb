@@ -215,6 +215,7 @@ const StakingInterface = ({
         pendingRewards={pendingRewards}
         totalRewardsFunded={totalRewardsFunded}
         stakedBalance={stakedBalance}
+        totalStakeWeight={totalStakeWeight}
         isLoading={isLoading}
         wrongNetwork={wrongNetwork}
         topStakers={topStakers}

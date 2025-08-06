@@ -11,6 +11,7 @@ type RewardsSectionProps = {
   pendingRewards: string;
   totalRewardsFunded: string;
   stakedBalance: string;
+  totalStakeWeight: string;
   isLoading: boolean;
   wrongNetwork: boolean;
   topStakers: Array<{ address: string; weight: string; rawAmount?: string }>;
@@ -22,6 +23,7 @@ const RewardsSection = ({
   pendingRewards,
   totalRewardsFunded,
   stakedBalance,
+  totalStakeWeight,
   isLoading,
   wrongNetwork,
   topStakers,
@@ -112,11 +114,14 @@ const RewardsSection = ({
           </p>
           <p className="text-xs text-blue-400 mt-1">
             Next block: +
-            {stakedBalance && parseFloat(stakedBalance) > 0
-              ? (
-                  (parseFloat(stakedBalance) * 1.0) /
-                  Math.max(1, parseFloat(stakedBalance))
-                ).toFixed(6)
+            {stakedBalance && parseFloat(stakedBalance) > 0 && totalStakeWeight
+              ? (() => {
+                  const userWeight = parseFloat(stakedBalance);
+                  const totalWeight = parseFloat(totalStakeWeight);
+                  return totalWeight > 0 
+                    ? ((userWeight / totalWeight) * 1.0).toFixed(6)
+                    : "0.000000";
+                })()
               : "0.000000"}{" "}
             FAET
           </p>
