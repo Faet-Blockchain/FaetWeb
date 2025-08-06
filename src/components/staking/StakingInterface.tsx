@@ -42,14 +42,6 @@ type StakingInterfaceProps = {
 
 import { getNetworkConfig } from "@/lib/networks";
 
-type NetworkConfig = {
-  name: string;
-  contracts: {
-    token: string;
-    staking: string;
-  };
-};
-
 const AddTokenButton = () => {
   const getMetaMaskProvider = () => {
     const eth = window.ethereum;
@@ -105,7 +97,6 @@ const AddTokenButton = () => {
 };
 
 const StakingInterface = ({
-  account,
   wrongNetwork,
   selectedNetwork,
   tokenBalance,
