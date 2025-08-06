@@ -92,7 +92,13 @@ const AddTokenButton = () => {
   };
 
   return (
-    <button onClick={handleAddToken} className="your-button-class">
+    <button 
+      onClick={handleAddToken} 
+      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+    >
+      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+      </svg>
       Add FAET to Wallet
     </button>
   );
@@ -138,12 +144,7 @@ const StakingInterface = ({
         >
           ← Back to Overview
         </button>
-        <AddTokenButton
-          account={account}
-          wrongNetwork={wrongNetwork}
-          selectedNetwork={selectedNetwork}
-          networkConfig={networkConfig}
-        />
+        <AddTokenButton />
       </div>
 
       <div className="mb-6">
