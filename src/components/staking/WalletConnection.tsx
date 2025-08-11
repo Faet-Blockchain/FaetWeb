@@ -117,6 +117,8 @@ const WalletConnection = ({
   const contractAddresses = getContractAddresses(selectedNetwork);
 
   const [isClaimingAirdrop, setIsClaimingAirdrop] = useState<boolean>(false);
+  const [isAddingCharacterNFTs, setIsAddingCharacterNFTs] = useState<boolean>(false);
+  const [isAddingFoundersPass, setIsAddingFoundersPass] = useState<boolean>(false);
   const [lastOperationTime, setLastOperationTime] = useState<number>(0);
 
   // Security: Memoized validation checks with stable network validation
@@ -368,6 +370,8 @@ const WalletConnection = ({
                           return;
                         }
 
+                        setIsAddingCharacterNFTs(true);
+
                         try {
                           const metaMask = getMetaMaskProvider();
                           if (!metaMask) {
@@ -396,55 +400,88 @@ const WalletConnection = ({
                           const nftBalance = await characterNftContract.balanceOf(account);
                           
                           if (nftBalance === 0n) {
-                            console.log("User doesn't own any Character NFTs");
+                            alert("❌ You don't own any Character NFTs");
                             return;
                           }
 
-                          // Find the first NFT the user owns
-                          let ownedTokenId = null;
+                          // Find all NFTs the user owns
+                          const ownedTokenIds: number[] = [];
                           
                           // Check token IDs in the expected range
                           for (let tokenId = 1; tokenId <= 10; tokenId++) {
                             try {
                               const owner = await characterNftContract.ownerOf(tokenId);
                               if (owner.toLowerCase() === account.toLowerCase()) {
-                                ownedTokenId = tokenId;
-                                break;
+                                ownedTokenIds.push(tokenId);
                               }
                             } catch {
                               // Token doesn't exist or not owned, continue
                             }
                           }
 
-                          if (!ownedTokenId) {
-                            console.log("Could not find owned Character NFT token ID");
+                          if (ownedTokenIds.length === 0) {
+                            alert("❌ Could not find owned Character NFT token IDs");
                             return;
                           }
 
-                          // Add the NFT to MetaMask using the found token ID
-                          await metaMask.request({
-                            method: "wallet_watchAsset",
-                            params: {
-                              type: "ERC721",
-                              options: {
-                                address: contractAddresses.CHARACTER_NFT,
-                                tokenId: ownedTokenId.toString(),
-                              },
-                            },
-                          });
+                          console.log(`Found ${ownedTokenIds.length} owned Character NFTs:`, ownedTokenIds);
+
+                          // Add each NFT to MetaMask one by one
+                          let successCount = 0;
+                          let errorCount = 0;
+
+                          for (const tokenId of ownedTokenIds) {
+                            try {
+                              await metaMask.request({
+                                method: "wallet_watchAsset",
+                                params: {
+                                  type: "ERC721",
+                                  options: {
+                                    address: contractAddresses.CHARACTER_NFT,
+                                    tokenId: tokenId.toString(),
+                                  },
+                                },
+                              });
+                              successCount++;
+                              
+                              // Add delay between requests to avoid rate limiting
+                              if (tokenId !== ownedTokenIds[ownedTokenIds.length - 1]) {
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                              }
+                            } catch (nftError: unknown) {
+                              const error = nftError as { code?: number };
+                              if (error?.code === 4001) {
+                                console.log(`User rejected adding Character NFT #${tokenId}`);
+                                break; // Stop if user rejects
+                              } else {
+                                console.error(`Failed to add Character NFT #${tokenId}:`, nftError);
+                                errorCount++;
+                              }
+                            }
+                          }
+
+                          if (successCount > 0) {
+                            alert(`✅ Successfully added ${successCount} Character NFT${successCount > 1 ? 's' : ''} to your wallet!`);
+                          }
+                          if (errorCount > 0) {
+                            alert(`⚠️ Failed to add ${errorCount} Character NFT${errorCount > 1 ? 's' : ''}`);
+                          }
 
                         } catch (err: unknown) {
                           const error = err as { code?: number };
                           if (error?.code === 4001) {
                             console.log("User rejected the add NFT request.");
                           } else {
-                            console.error("Add NFT failed", err);
+                            console.error("Add Character NFTs failed", err);
+                            alert(`❌ Failed to add Character NFTs: ${sanitizeError(err)}`);
                           }
+                        } finally {
+                          setIsAddingCharacterNFTs(false);
                         }
                       }}
-                      disabled={!account}
-                      className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors ${
-                        !account
+                      disabled={!account || isAddingCharacterNFTs}
+                      className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors flex items-center justify-center gap-1 ${
+                        !account || isAddingCharacterNFTs
                           ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                           : !securityChecks.isValidChain
                             ? "bg-red-600 hover:bg-red-700 text-white"
@@ -453,11 +490,18 @@ const WalletConnection = ({
                               : "bg-blue-600 hover:bg-blue-700 text-white"
                       }`}
                     >
-                      {!account
-                        ? "Connect Wallet First"
-                        : !securityChecks.isValidChain
-                          ? "Switch Network"
-                          : "Add Character NFTs"}
+                      {isAddingCharacterNFTs ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          Processing...
+                        </>
+                      ) : !account ? (
+                        "Connect Wallet First"
+                      ) : !securityChecks.isValidChain ? (
+                        "Switch Network"
+                      ) : (
+                        "Add Character NFTs"
+                      )}
                     </button>
 
                     <button
@@ -476,6 +520,8 @@ const WalletConnection = ({
                           alert("Please wait or try again in 2 seconds");
                           return;
                         }
+
+                        setIsAddingFoundersPass(true);
 
                         try {
                           const metaMask = getMetaMaskProvider();
@@ -505,55 +551,88 @@ const WalletConnection = ({
                           const nftBalance = await foundersPassContract.balanceOf(account);
                           
                           if (nftBalance === 0n) {
-                            console.log("User doesn't own any Founder's Pass NFTs");
+                            alert("❌ You don't own any Founder's Pass NFTs");
                             return;
                           }
 
-                          // Find the first NFT the user owns
-                          let ownedTokenId = null;
+                          // Find all NFTs the user owns
+                          const ownedTokenIds: number[] = [];
                           
                           // Check token IDs in the expected range
                           for (let tokenId = 1; tokenId <= 150; tokenId++) {
                             try {
                               const owner = await foundersPassContract.ownerOf(tokenId);
                               if (owner.toLowerCase() === account.toLowerCase()) {
-                                ownedTokenId = tokenId;
-                                break;
+                                ownedTokenIds.push(tokenId);
                               }
                             } catch {
                               // Token doesn't exist or not owned, continue
                             }
                           }
 
-                          if (!ownedTokenId) {
-                            console.log("Could not find owned Founder's Pass NFT token ID");
+                          if (ownedTokenIds.length === 0) {
+                            alert("❌ Could not find owned Founder's Pass NFT token IDs");
                             return;
                           }
 
-                          // Add the NFT to MetaMask using the found token ID
-                          await metaMask.request({
-                            method: "wallet_watchAsset",
-                            params: {
-                              type: "ERC721",
-                              options: {
-                                address: contractAddresses.FOUNDERS_PASS,
-                                tokenId: ownedTokenId.toString(),
-                              },
-                            },
-                          });
+                          console.log(`Found ${ownedTokenIds.length} owned Founder's Pass NFTs:`, ownedTokenIds);
+
+                          // Add each NFT to MetaMask one by one
+                          let successCount = 0;
+                          let errorCount = 0;
+
+                          for (const tokenId of ownedTokenIds) {
+                            try {
+                              await metaMask.request({
+                                method: "wallet_watchAsset",
+                                params: {
+                                  type: "ERC721",
+                                  options: {
+                                    address: contractAddresses.FOUNDERS_PASS,
+                                    tokenId: tokenId.toString(),
+                                  },
+                                },
+                              });
+                              successCount++;
+                              
+                              // Add delay between requests to avoid rate limiting
+                              if (tokenId !== ownedTokenIds[ownedTokenIds.length - 1]) {
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                              }
+                            } catch (nftError: unknown) {
+                              const error = nftError as { code?: number };
+                              if (error?.code === 4001) {
+                                console.log(`User rejected adding Founder's Pass NFT #${tokenId}`);
+                                break; // Stop if user rejects
+                              } else {
+                                console.error(`Failed to add Founder's Pass NFT #${tokenId}:`, nftError);
+                                errorCount++;
+                              }
+                            }
+                          }
+
+                          if (successCount > 0) {
+                            alert(`✅ Successfully added ${successCount} Founder's Pass NFT${successCount > 1 ? 's' : ''} to your wallet!`);
+                          }
+                          if (errorCount > 0) {
+                            alert(`⚠️ Failed to add ${errorCount} Founder's Pass NFT${errorCount > 1 ? 's' : ''}`);
+                          }
 
                         } catch (err: unknown) {
                           const error = err as { code?: number };
                           if (error?.code === 4001) {
                             console.log("User rejected the add NFT request.");
                           } else {
-                            console.error("Add NFT failed", err);
+                            console.error("Add Founder's Pass NFTs failed", err);
+                            alert(`❌ Failed to add Founder's Pass NFTs: ${sanitizeError(err)}`);
                           }
+                        } finally {
+                          setIsAddingFoundersPass(false);
                         }
                       }}
-                      disabled={!account}
-                      className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors ${
-                        !account
+                      disabled={!account || isAddingFoundersPass}
+                      className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors flex items-center justify-center gap-1 ${
+                        !account || isAddingFoundersPass
                           ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                           : !securityChecks.isValidChain
                             ? "bg-red-600 hover:bg-red-700 text-white"
@@ -562,11 +641,18 @@ const WalletConnection = ({
                               : "bg-blue-600 hover:bg-blue-700 text-white"
                       }`}
                     >
-                      {!account
-                        ? "Connect Wallet First"
-                        : !securityChecks.isValidChain
-                          ? "Switch Network"
-                          : "Add Founder's Pass"}
+                      {isAddingFoundersPass ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          Processing...
+                        </>
+                      ) : !account ? (
+                        "Connect Wallet First"
+                      ) : !securityChecks.isValidChain ? (
+                        "Switch Network"
+                      ) : (
+                        "Add Founder's Pass"
+                      )}
                     </button>
                   </div>
                 </div>
