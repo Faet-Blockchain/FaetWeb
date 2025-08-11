@@ -73,6 +73,7 @@ const RewardsSection = ({
     }));
 
     if (othersAmount > 0) {
+      console.log(`Weighted Others: ${others.length} accounts with total ${othersAmount} weight`);
       data.push({
         name: `Others (${others.length} accounts)`,
         value: othersAmount,
@@ -115,6 +116,7 @@ const RewardsSection = ({
     }));
 
     if (othersAmount > 0) {
+      console.log(`Raw Others: ${others.length} accounts with total ${othersAmount} raw amount`);
       data.push({
         name: `Others (${others.length} accounts)`,
         value: othersAmount,
@@ -175,8 +177,10 @@ const RewardsSection = ({
     const currentData = getCurrentData();
     return currentData.map((item) => ({
       range: item.name,
-      count: item.name.includes("Others") || item.name.includes("All Others") ? 
-        (item.name.includes("All Others") ? topStakers.length - 1 : topStakers.length - 10) : 1,
+      count: item.name.includes("Others") ? 
+        Math.max(0, topStakers.length - 10) : 
+        item.name.includes("All Others") ? 
+        topStakers.length : 1,
       totalWeight: item.value.toString(),
       percentage: item.percentage,
     }));
