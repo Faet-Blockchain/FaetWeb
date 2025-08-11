@@ -175,28 +175,54 @@ export default function StakingPage() {
       setTopStakers([]);
       setStakingRanges([]);
 
-      // Get all Stake events to find unique stakers
-      const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
-
-      const stakeEvents = await staking.queryFilter(
-        staking.filters.Staked(),
-        fromBlock,
-        'latest'
-      );
-
-      // Get unique stakers and their current active weights
-      const uniqueStakers = new Set<string>();
-
-      for (const event of stakeEvents) {
-        // Type guard to check if event is EventLog (has args property)
-        if ('args' in event && event.args) {
-          const userAddress = event.args.user || '';
-          if (userAddress) {
-            uniqueStakers.add(userAddress);
-          }
-        }
+      // Get a provider to fetch the latest block number
+      let provider;
+      if (typeof window.ethereum !== "undefined") {
+        provider = new ethers.BrowserProvider(window.ethereum);
+      } else {
+        console.error("Provider not available");
+        return;
       }
 
+      // Get all Stake events to find unique stakers with pagination
+      const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
+      const uniqueStakers = new Set<string>();
+      const blockRange = 10000; // Process blocks in chunks
+      let currentFromBlock = fromBlock;
+      const latestBlock = await provider.getBlockNumber();
+
+      while (currentFromBlock <= latestBlock) {
+        const toBlock = Math.min(currentFromBlock + blockRange - 1, latestBlock);
+
+        try {
+          const stakeEvents = await staking.queryFilter(
+            staking.filters.Staked(),
+            currentFromBlock,
+            toBlock
+          );
+
+          for (const event of stakeEvents) {
+            // Type guard to check if event is EventLog (has args property)
+            if ('args' in event && event.args) {
+              const userAddress = event.args.user || '';
+              if (userAddress) {
+                uniqueStakers.add(userAddress);
+              }
+            }
+          }
+
+          console.log(`Processed blocks ${currentFromBlock} to ${toBlock}, found ${uniqueStakers.size} unique stakers so far`);
+        } catch (error) {
+          console.warn(`Failed to fetch events for blocks ${currentFromBlock}-${toBlock}:`, error);
+          // Continue with next batch even if this one fails
+        }
+
+        currentFromBlock = toBlock + 1;
+      }
+
+      console.log(`Total unique stakers found: ${uniqueStakers.size}`);
+
+      // Get unique stakers and their current active weights
       // Calculate current active weights and raw amounts for each staker
       const stakersWithWeights: Array<{ address: string; weight: string; rawAmount: string }> = [];
 
