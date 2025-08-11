@@ -263,7 +263,7 @@ const WalletConnection = ({
         if (!isActive) return; // Prevent updates if component unmounted
         
         try {
-          const accounts = await eth.request({ method: "eth_accounts" });
+          const accounts = await eth.request({ method: "eth_accounts" }) as string[];
           if (!isActive) return; // Check again after async operation
           
           if (accounts && accounts.length > 0) {
