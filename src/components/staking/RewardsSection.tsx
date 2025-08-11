@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { PieChart, Pie, ResponsiveContainer, Tooltip } from "recharts";
 
 // Import types from global definitions
@@ -29,6 +29,8 @@ type RewardsSectionProps = {
   onClaimRewards: () => void;
 };
 
+type ViewMode = "weighted" | "raw" | "user";
+
 const RewardsSection = ({
   pendingRewards,
   totalRewardsFunded,
@@ -39,6 +41,7 @@ const RewardsSection = ({
   topStakers,
   onClaimRewards,
 }: RewardsSectionProps) => {
+  const [viewMode, setViewMode] = useState<ViewMode>("weighted");
   // Process data for all stakers by weighted amount, showing top 10 individually and grouping others
   const getTopWeightedData = () => {
     if (topStakers.length === 0) return [];
@@ -81,15 +84,117 @@ const RewardsSection = ({
     return data;
   };
 
+  // Process data for raw staked amounts (without multipliers)
+  const getTopRawData = () => {
+    if (topStakers.length === 0) return [];
+
+    // Sort by raw amount (without multipliers)
+    const sortedByRaw = [...topStakers].sort((a, b) => {
+      const aRaw = parseFloat(a.rawAmount || "0");
+      const bRaw = parseFloat(b.rawAmount || "0");
+      return bRaw - aRaw;
+    });
+
+    const top10 = sortedByRaw.slice(0, 10);
+    const others = sortedByRaw.slice(10);
+    const othersAmount = others.reduce(
+      (sum, staker) => sum + parseFloat(staker.rawAmount || "0"),
+      0,
+    );
+
+    const totalRaw = sortedByRaw.reduce(
+      (sum, staker) => sum + parseFloat(staker.rawAmount || "0"),
+      0,
+    );
+
+    const data = top10.map((staker, index) => ({
+      name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
+      value: parseFloat(staker.rawAmount || "0"),
+      fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
+      percentage: (parseFloat(staker.rawAmount || "0") / (totalRaw || 1)) * 100,
+    }));
+
+    if (othersAmount > 0) {
+      data.push({
+        name: `Others (${others.length} accounts)`,
+        value: othersAmount,
+        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+        percentage: (othersAmount / (totalRaw || 1)) * 100,
+      });
+    }
+
+    return data;
+  };
+
+  // Process data for user vs others view
+  const getUserVsOthersData = () => {
+    if (topStakers.length === 0) return [];
+
+    const userStaker = topStakers.find(staker => 
+      staker.address.toLowerCase() === "user" // This should be replaced with actual user address comparison
+    );
+
+    const userWeight = userStaker ? parseFloat(userStaker.weight || "0") : parseFloat(stakedBalance || "0");
+    const totalWeight = parseFloat(totalStakeWeight || "0");
+    const othersWeight = Math.max(0, totalWeight - userWeight);
+
+    const data = [];
+    
+    if (userWeight > 0) {
+      data.push({
+        name: "Your Stakes",
+        value: userWeight,
+        fill: "hsl(120, 70%, 50%)",
+        percentage: (userWeight / (totalWeight || 1)) * 100,
+      });
+    }
+
+    if (othersWeight > 0) {
+      data.push({
+        name: `All Others (${topStakers.length - (userWeight > 0 ? 1 : 0)} accounts)`,
+        value: othersWeight,
+        fill: "hsl(240, 70%, 50%)",
+        percentage: (othersWeight / (totalWeight || 1)) * 100,
+      });
+    }
+
+    return data;
+  };
+
+  // Get current data based on view mode
+  const getCurrentData = () => {
+    switch (viewMode) {
+      case "raw":
+        return getTopRawData();
+      case "user":
+        return getUserVsOthersData();
+      default:
+        return getTopWeightedData();
+    }
+  };
+
   // Get current breakdown data for the right panel
   const getCurrentBreakdownData = () => {
-    const weightedData = getTopWeightedData();
-    return weightedData.map((item) => ({
+    const currentData = getCurrentData();
+    return currentData.map((item) => ({
       range: item.name,
-      count: item.name.includes("Others") ? topStakers.length - 10 : 1,
+      count: item.name.includes("Others") || item.name.includes("All Others") ? 
+        (item.name.includes("All Others") ? topStakers.length - 1 : topStakers.length - 10) : 1,
       totalWeight: item.value.toString(),
       percentage: item.percentage,
     }));
+  };
+
+  // Get current title based on view mode
+  const getCurrentTitle = () => {
+    switch (viewMode) {
+      case "raw":
+        return "Top Raw Stakers";
+      case "user":
+        return "Your Staking Share";
+      default:
+        return "Top Weighted Stakers";
+    }
   };
 
   return (
@@ -190,8 +295,40 @@ const RewardsSection = ({
       <div className="bg-gray-700 p-6 rounded-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
           <h4 className="font-semibold text-purple-400 mb-2 sm:mb-0">
-            Top Weighted Stakers
+            {getCurrentTitle()}
           </h4>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setViewMode("weighted")}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                viewMode === "weighted"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+              }`}
+            >
+              Weighted Stakes
+            </button>
+            <button
+              onClick={() => setViewMode("raw")}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                viewMode === "raw"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+              }`}
+            >
+              Raw Total Stakes
+            </button>
+            <button
+              onClick={() => setViewMode("user")}
+              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                viewMode === "user"
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-600 text-gray-300 hover:bg-gray-500"
+              }`}
+            >
+              Your Staking %
+            </button>
+          </div>
         </div>
         {topStakers.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
@@ -200,7 +337,7 @@ const RewardsSection = ({
             </div>
             <div className="text-xs mt-2">Fetching data from blockchain...</div>
           </div>
-        ) : getTopWeightedData().length === 0 ? (
+        ) : getCurrentData().length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <div>No staking data available</div>
             <div className="text-xs mt-2">
@@ -213,7 +350,7 @@ const RewardsSection = ({
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={getTopWeightedData()}
+                    data={getCurrentData()}
                     cx="50%"
                     cy="50%"
                     outerRadius={80}
@@ -230,9 +367,10 @@ const RewardsSection = ({
                       // Handle array values by taking the first element, or use the value directly
                       const numericValue = Array.isArray(value) ? value[0] : value;
                       const finalValue = numericValue || 0;
+                      const label = viewMode === "raw" ? "Raw Amount" : "Total Weight";
                       return [
                         `${Math.round(parseFloat(finalValue.toString())).toLocaleString()} FAET (${props.payload?.percentage?.toFixed(2)}%)`,
-                        "Total Weight",
+                        label,
                       ];
                     }}
                   />
@@ -254,7 +392,7 @@ const RewardsSection = ({
                         className="w-3 h-3 rounded-full"
                         style={{
                           backgroundColor:
-                            getTopWeightedData()[index]?.fill ||
+                            getCurrentData()[index]?.fill ||
                             `hsl(${(index * 360) / getCurrentBreakdownData().length}, 70%, 50%)`,
                         }}
                       ></div>
