@@ -343,130 +343,140 @@ const WalletConnection = ({
                 </p>
                 <div className="space-y-3">
                   <button
-                    onClick={async () => {
-                      if (!account) {
-                        console.log("No account connected");
-                        return;
-                      }
-                      if (!securityChecks.isValidChain) {
-                        console.log("Invalid network, switching...");
-                        onSwitchNetwork();
-                        return;
-                      }
-
-                      if (!validateContractInteraction()) {
-                        alert("Please wait or try again in 2 seconds");
-                        return;
-                      }
-
-                      try {
-                        const metaMask = getMetaMaskProvider();
-                        if (!metaMask) {
-                          console.error("MetaMask not detected");
-                          return;
-                        }
-
-                        await metaMask.request({
-                          method: "wallet_watchAsset",
-                          params: {
-                            type: "ERC721",
-                            options: {
-                              address: contractAddresses.CHARACTER_NFT,
-                              symbol: "FAET",
-                              image: "https://www.faet.io/images/faeticonblk.png",
-                            },
-                          },
-                        });
-
-                      } catch (err: unknown) {
-                        const error = err as { code?: number };
-                        if (error?.code === 4001) {
-                          console.log("User rejected the add NFT request.");
-                        } else {
-                          console.error("Add NFT failed", err);
-                        }
-                      }
-                    }}
-                    disabled={!account}
-                    className={`w-full font-bold py-2 px-4 rounded-lg transition-colors ${
-                      !account
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : !securityChecks.isValidChain
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : selectedNetwork === "mainnet"
-                            ? "bg-purple-600 hover:bg-purple-700 text-white"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
+                    disabled={true}
+                    className="w-full bg-gray-600 text-gray-400 cursor-not-allowed font-bold py-2 px-4 rounded-lg transition-colors"
                   >
-                    {!account
-                      ? "Connect Wallet First"
-                      : !securityChecks.isValidChain
-                        ? "Switch Network"
-                        : "Add Character NFTs"}
+                    Coming Soon
                   </button>
                   
-                  <button
-                    onClick={async () => {
-                      if (!account) {
-                        console.log("No account connected");
-                        return;
-                      }
-                      if (!securityChecks.isValidChain) {
-                        console.log("Invalid network, switching...");
-                        onSwitchNetwork();
-                        return;
-                      }
-
-                      if (!validateContractInteraction()) {
-                        alert("Please wait or try again in 2 seconds");
-                        return;
-                      }
-
-                      try {
-                        const metaMask = getMetaMaskProvider();
-                        if (!metaMask) {
-                          console.error("MetaMask not detected");
+                  <div className="border-t border-gray-600 pt-3 space-y-2">
+                    <p className="text-xs text-gray-400 text-center mb-2">Add NFTs to Wallet:</p>
+                    <button
+                      onClick={async () => {
+                        if (!account) {
+                          console.log("No account connected");
+                          return;
+                        }
+                        if (!securityChecks.isValidChain) {
+                          console.log("Invalid network, switching...");
+                          onSwitchNetwork();
                           return;
                         }
 
-                        await metaMask.request({
-                          method: "wallet_watchAsset",
-                          params: {
-                            type: "ERC721",
-                            options: {
-                              address: contractAddresses.FOUNDERS_PASS,
-                              symbol: "FAET",
-                              image: "https://www.faet.io/images/faeticonblk.png",
-                            },
-                          },
-                        });
-
-                      } catch (err: unknown) {
-                        const error = err as { code?: number };
-                        if (error?.code === 4001) {
-                          console.log("User rejected the add NFT request.");
-                        } else {
-                          console.error("Add NFT failed", err);
+                        if (!validateContractInteraction()) {
+                          alert("Please wait or try again in 2 seconds");
+                          return;
                         }
-                      }
-                    }}
-                    disabled={!account}
-                    className={`w-full font-bold py-2 px-4 rounded-lg transition-colors ${
-                      !account
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+
+                        try {
+                          const metaMask = getMetaMaskProvider();
+                          if (!metaMask) {
+                            console.error("MetaMask not detected");
+                            return;
+                          }
+
+                          await metaMask.request({
+                            method: "wallet_watchAsset",
+                            params: {
+                              type: "ERC721",
+                              options: {
+                                address: contractAddresses.CHARACTER_NFT,
+                                symbol: "FAET",
+                                image: "https://www.faet.io/images/faeticonblk.png",
+                              },
+                            },
+                          });
+
+                        } catch (err: unknown) {
+                          const error = err as { code?: number };
+                          if (error?.code === 4001) {
+                            console.log("User rejected the add NFT request.");
+                          } else {
+                            console.error("Add NFT failed", err);
+                          }
+                        }
+                      }}
+                      disabled={!account}
+                      className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors ${
+                        !account
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                          : !securityChecks.isValidChain
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : selectedNetwork === "mainnet"
+                              ? "bg-purple-600 hover:bg-purple-700 text-white"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}
+                    >
+                      {!account
+                        ? "Connect Wallet First"
                         : !securityChecks.isValidChain
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : selectedNetwork === "mainnet"
-                            ? "bg-purple-600 hover:bg-purple-700 text-white"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
-                  >
-                    {!account
-                      ? "Connect Wallet First"
-                      : !securityChecks.isValidChain
-                        ? "Switch Network"
-                        : "Add Founder's Pass NFTs"}
-                  </button>
+                          ? "Switch Network"
+                          : "Add Character NFTs"}
+                    </button>
+                    
+                    <button
+                      onClick={async () => {
+                        if (!account) {
+                          console.log("No account connected");
+                          return;
+                        }
+                        if (!securityChecks.isValidChain) {
+                          console.log("Invalid network, switching...");
+                          onSwitchNetwork();
+                          return;
+                        }
+
+                        if (!validateContractInteraction()) {
+                          alert("Please wait or try again in 2 seconds");
+                          return;
+                        }
+
+                        try {
+                          const metaMask = getMetaMaskProvider();
+                          if (!metaMask) {
+                            console.error("MetaMask not detected");
+                            return;
+                          }
+
+                          await metaMask.request({
+                            method: "wallet_watchAsset",
+                            params: {
+                              type: "ERC721",
+                              options: {
+                                address: contractAddresses.FOUNDERS_PASS,
+                                symbol: "FAET",
+                                image: "https://www.faet.io/images/faeticonblk.png",
+                              },
+                            },
+                          });
+
+                        } catch (err: unknown) {
+                          const error = err as { code?: number };
+                          if (error?.code === 4001) {
+                            console.log("User rejected the add NFT request.");
+                          } else {
+                            console.error("Add NFT failed", err);
+                          }
+                        }
+                      }}
+                      disabled={!account}
+                      className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors ${
+                        !account
+                          ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                          : !securityChecks.isValidChain
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : selectedNetwork === "mainnet"
+                              ? "bg-purple-600 hover:bg-purple-700 text-white"
+                              : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}
+                    >
+                      {!account
+                        ? "Connect Wallet First"
+                        : !securityChecks.isValidChain
+                          ? "Switch Network"
+                          : "Add Founder's Pass NFTs"}
+                    </button>
+                  </div>
                 </div>
               </div>
 
