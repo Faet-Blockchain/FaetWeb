@@ -355,7 +355,8 @@ const WalletConnection = ({
     // 5) Verify disconnection (for debugging)
     if (eth?.request) {
       eth.request({ method: "eth_accounts" })
-        .then((accounts: string[]) => {
+        .then((result: unknown) => {
+          const accounts = result as string[];
           if (accounts?.length > 0) {
             console.warn("Still authorized in MetaMask; user must manually disconnect in wallet settings.");
           } else {
