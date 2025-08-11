@@ -1,18 +1,20 @@
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: {
-        method: string;
-        params?: unknown[] | {
-          type?: string;
-          options?: {
-            address?: string;
-            symbol?: string;
-            decimals?: number;
+      request(args: {
+        method: "wallet_watchAsset";
+        params: {
+          type: "ERC20";
+          options: {
+            address: `0x${string}`;
+            symbol: string;
+            decimals: number;
             image?: string;
           };
-        } | Record<string, unknown>;
-      }) => Promise<unknown>;
+        };
+      }): Promise<boolean>;
+      request(args: { method: string; params?: unknown }): Promise<unknown>;
+
       on?: (event: string, handler: (...args: unknown[]) => void) => void;
       removeListener?: (
         event: string,
@@ -33,16 +35,8 @@ interface Grecaptcha {
 
 interface EthereumProvider {
   isMetaMask?: boolean;
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  request(args: { method: string; params?: unknown }): Promise<unknown>;
 }
-
-interface EthereumWindow extends Window {
-  ethereum?: EthereumProvider & {
-    providers?: EthereumProvider[];
-  };
-}
-
-declare const window: EthereumWindow;
 
 // Chart component types
 interface TooltipFormatterProps {

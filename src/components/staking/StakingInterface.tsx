@@ -63,18 +63,17 @@ const AddTokenButton = () => {
     try {
       await metaMask.request({
         method: "wallet_watchAsset",
-        params: [
-          {
-            type: "ERC20",
-            options: {
-              address: "0xdF92bA28D17329a7284A5eC230967768D4cb7A89",
-              symbol: "FAET",
-              decimals: 18,
-              image: "https://www.faet.io/images/faeticonblk.png",
-            },
+        params: {
+          type: "ERC20",
+          options: {
+            address: "0xdF92bA28D17329a7284A5eC230967768D4cb7A89",
+            symbol: "FAET",
+            decimals: 18,
+            image: "https://www.faet.io/images/faeticonblk.png",
           },
-        ],
+        },
       });
+
     } catch (err: unknown) {
       const error = err as { code?: number };
       if (error?.code === 4001) {
