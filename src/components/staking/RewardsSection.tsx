@@ -72,15 +72,14 @@ const RewardsSection = ({
       percentage: (parseFloat(staker.weight || "0") / (totalWeight || 1)) * 100,
     }));
 
-    if (othersAmount > 0) {
-      console.log(`Weighted Others: ${others.length} accounts with total ${othersAmount} weight`);
-      data.push({
-        name: `Others (${others.length} accounts)`,
-        value: othersAmount,
-        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
-        percentage: (othersAmount / (totalWeight || 1)) * 100,
-      });
-    }
+    // Always show Others category, even if there are no others (0 accounts)
+    console.log(`Weighted Others: ${others.length} accounts with total ${othersAmount} weight`);
+    data.push({
+      name: `Others (${others.length} accounts)`,
+      value: othersAmount,
+      fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+      percentage: totalWeight > 0 ? (othersAmount / totalWeight) * 100 : 0,
+    });
 
     return data;
   };
@@ -115,15 +114,14 @@ const RewardsSection = ({
       percentage: (parseFloat(staker.rawAmount || "0") / (totalRaw || 1)) * 100,
     }));
 
-    if (othersAmount > 0) {
-      console.log(`Raw Others: ${others.length} accounts with total ${othersAmount} raw amount`);
-      data.push({
-        name: `Others (${others.length} accounts)`,
-        value: othersAmount,
-        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
-        percentage: (othersAmount / (totalRaw || 1)) * 100,
-      });
-    }
+    // Always show Others category, even if there are no others (0 accounts)
+    console.log(`Raw Others: ${others.length} accounts with total ${othersAmount} raw amount`);
+    data.push({
+      name: `Others (${others.length} accounts)`,
+      value: othersAmount,
+      fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+      percentage: totalRaw > 0 ? (othersAmount / totalRaw) * 100 : 0,
+    });
 
     return data;
   };
@@ -177,10 +175,10 @@ const RewardsSection = ({
     const currentData = getCurrentData();
     return currentData.map((item) => ({
       range: item.name,
-      count: item.name.includes("Others") ? 
-        Math.max(0, topStakers.length - 10) : 
-        item.name.includes("All Others") ? 
-        topStakers.length : 1,
+      count: item.name.includes("All Others") ? 
+        topStakers.length : 
+        item.name.includes("Others") ? 
+        Math.max(0, topStakers.length - 10) : 1,
       totalWeight: item.value.toString(),
       percentage: item.percentage,
     }));
