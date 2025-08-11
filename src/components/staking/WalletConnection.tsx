@@ -266,7 +266,7 @@ const WalletConnection = ({
           const accounts = await eth.request({ method: "eth_accounts" });
           if (!isActive) return; // Check again after async operation
           
-          if (accounts.length > 0) {
+          if (accounts && accounts.length > 0) {
             console.log("Initial account found:", accounts[0]);
             setAccount(accounts[0]);
             if (eth.chainId) {
