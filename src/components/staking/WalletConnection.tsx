@@ -194,7 +194,8 @@ const WalletConnection = ({
     (typeof window !== "undefined" ? window.ethereum : undefined) ?? null;
 
   // Create stable listener functions that we can reference for cleanup
-  const handleAccountsChanged = useCallback((accounts: string[]) => {
+  const handleAccountsChanged = useCallback((...args: unknown[]) => {
+    const accounts = args[0] as string[];
     if (accounts.length === 0) {
       // User disconnected from MetaMask
       setAccount(null);
@@ -215,7 +216,8 @@ const WalletConnection = ({
     }
   }, [clearWeb3State, onDisconnect, selectedNetwork]); // Added selectedNetwork dependency
 
-  const handleChainChanged = useCallback((newChainId: string) => {
+  const handleChainChanged = useCallback((...args: unknown[]) => {
+    const newChainId = args[0] as string;
     setCurrentChainId(newChainId);
     const networkConfig = getNetworkConfig(selectedNetwork);
     setWrongNetwork(newChainId !== networkConfig.chainId);
@@ -226,7 +228,7 @@ const WalletConnection = ({
     }
   }, [selectedNetwork, onSwitchNetwork]); // Added onSwitchNetwork dependency
 
-  const handleDisconnect = useCallback(() => {
+  const handleDisconnect = useCallback((...args: unknown[]) => {
     setAccount(null);
     setCurrentChainId(null);
     setWrongNetwork(false);

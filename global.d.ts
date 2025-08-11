@@ -4,6 +4,12 @@ declare global {
   interface Window {
     ethereum?: MetaMaskInpageProvider & {
       providers?: MetaMaskInpageProvider[];
+      on?: (event: string, callback: (...args: unknown[]) => void) => void;
+      removeListener?: (event: string, callback: (...args: unknown[]) => void) => void;
+      request?: (args: {
+        method: "wallet_revokePermissions";
+        params: [{ eth_accounts: {} }];
+      }) => Promise<null>;
     };
     grecaptcha: Grecaptcha;
   }
