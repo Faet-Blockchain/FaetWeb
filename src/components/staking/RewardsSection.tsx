@@ -41,7 +41,7 @@ const RewardsSection = ({
   topStakers,
   onClaimRewards,
 }: RewardsSectionProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>("weighted");
+  const [viewMode, setViewMode] = useState<ViewMode>("user");
   // Process data for all stakers by weighted amount, showing top 10 individually and grouping others
   const getTopWeightedData = () => {
     if (topStakers.length === 0) return [];
@@ -298,14 +298,14 @@ const RewardsSection = ({
           </h4>
           <div className="flex gap-2 flex-wrap">
             <button
-              onClick={() => setViewMode("weighted")}
+              onClick={() => setViewMode("user")}
               className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                viewMode === "weighted"
+                viewMode === "user"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-600 text-gray-300 hover:bg-gray-500"
               }`}
             >
-              Weighted Stakes
+              Your Staking %
             </button>
             <button
               onClick={() => setViewMode("raw")}
@@ -318,14 +318,14 @@ const RewardsSection = ({
               Raw Total Stakes
             </button>
             <button
-              onClick={() => setViewMode("user")}
+              onClick={() => setViewMode("weighted")}
               className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                viewMode === "user"
+                viewMode === "weighted"
                   ? "bg-purple-600 text-white"
                   : "bg-gray-600 text-gray-300 hover:bg-gray-500"
               }`}
             >
-              Your Staking %
+              Weighted Stakes
             </button>
           </div>
         </div>
