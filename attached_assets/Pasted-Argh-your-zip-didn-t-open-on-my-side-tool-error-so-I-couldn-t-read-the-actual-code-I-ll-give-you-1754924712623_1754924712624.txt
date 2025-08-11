@@ -1,0 +1,121 @@
+Argh—your zip didn’t open on my side (tool error), so I couldn’t read the actual code. I’ll give you an exact, minimal patch so you can confirm whether your current disconnect button already does this—or drop this in if it doesn’t.
+
+What a correct “Disconnect” must do
+Stop listening to provider events.
+
+Clear your app state (account, chainId, flags, any “autoconnect” markers).
+
+Try to revoke eth_accounts permission (wallet may ignore).
+
+Don’t auto-reconnect on mount (use eth_accounts for silent check; only call eth_requestAccounts on Connect click).
+
+Minimal code you need (drop-in)
+Only the nearest scope:
+
+ts
+Copy
+Edit
+// helper
+const getEth = () =>
+  (typeof window !== "undefined" ? window.ethereum : undefined) ?? null;
+
+// listener refs so we can remove the same function references
+const onAccountsChanged = (accs: string[]) => {
+  setAccount(accs?.[0] ?? null);
+};
+const onChainChanged = (cid: string) => {
+  setCurrentChainId(cid);
+};
+const onDisconnect = () => {
+  setAccount(null);
+  setCurrentChainId(null);
+  setWrongNetwork(false);
+};
+
+// attach & cleanup (where you currently add listeners)
+useEffect(() => {
+  const eth = getEth();
+  if (!eth) return;
+
+  eth.on?.("accountsChanged", onAccountsChanged);
+  eth.on?.("chainChanged", onChainChanged);
+  eth.on?.("disconnect", onDisconnect);
+
+  return () => {
+    eth.removeListener?.("accountsChanged", onAccountsChanged);
+    eth.removeListener?.("chainChanged", onChainChanged);
+    eth.removeListener?.("disconnect", onDisconnect);
+  };
+}, []);
+ts
+Copy
+Edit
+// disconnect button handler (replace your current one)
+const disconnect = async () => {
+  const eth = getEth();
+
+  // 1) remove listeners
+  eth?.removeListener?.("accountsChanged", onAccountsChanged);
+  eth?.removeListener?.("chainChanged", onChainChanged);
+  eth?.removeListener?.("disconnect", onDisconnect);
+
+  // 2) try to revoke permission (supported in some wallets)
+  try {
+    await eth?.request?.({
+      method: "wallet_revokePermissions",
+      params: [{ eth_accounts: {} }],
+    });
+  } catch { /* ignore if unsupported */ }
+
+  // 3) clear app state
+  setAccount(null);
+  setCurrentChainId(null);
+  setWrongNetwork(false);
+  setIsConnecting(false);
+  localStorage.removeItem("faet:lastConnectedWallet");
+
+  // 4) verify current authorization for UI hints
+  try {
+    const accs = (await eth?.request?.({ method: "eth_accounts" })) as string[] | undefined;
+    if (accs?.length) {
+      console.warn("Still authorized in MetaMask; user must disconnect in wallet UI (Connected sites).");
+    }
+  } catch { /* noop */ }
+};
+ts
+Copy
+Edit
+// IMPORTANT: on mount, do NOT call eth_requestAccounts
+// Replace any auto-connect with a silent check:
+useEffect(() => {
+  const eth = getEth();
+  if (!eth) return;
+  (async () => {
+    try {
+      const accs = (await eth.request({ method: "eth_accounts" })) as string[];
+      if (accs?.[0]) setAccount(accs[0]); // no permission prompt
+    } catch {/* noop */}
+  })();
+}, []);
+Typing (so this compiles cleanly)
+In your global.d.ts you already use MetaMaskInpageProvider. Add a typed overload for revoke (optional, for IntelliSense):
+
+ts
+Copy
+Edit
+// inside Window.ethereum declaration
+request(args: {
+  method: "wallet_revokePermissions";
+  params: [{ eth_accounts: {} }];
+}): Promise<null>;
+If your current disconnect handler already:
+
+removes those listeners,
+
+clears all wallet state,
+
+avoids auto-calling eth_requestAccounts,
+
+and tries wallet_revokePermissions,
+
+then it’s functionally correct. MetaMask will still show your site as “Connected” until the user removes it in the wallet UI—that’s expected. If you want, paste just your disconnect handler + the effect where you add listeners, and I’ll diff it precisely.
