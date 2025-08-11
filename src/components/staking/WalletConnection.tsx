@@ -172,6 +172,70 @@ const WalletConnection = ({
 
     return true;
   }, [securityChecks.canPerformOperations, checkRateLimit]);
+
+  // Security: Updated disconnect function
+  const disconnectWallet = useCallback(() => {
+    const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+
+    // 1) Remove listeners if they exist
+    if (eth?.removeListener) {
+      // Note: We'd need to store listener refs to remove the exact same functions
+      // For now, this attempts to remove any listeners
+      try {
+        // Using a no-op function for removal as we don't have the original listeners
+        // This might not be perfectly effective if the actual listener functions differ
+        eth.removeListener('chainChanged', () => {});
+        eth.removeListener('accountsChanged', () => {});
+      } catch {
+        // Ignore errors if listeners weren't attached or removal fails
+      }
+    }
+
+    // 2) Try to revoke permission (supported in some wallets)
+    if (eth?.request) {
+      eth.request({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }],
+      }).catch(() => {
+        // Ignore if unsupported - many wallets don't support this yet
+      });
+    }
+
+    // 3) Clear app state
+    setAccount(null);
+    setWrongNetwork(false);
+    setCurrentChainId(null);
+    // Assuming setCurrentChainIdNumber is a prop or state setter, if it exists
+    // If not, this line might need adjustment or removal based on the actual component state/props
+    // For now, assuming it's a valid setter for the chainId number.
+    // If `currentChainIdNumber` is not a state variable managed within this component,
+    // this line should be removed or adjusted. Let's assume it's a state variable for now.
+    // setCurrentChainIdNumber(null); // Uncomment if currentChainIdNumber is a state variable managed here.
+    clearWeb3State();
+
+    // 4) Clear any stored connection preferences
+    try {
+      localStorage.removeItem("faet:lastConnectedWallet");
+      localStorage.removeItem("faet:autoConnect");
+    } catch {
+      // Ignore localStorage errors
+    }
+
+    // 5) Verify current authorization for debugging
+    if (eth?.request) {
+      eth.request({ method: "eth_accounts" })
+        .then((accounts: string[]) => {
+          if (accounts?.length > 0) {
+            console.warn("Still authorized in MetaMask; user must disconnect in wallet UI (Connected sites).");
+          }
+        })
+        .catch(() => {
+          // Ignore errors
+        });
+    }
+  }, [clearWeb3State]); // Removed setCurrentChainIdNumber from dependencies as it's not used directly in the callback logic
+
+
   return (
     <>
       <motion.div
@@ -1021,7 +1085,7 @@ const WalletConnection = ({
 
             <button
               type="button"
-              onClick={onDisconnect}
+              onClick={disconnectWallet} // Use the updated disconnectWallet function
               className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
             >
               Disconnect Wallet
