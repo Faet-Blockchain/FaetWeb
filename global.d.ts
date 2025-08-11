@@ -4,12 +4,36 @@ declare global {
   interface Window {
     ethereum?: MetaMaskInpageProvider & {
       providers?: MetaMaskInpageProvider[];
-      on?: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener?: (event: string, callback: (...args: unknown[]) => void) => void;
-      request?: (args: {
+
+      // --- Request overloads for strong typing ---
+      request(args: { method: "eth_accounts" }): Promise<string[]>;
+      request(args: {
+        method: "wallet_watchAsset";
+        params: {
+          type: "ERC20";
+          options: {
+            address: `0x${string}`;
+            symbol: string;
+            decimals: number;
+            image?: string;
+          };
+        };
+      }): Promise<boolean>;
+      request(args: {
+        method: "wallet_watchAsset";
+        params: {
+          type: "ERC721";
+          options: {
+            address: `0x${string}`;
+            tokenId: string;
+          };
+        };
+      }): Promise<boolean>;
+      request(args: {
         method: "wallet_revokePermissions";
         params: [{ eth_accounts: {} }];
-      }) => Promise<null>;
+      }): Promise<null>;
+      request(args: { method: string; params?: unknown }): Promise<unknown>;
     };
     grecaptcha: Grecaptcha;
   }
