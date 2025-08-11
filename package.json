@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@metamask/providers": "^22.1.0",
     "@tabler/icons-react": "^3.23.0",
     "clsx": "^2.1.1",
     "emailjs-com": "^3.2.0",

@@ -1,28 +1,8 @@
+import type { MetaMaskInpageProvider } from '@metamask/providers';
+
 declare global {
   interface Window {
-    ethereum?: {
-      request(args: {
-        method: "wallet_watchAsset";
-        params: {
-          type: "ERC20";
-          options: {
-            address: `0x${string}`;
-            symbol: string;
-            decimals: number;
-            image?: string;
-          };
-        };
-      }): Promise<boolean>;
-      request(args: { method: string; params?: unknown }): Promise<unknown>;
-
-      on?: (event: string, handler: (...args: unknown[]) => void) => void;
-      removeListener?: (
-        event: string,
-        handler: (...args: unknown[]) => void,
-      ) => void;
-      providers?: EthereumProvider[];
-      isMetaMask?: boolean;
-    } & EventTarget;
+    ethereum?: MetaMaskInpageProvider;
     grecaptcha: Grecaptcha;
   }
 }
@@ -31,11 +11,6 @@ interface Grecaptcha {
   execute: (siteKey: string, options: { action: string }) => Promise<string>;
   render?: (element: string | HTMLElement, options: object) => number;
   reset?: (widgetId?: number) => void;
-}
-
-interface EthereumProvider {
-  isMetaMask?: boolean;
-  request(args: { method: string; params?: unknown }): Promise<unknown>;
 }
 
 // Chart component types

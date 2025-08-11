@@ -91,7 +91,7 @@ const isValidChainId = (
 // Security: Sanitize error messages to prevent information leakage
 
 const getMetaMaskProvider = () => {
-  const eth = window.ethereum;
+  const eth = typeof window !== "undefined" ? window.ethereum : undefined;
   if (!eth) return null;
   return Array.isArray(eth.providers)
     ? eth.providers.find((p) => p.isMetaMask)
@@ -159,7 +159,8 @@ const WalletConnection = ({
       return false;
     }
 
-    if (typeof window.ethereum === "undefined") {
+    const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+    if (!eth) {
       console.warn("Security: MetaMask not detected");
       return false;
     }
@@ -381,7 +382,13 @@ const WalletConnection = ({
 
                           // Initialize web3 to check which NFTs the user owns
                           const { ethers } = await import("ethers");
-                          const provider = new ethers.BrowserProvider(window.ethereum);
+
+                          const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+                          if (!eth) {
+                            throw new Error("MetaMask provider not found");
+                          }
+
+                          const provider = new ethers.BrowserProvider(eth);
 
                           // Character NFT contract setup
                           const characterNftABI = [
@@ -398,7 +405,7 @@ const WalletConnection = ({
 
                           // Check NFT balance
                           const nftBalance = await characterNftContract.balanceOf(account);
-                          
+
                           if (nftBalance === 0n) {
                             alert("❌ You don't own any Character NFTs");
                             return;
@@ -406,7 +413,7 @@ const WalletConnection = ({
 
                           // Find all NFTs the user owns
                           const ownedTokenIds: number[] = [];
-                          
+
                           // Check token IDs in the expected range
                           for (let tokenId = 1; tokenId <= 10; tokenId++) {
                             try {
@@ -443,7 +450,7 @@ const WalletConnection = ({
                                 },
                               });
                               successCount++;
-                              
+
                               // Add delay between requests to avoid rate limiting
                               if (tokenId !== ownedTokenIds[ownedTokenIds.length - 1]) {
                                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -532,7 +539,14 @@ const WalletConnection = ({
 
                           // Initialize web3 to check which NFTs the user owns
                           const { ethers } = await import("ethers");
-                          const provider = new ethers.BrowserProvider(window.ethereum);
+
+                          const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+                          if (!eth) {
+                            throw new Error("MetaMask provider not found");
+                          }
+
+                          const provider = new ethers.BrowserProvider(eth);
+
 
                           // Founder's Pass NFT contract setup
                           const foundersPassABI = [
@@ -549,7 +563,7 @@ const WalletConnection = ({
 
                           // Check NFT balance
                           const nftBalance = await foundersPassContract.balanceOf(account);
-                          
+
                           if (nftBalance === 0n) {
                             alert("❌ You don't own any Founder's Pass NFTs");
                             return;
@@ -557,7 +571,7 @@ const WalletConnection = ({
 
                           // Find all NFTs the user owns
                           const ownedTokenIds: number[] = [];
-                          
+
                           // Check token IDs in the expected range
                           for (let tokenId = 1; tokenId <= 150; tokenId++) {
                             try {
@@ -594,7 +608,7 @@ const WalletConnection = ({
                                 },
                               });
                               successCount++;
-                              
+
                               // Add delay between requests to avoid rate limiting
                               if (tokenId !== ownedTokenIds[ownedTokenIds.length - 1]) {
                                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -654,7 +668,7 @@ const WalletConnection = ({
                         "Add Founder's Pass to MetaMask"
                       )}
                     </button>
-                    
+
                     <p className="text-gray-400 text-xs text-center mt-2">
                       May take up to 30 seconds to add all NFTs. Check MetaMask for prompts.
                     </p>
@@ -714,13 +728,13 @@ const WalletConnection = ({
                           // Initialize web3 provider with security checks
                           const { ethers } = await import("ethers");
 
-                          // Security: Check if ethereum is available
-                          if (typeof window.ethereum === "undefined") {
-                            throw new Error("MetaMask not available");
+                          const eth = typeof window !== "undefined" ? window.ethereum : undefined;
+                          if (!eth) {
+                            throw new Error("MetaMask provider not found");
                           }
 
                           const provider = new ethers.BrowserProvider(
-                            window.ethereum,
+                            eth,
                           );
                           const signer = await await provider.getSigner();
 
@@ -779,12 +793,12 @@ const WalletConnection = ({
                           const nftBalance =
                             await foundersPassContract.balanceOf(account);
                           console.log(
-                            `User owns ${nftBalance.toString()} Founder&apos;s Pass NFTs`,
+                            `User owns ${nftBalance.toString()} Founder's Pass NFTs`,
                           );
 
                           if (nftBalance === 0n) {
                             alert(
-                              "❌ No Founder&apos;s Pass NFTs found in your wallet.",
+                              "❌ No Founder's Pass NFTs found in your wallet.",
                             );
                             return;
                           }
@@ -819,7 +833,7 @@ const WalletConnection = ({
 
                           if (ownedTokenIds.length === 0) {
                             alert(
-                              "❌ Could not retrieve your Founder&apos;s Pass NFT token IDs. You may not own any NFTs from this collection.",
+                              "❌ Could not retrieve your Founder's Pass NFT token IDs. You may not own any NFTs from this collection.",
                             );
                             return;
                           }
@@ -888,7 +902,7 @@ const WalletConnection = ({
                           if (claimableTokens.length === 0) {
                             if (alreadyClaimedTokens.length > 0) {
                               alert(
-                                `❌ All your Founder&apos;s Pass NFTs have already been claimed.`,
+                                `❌ All your Founder's Pass NFTs have already been claimed.`,
                               );
                             } else {
                               alert("❌ No claimable airdrop tokens found.");
