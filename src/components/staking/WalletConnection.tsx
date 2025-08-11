@@ -348,7 +348,7 @@ const WalletConnection = ({
                   >
                     Coming Soon
                   </button>
-                  
+
                   <div className="border-t border-gray-600 pt-3 space-y-2">
                     <p className="text-xs text-gray-400 text-center mb-2">Add NFTs to Wallet:</p>
                     <button
@@ -381,7 +381,7 @@ const WalletConnection = ({
                               type: "ERC721",
                               options: {
                                 address: contractAddresses.CHARACTER_NFT,
-                                symbol: "FAET",
+                                symbol: "FAET-CHAR",
                                 image: "https://www.faet.io/images/faeticonblk.png",
                               },
                             },
@@ -413,7 +413,7 @@ const WalletConnection = ({
                           ? "Switch Network"
                           : "Add Character NFTs"}
                     </button>
-                    
+
                     <button
                       onClick={async () => {
                         if (!account) {
@@ -444,7 +444,7 @@ const WalletConnection = ({
                               type: "ERC721",
                               options: {
                                 address: contractAddresses.FOUNDERS_PASS,
-                                symbol: "FAET",
+                                symbol: "FAET-PASS",
                                 image: "https://www.faet.io/images/faeticonblk.png",
                               },
                             },
@@ -822,7 +822,7 @@ const WalletConnection = ({
                 </p>
               </div>
             </div>
-            
+
             <button
               type="button"
               onClick={onDisconnect}

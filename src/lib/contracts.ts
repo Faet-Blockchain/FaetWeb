@@ -1,4 +1,3 @@
-
 // Contract configuration for different networks
 export type ContractAddresses = {
   CHARACTER_NFT: string;
