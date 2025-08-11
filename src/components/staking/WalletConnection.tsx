@@ -375,16 +375,63 @@ const WalletConnection = ({
                             return;
                           }
 
-                          // For ERC721 collections, we need to provide a tokenId or use a different approach
-                          // Since MetaMask now requires tokenId for ERC721, we'll inform the user
-                          alert(
-                            `To add Character NFTs to your wallet:\n\n` +
-                            `1. Go to MetaMask\n` +
-                            `2. Click "Import tokens" → "NFTs"\n` +
-                            `3. Enter contract address: ${contractAddresses.CHARACTER_NFT}\n` +
-                            `4. Enter a tokenId of an NFT you own\n\n` +
-                            `MetaMask will automatically detect other NFTs from the same collection.`
+                          // Initialize web3 to check which NFTs the user owns
+                          const { ethers } = await import("ethers");
+                          const provider = new ethers.BrowserProvider(window.ethereum);
+
+                          // Character NFT contract setup
+                          const characterNftABI = [
+                            "function balanceOf(address owner) view returns (uint256)",
+                            "function ownerOf(uint256 tokenId) view returns (address)",
+                            "function totalSupply() view returns (uint256)",
+                          ];
+
+                          const characterNftContract = new ethers.Contract(
+                            contractAddresses.CHARACTER_NFT,
+                            characterNftABI,
+                            provider,
                           );
+
+                          // Check NFT balance
+                          const nftBalance = await characterNftContract.balanceOf(account);
+                          
+                          if (nftBalance === 0n) {
+                            console.log("User doesn't own any Character NFTs");
+                            return;
+                          }
+
+                          // Find the first NFT the user owns
+                          let ownedTokenId = null;
+                          
+                          // Check token IDs in the expected range
+                          for (let tokenId = 1; tokenId <= 10; tokenId++) {
+                            try {
+                              const owner = await characterNftContract.ownerOf(tokenId);
+                              if (owner.toLowerCase() === account.toLowerCase()) {
+                                ownedTokenId = tokenId;
+                                break;
+                              }
+                            } catch {
+                              // Token doesn't exist or not owned, continue
+                            }
+                          }
+
+                          if (!ownedTokenId) {
+                            console.log("Could not find owned Character NFT token ID");
+                            return;
+                          }
+
+                          // Add the NFT to MetaMask using the found token ID
+                          await metaMask.request({
+                            method: "wallet_watchAsset",
+                            params: {
+                              type: "ERC721",
+                              options: {
+                                address: contractAddresses.CHARACTER_NFT,
+                                tokenId: ownedTokenId.toString(),
+                              },
+                            },
+                          });
 
                         } catch (err: unknown) {
                           const error = err as { code?: number };
@@ -410,7 +457,7 @@ const WalletConnection = ({
                         ? "Connect Wallet First"
                         : !securityChecks.isValidChain
                           ? "Switch Network"
-                          : "How to Add Character NFTs"}
+                          : "Add Character NFTs"}
                     </button>
 
                     <button
@@ -437,16 +484,63 @@ const WalletConnection = ({
                             return;
                           }
 
-                          // For ERC721 collections, we need to provide a tokenId or use a different approach
-                          // Since MetaMask now requires tokenId for ERC721, we'll inform the user
-                          alert(
-                            `To add Founder's Pass NFTs to your wallet:\n\n` +
-                            `1. Go to MetaMask\n` +
-                            `2. Click "Import tokens" → "NFTs"\n` +
-                            `3. Enter contract address: ${contractAddresses.FOUNDERS_PASS}\n` +
-                            `4. Enter a tokenId of an NFT you own\n\n` +
-                            `MetaMask will automatically detect other NFTs from the same collection.`
+                          // Initialize web3 to check which NFTs the user owns
+                          const { ethers } = await import("ethers");
+                          const provider = new ethers.BrowserProvider(window.ethereum);
+
+                          // Founder's Pass NFT contract setup
+                          const foundersPassABI = [
+                            "function balanceOf(address owner) view returns (uint256)",
+                            "function ownerOf(uint256 tokenId) view returns (address)",
+                            "function totalSupply() view returns (uint256)",
+                          ];
+
+                          const foundersPassContract = new ethers.Contract(
+                            contractAddresses.FOUNDERS_PASS,
+                            foundersPassABI,
+                            provider,
                           );
+
+                          // Check NFT balance
+                          const nftBalance = await foundersPassContract.balanceOf(account);
+                          
+                          if (nftBalance === 0n) {
+                            console.log("User doesn't own any Founder's Pass NFTs");
+                            return;
+                          }
+
+                          // Find the first NFT the user owns
+                          let ownedTokenId = null;
+                          
+                          // Check token IDs in the expected range
+                          for (let tokenId = 1; tokenId <= 150; tokenId++) {
+                            try {
+                              const owner = await foundersPassContract.ownerOf(tokenId);
+                              if (owner.toLowerCase() === account.toLowerCase()) {
+                                ownedTokenId = tokenId;
+                                break;
+                              }
+                            } catch {
+                              // Token doesn't exist or not owned, continue
+                            }
+                          }
+
+                          if (!ownedTokenId) {
+                            console.log("Could not find owned Founder's Pass NFT token ID");
+                            return;
+                          }
+
+                          // Add the NFT to MetaMask using the found token ID
+                          await metaMask.request({
+                            method: "wallet_watchAsset",
+                            params: {
+                              type: "ERC721",
+                              options: {
+                                address: contractAddresses.FOUNDERS_PASS,
+                                tokenId: ownedTokenId.toString(),
+                              },
+                            },
+                          });
 
                         } catch (err: unknown) {
                           const error = err as { code?: number };
@@ -472,7 +566,7 @@ const WalletConnection = ({
                         ? "Connect Wallet First"
                         : !securityChecks.isValidChain
                           ? "Switch Network"
-                          : "How to Add Founder's Pass"}
+                          : "Add Founder's Pass"}
                     </button>
                   </div>
                 </div>
