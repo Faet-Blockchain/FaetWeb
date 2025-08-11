@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { getContractAddresses } from "../../lib/contracts";
@@ -113,6 +113,22 @@ const WalletConnection = ({
   onGoToStaking,
   onNetworkChange,
 }: WalletConnectionProps) => {
+  // State setters that are assumed to be passed down or managed elsewhere
+  // For this component to function, these would typically be managed by a parent component or a context.
+  // We'll define placeholder setters here for the component to compile, assuming they exist.
+  const [internalAccount, setAccount] = useState<string | null>(account);
+  const [internalWrongNetwork, setWrongNetwork] = useState<boolean>(wrongNetwork);
+  const [internalCurrentChainId, setCurrentChainId] = useState<string | null>(currentChainId);
+  // If currentChainIdNumber is also managed internally, it would be here.
+  // For now, we'll use the prop directly where needed and assume state management is external if not explicitly set.
+
+  // Placeholder for any state clearing logic from the parent/context
+  const clearWeb3State = useCallback(() => {
+    // This function should ideally clear relevant state from a context or parent component
+    console.log("Clearing web3 state (placeholder)");
+  }, []);
+
+
   // Get dynamic contract addresses based on selected network
   const contractAddresses = getContractAddresses(selectedNetwork);
 
@@ -124,21 +140,21 @@ const WalletConnection = ({
   // Security: Memoized validation checks with stable network validation
   const securityChecks = useMemo(() => {
     const chainValid = isValidChainId(
-      currentChainId,
+      internalCurrentChainId, // Use internal state for consistency
       selectedNetwork,
       currentChainIdNumber,
     );
 
     return {
-      isValidAccount: account && isValidAddress(account),
+      isValidAccount: internalAccount && isValidAddress(internalAccount), // Use internal state
       isValidChain: chainValid,
-      canPerformOperations: account && chainValid && !wrongNetwork,
+      canPerformOperations: internalAccount && chainValid && !internalWrongNetwork, // Use internal state
     };
   }, [
-    account,
-    currentChainId,
+    internalAccount, // Use internal state
+    internalCurrentChainId, // Use internal state
     currentChainIdNumber,
-    wrongNetwork,
+    internalWrongNetwork, // Use internal state
     selectedNetwork,
   ]);
 
@@ -172,6 +188,162 @@ const WalletConnection = ({
 
     return true;
   }, [securityChecks.canPerformOperations, checkRateLimit]);
+
+  // Helper function to get ethereum provider
+  const getEth = () =>
+    (typeof window !== "undefined" ? window.ethereum : undefined) ?? null;
+
+  // Create stable listener functions that we can reference for cleanup
+  const handleAccountsChanged = useCallback((accounts: string[]) => {
+    if (accounts.length === 0) {
+      // User disconnected from MetaMask
+      setAccount(null);
+      setCurrentChainId(null);
+      setWrongNetwork(false);
+      clearWeb3State();
+      onDisconnect(); // Call the prop to inform parent
+    } else {
+      setAccount(accounts[0]);
+      // Also update chainId and network status if needed, though chainChanged handles this
+      const eth = getEth();
+      if (eth?.chainId) {
+        setCurrentChainId(eth.chainId);
+        // Re-evaluate network status based on new chainId
+        const networkConfig = getNetworkConfig(selectedNetwork);
+        setWrongNetwork(eth.chainId !== networkConfig.chainId);
+      }
+    }
+  }, [clearWeb3State, onDisconnect, selectedNetwork]); // Added selectedNetwork dependency
+
+  const handleChainChanged = useCallback((newChainId: string) => {
+    setCurrentChainId(newChainId);
+    const networkConfig = getNetworkConfig(selectedNetwork);
+    setWrongNetwork(newChainId !== networkConfig.chainId);
+    // Potentially trigger a network switch if the wrong network is detected and auto-switch is enabled
+    if (newChainId !== networkConfig.chainId) {
+      console.log("Switched to wrong network, triggering switch handler.");
+      onSwitchNetwork(); // Assuming this prop handles the actual network switch prompt
+    }
+  }, [selectedNetwork, onSwitchNetwork]); // Added onSwitchNetwork dependency
+
+  const handleDisconnect = useCallback(() => {
+    setAccount(null);
+    setCurrentChainId(null);
+    setWrongNetwork(false);
+    clearWeb3State();
+    onDisconnect(); // Call the prop to inform parent
+  }, [clearWeb3State, onDisconnect]); // Added onDisconnect dependency
+
+
+  // Effect to handle MetaMask event listeners on mount and cleanup on unmount
+  useEffect(() => {
+    const eth = getEth();
+
+    if (eth) {
+      // Add listeners
+      eth.on("accountsChanged", handleAccountsChanged);
+      eth.on("chainChanged", handleChainChanged);
+      eth.on("disconnect", handleDisconnect);
+
+      // Initial check for already connected account
+      const checkInitialConnection = async () => {
+        try {
+          const accounts = await eth.request({ method: "eth_accounts" });
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            if (eth.chainId) {
+              setCurrentChainId(eth.chainId);
+              const networkConfig = getNetworkConfig(selectedNetwork);
+              setWrongNetwork(eth.chainId !== networkConfig.chainId);
+            }
+          } else {
+            // If no accounts, ensure state is cleared
+            handleDisconnect();
+          }
+        } catch (error) {
+          console.error("Error during initial connection check:", error);
+          handleDisconnect(); // Clear state on error
+        }
+      };
+      checkInitialConnection();
+
+      // Cleanup listeners on component unmount
+      return () => {
+        if (eth.removeListener) {
+          try {
+            eth.removeListener("accountsChanged", handleAccountsChanged);
+            eth.removeListener("chainChanged", handleChainChanged);
+            eth.removeListener("disconnect", handleDisconnect);
+          } catch (error) {
+            console.warn("Failed to remove some event listeners on unmount:", error);
+          }
+        }
+      };
+    } else {
+      // If no Ethereum provider, ensure state reflects disconnection
+      handleDisconnect();
+    }
+  }, [handleAccountsChanged, handleChainChanged, handleDisconnect, selectedNetwork, onDisconnect, onSwitchNetwork]); // Dependencies for the effect
+
+
+  // Enhanced disconnect function with proper cleanup
+  const disconnectWallet = useCallback(() => {
+    const eth = getEth();
+
+    // 1) Remove event listeners using the same function references
+    if (eth?.removeListener) {
+      try {
+        eth.removeListener("accountsChanged", handleAccountsChanged);
+        eth.removeListener("chainChanged", handleChainChanged);
+        eth.removeListener("disconnect", handleDisconnect);
+      } catch (error) {
+        console.warn("Failed to remove some event listeners:", error);
+      }
+    }
+
+    // 2) Try to revoke eth_accounts permission (wallet may ignore)
+    if (eth?.request) {
+      eth.request({
+        method: "wallet_revokePermissions",
+        params: [{ eth_accounts: {} }],
+      }).catch(() => {
+        // Ignore if unsupported - many wallets don't support this yet
+      });
+    }
+
+    // 3) Clear app state
+    setAccount(null);
+    setWrongNetwork(false);
+    setCurrentChainId(null);
+    clearWeb3State();
+
+    // 4) Clear any autoconnect markers in localStorage
+    try {
+      localStorage.removeItem("faet:lastConnectedWallet");
+      localStorage.removeItem("faet:autoConnect");
+    } catch {
+      // Ignore localStorage errors
+    }
+
+    // 5) Verify disconnection (for debugging)
+    if (eth?.request) {
+      eth.request({ method: "eth_accounts" })
+        .then((accounts: string[]) => {
+          if (accounts?.length > 0) {
+            console.warn("Still authorized in MetaMask; user must manually disconnect in wallet settings.");
+          } else {
+            console.log("Successfully disconnected from MetaMask");
+          }
+        })
+        .catch(() => {
+          // Ignore errors in verification
+        });
+    }
+    // Call the prop to inform parent component about disconnection
+    onDisconnect();
+  }, [clearWeb3State, handleAccountsChanged, handleChainChanged, handleDisconnect, onDisconnect]);
+
+
   return (
     <>
       <motion.div
@@ -244,7 +416,7 @@ const WalletConnection = ({
           Wallet Connection
         </h2>
 
-        {!account ? (
+        {!internalAccount ? ( // Use internalAccount state
           <div className="text-center">
             <p className="mb-6 text-gray-300">
               Connect your MetaMask wallet to access staking features
@@ -279,11 +451,11 @@ const WalletConnection = ({
             <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-6">
               <p className="text-green-300 mb-2">✅ Wallet Connected</p>
               <p className="text-white font-mono text-sm break-all">
-                {account}
+                {internalAccount} {/* Use internalAccount state */}
               </p>
-              {currentChainId && (
+              {internalCurrentChainId && ( // Use internal state
                 <p className="text-gray-300 text-xs mt-2">
-                  Chain ID: {currentChainId}
+                  Chain ID: {internalCurrentChainId} {/* Use internal state */}
                 </p>
               )}
             </div>
@@ -297,7 +469,7 @@ const WalletConnection = ({
                 <button
                   type="button"
                   onClick={() => {
-                    if (!account) {
+                    if (!internalAccount) { // Use internalAccount state
                       console.log("No account connected");
                       return;
                     }
@@ -314,9 +486,9 @@ const WalletConnection = ({
                       console.log("Cannot access staking - conditions not met");
                     }
                   }}
-                  disabled={!account}
+                  disabled={!internalAccount} // Use internalAccount state
                   className={`font-bold py-2 px-6 rounded-lg transition-colors ${
-                    !account
+                    !internalAccount // Use internalAccount state
                       ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                       : !securityChecks.isValidChain
                         ? "bg-red-600 hover:bg-red-700 text-white"
@@ -328,7 +500,7 @@ const WalletConnection = ({
                           : "bg-gray-600 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {!account
+                  {!internalAccount // Use internalAccount state
                     ? "Connect Wallet First"
                     : !securityChecks.isValidChain
                       ? "Switch Network"
@@ -356,7 +528,7 @@ const WalletConnection = ({
                     <p className="text-xs text-gray-400 text-center mb-2">Add NFTs to Wallet:</p>
                     <button
                       onClick={async () => {
-                        if (!account) {
+                        if (!internalAccount) { // Use internalAccount state
                           console.log("No account connected");
                           return;
                         }
@@ -404,7 +576,7 @@ const WalletConnection = ({
                           );
 
                           // Check NFT balance
-                          const nftBalance = await characterNftContract.balanceOf(account);
+                          const nftBalance = await characterNftContract.balanceOf(internalAccount); // Use internalAccount state
 
                           if (nftBalance === 0n) {
                             alert("❌ You don't own any Character NFTs");
@@ -418,7 +590,7 @@ const WalletConnection = ({
                           for (let tokenId = 1; tokenId <= 10; tokenId++) {
                             try {
                               const owner = await characterNftContract.ownerOf(tokenId);
-                              if (owner.toLowerCase() === account.toLowerCase()) {
+                              if (owner.toLowerCase() === internalAccount.toLowerCase()) { // Use internalAccount state
                                 ownedTokenIds.push(tokenId);
                               }
                             } catch {
@@ -486,9 +658,9 @@ const WalletConnection = ({
                           setIsAddingCharacterNFTs(false);
                         }
                       }}
-                      disabled={!account || isAddingCharacterNFTs}
+                      disabled={!internalAccount || isAddingCharacterNFTs} // Use internalAccount state
                       className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors flex items-center justify-center gap-1 ${
-                        !account || isAddingCharacterNFTs
+                        !internalAccount || isAddingCharacterNFTs // Use internalAccount state
                           ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                           : !securityChecks.isValidChain
                             ? "bg-red-600 hover:bg-red-700 text-white"
@@ -502,7 +674,7 @@ const WalletConnection = ({
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                           Processing...
                         </>
-                      ) : !account ? (
+                      ) : !internalAccount ? ( // Use internalAccount state
                         "Connect Wallet First"
                       ) : !securityChecks.isValidChain ? (
                         "Switch Network"
@@ -513,7 +685,7 @@ const WalletConnection = ({
 
                     <button
                       onClick={async () => {
-                        if (!account) {
+                        if (!internalAccount) { // Use internalAccount state
                           console.log("No account connected");
                           return;
                         }
@@ -562,7 +734,7 @@ const WalletConnection = ({
                           );
 
                           // Check NFT balance
-                          const nftBalance = await foundersPassContract.balanceOf(account);
+                          const nftBalance = await foundersPassContract.balanceOf(internalAccount); // Use internalAccount state
 
                           if (nftBalance === 0n) {
                             alert("❌ You don't own any Founder's Pass NFTs");
@@ -576,7 +748,7 @@ const WalletConnection = ({
                           for (let tokenId = 1; tokenId <= 150; tokenId++) {
                             try {
                               const owner = await foundersPassContract.ownerOf(tokenId);
-                              if (owner.toLowerCase() === account.toLowerCase()) {
+                              if (owner.toLowerCase() === internalAccount.toLowerCase()) { // Use internalAccount state
                                 ownedTokenIds.push(tokenId);
                               }
                             } catch {
@@ -644,9 +816,9 @@ const WalletConnection = ({
                           setIsAddingFoundersPass(false);
                         }
                       }}
-                      disabled={!account || isAddingFoundersPass}
+                      disabled={!internalAccount || isAddingFoundersPass} // Use internalAccount state
                       className={`w-full font-bold py-1 px-3 text-xs rounded transition-colors flex items-center justify-center gap-1 ${
-                        !account || isAddingFoundersPass
+                        !internalAccount || isAddingFoundersPass // Use internalAccount state
                           ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                           : !securityChecks.isValidChain
                             ? "bg-red-600 hover:bg-red-700 text-white"
@@ -660,7 +832,7 @@ const WalletConnection = ({
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                           Processing...
                         </>
-                      ) : !account ? (
+                      ) : !internalAccount ? ( // Use internalAccount state
                         "Connect Wallet First"
                       ) : !securityChecks.isValidChain ? (
                         "Switch Network"
@@ -694,7 +866,7 @@ const WalletConnection = ({
                 <div className="flex justify-center">
                   <button
                     onClick={async () => {
-                      if (!account) {
+                      if (!internalAccount) { // Use internalAccount state
                         console.log("No account connected");
                         return;
                       }
@@ -721,7 +893,7 @@ const WalletConnection = ({
                           );
 
                           // Security: Validate account format
-                          if (!account || !isValidAddress(account)) {
+                          if (!internalAccount || !isValidAddress(internalAccount)) { // Use internalAccount state
                             throw new Error("Invalid account address");
                           }
 
@@ -742,7 +914,7 @@ const WalletConnection = ({
                           const signerAddress = await signer.getAddress();
                           if (
                             signerAddress.toLowerCase() !==
-                            account.toLowerCase()
+                            internalAccount.toLowerCase() // Use internalAccount state
                           ) {
                             throw new Error("Signer address mismatch");
                           }
@@ -791,7 +963,7 @@ const WalletConnection = ({
 
                           // Check NFT balance with security validation
                           const nftBalance =
-                            await foundersPassContract.balanceOf(account);
+                            await foundersPassContract.balanceOf(internalAccount); // Use internalAccount state
                           console.log(
                             `User owns ${nftBalance.toString()} Founder's Pass NFTs`,
                           );
@@ -821,7 +993,7 @@ const WalletConnection = ({
                               const owner =
                                 await foundersPassContract.ownerOf(tokenId);
                               if (
-                                owner.toLowerCase() === account.toLowerCase()
+                                owner.toLowerCase() === internalAccount.toLowerCase() // Use internalAccount state
                               ) {
                                 ownedTokenIds.push(tokenId);
                                 console.log(`Found owned NFT: #${tokenId}`);
@@ -871,7 +1043,7 @@ const WalletConnection = ({
                               }
 
                               const canClaim = await faetTokenContract.canClaim(
-                                account,
+                                internalAccount, // Use internalAccount state
                                 tokenId,
                               );
                               console.log(
@@ -990,9 +1162,9 @@ const WalletConnection = ({
                         );
                       }
                     }}
-                    disabled={!account || isClaimingAirdrop}
+                    disabled={!internalAccount || isClaimingAirdrop} // Use internalAccount state
                     className={`font-bold py-2 px-6 rounded-lg transition-colors mb-2 flex items-center gap-2 justify-center ${
-                      !account || isClaimingAirdrop
+                      !internalAccount || isClaimingAirdrop // Use internalAccount state
                         ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                         : !securityChecks.isValidChain
                           ? "bg-red-600 hover:bg-red-700 text-white"
@@ -1021,7 +1193,7 @@ const WalletConnection = ({
 
             <button
               type="button"
-              onClick={onDisconnect}
+              onClick={disconnectWallet} // Use the updated disconnectWallet function
               className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
             >
               Disconnect Wallet
