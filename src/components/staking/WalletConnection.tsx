@@ -124,8 +124,11 @@ const WalletConnection = ({
 
   // Placeholder for any state clearing logic from the parent/context
   const clearWeb3State = useCallback(() => {
-    // This function should ideally clear relevant state from a context or parent component
-    console.log("Clearing web3 state (placeholder)");
+    // Clear internal state immediately to prevent loops
+    setAccount(null);
+    setCurrentChainId(null);
+    setWrongNetwork(false);
+    console.log("Web3 state cleared");
   }, []);
 
 
@@ -196,52 +199,60 @@ const WalletConnection = ({
   // Create stable listener functions that we can reference for cleanup
   const handleAccountsChanged = useCallback((...args: unknown[]) => {
     const accounts = args[0] as string[];
+    console.log("Accounts changed:", accounts);
+    
     if (accounts.length === 0) {
-      // User disconnected from MetaMask
-      setAccount(null);
-      setCurrentChainId(null);
-      setWrongNetwork(false);
+      // User disconnected from MetaMask - clear state once
+      console.log("No accounts, clearing state");
       clearWeb3State();
       onDisconnect(); // Call the prop to inform parent
-    } else {
+    } else if (accounts[0] !== internalAccount) {
+      // Only update if account actually changed
+      console.log("Account changed to:", accounts[0]);
       setAccount(accounts[0]);
-      // Also update chainId and network status if needed, though chainChanged handles this
+      
+      // Update chain info if available
       const eth = getEth();
-      if (eth?.chainId) {
+      if (eth?.chainId && eth.chainId !== internalCurrentChainId) {
         setCurrentChainId(eth.chainId);
-        // Re-evaluate network status based on new chainId
         const networkConfig = getNetworkConfig(selectedNetwork);
         setWrongNetwork(eth.chainId !== networkConfig.chainId);
       }
     }
-  }, [clearWeb3State, onDisconnect, selectedNetwork]); // Added selectedNetwork dependency
+  }, [internalAccount, internalCurrentChainId, selectedNetwork, clearWeb3State, onDisconnect]);
 
   const handleChainChanged = useCallback((...args: unknown[]) => {
     const newChainId = args[0] as string;
-    setCurrentChainId(newChainId);
-    const networkConfig = getNetworkConfig(selectedNetwork);
-    setWrongNetwork(newChainId !== networkConfig.chainId);
-    // Potentially trigger a network switch if the wrong network is detected and auto-switch is enabled
-    if (newChainId !== networkConfig.chainId) {
-      console.log("Switched to wrong network, triggering switch handler.");
-      onSwitchNetwork(); // Assuming this prop handles the actual network switch prompt
+    console.log("Chain changed to:", newChainId);
+    
+    // Only update if chain actually changed
+    if (newChainId !== internalCurrentChainId) {
+      setCurrentChainId(newChainId);
+      const networkConfig = getNetworkConfig(selectedNetwork);
+      const isWrong = newChainId !== networkConfig.chainId;
+      setWrongNetwork(isWrong);
+      
+      if (isWrong) {
+        console.log("Wrong network detected, may need to switch");
+      }
     }
-  }, [selectedNetwork, onSwitchNetwork]); // Added onSwitchNetwork dependency
+  }, [internalCurrentChainId, selectedNetwork]);
 
   const handleDisconnect = useCallback((...args: unknown[]) => {
-    setAccount(null);
-    setCurrentChainId(null);
-    setWrongNetwork(false);
+    console.log("Disconnect event received");
     clearWeb3State();
     onDisconnect(); // Call the prop to inform parent
-  }, [clearWeb3State, onDisconnect]); // Added onDisconnect dependency
+  }, [clearWeb3State, onDisconnect]);
 
 
   // Effect to handle MetaMask event listeners on mount and cleanup on unmount
   useEffect(() => {
     const eth = getEth();
+    let isActive = true; // Flag to prevent state updates after cleanup
 
     if (eth) {
+      console.log("Setting up MetaMask event listeners");
+      
       // Add listeners
       eth.on("accountsChanged", handleAccountsChanged);
       eth.on("chainChanged", handleChainChanged);
@@ -249,9 +260,14 @@ const WalletConnection = ({
 
       // Initial check for already connected account
       const checkInitialConnection = async () => {
+        if (!isActive) return; // Prevent updates if component unmounted
+        
         try {
           const accounts = await eth.request({ method: "eth_accounts" });
+          if (!isActive) return; // Check again after async operation
+          
           if (accounts.length > 0) {
+            console.log("Initial account found:", accounts[0]);
             setAccount(accounts[0]);
             if (eth.chainId) {
               setCurrentChainId(eth.chainId);
@@ -259,33 +275,42 @@ const WalletConnection = ({
               setWrongNetwork(eth.chainId !== networkConfig.chainId);
             }
           } else {
-            // If no accounts, ensure state is cleared
-            handleDisconnect();
+            console.log("No initial accounts found");
+            clearWeb3State();
           }
         } catch (error) {
-          console.error("Error during initial connection check:", error);
-          handleDisconnect(); // Clear state on error
+          if (isActive) {
+            console.error("Error during initial connection check:", error);
+            clearWeb3State();
+          }
         }
       };
+      
       checkInitialConnection();
 
       // Cleanup listeners on component unmount
       return () => {
+        isActive = false; // Prevent any pending state updates
+        console.log("Cleaning up MetaMask event listeners");
+        
         if (eth.removeListener) {
           try {
             eth.removeListener("accountsChanged", handleAccountsChanged);
             eth.removeListener("chainChanged", handleChainChanged);
             eth.removeListener("disconnect", handleDisconnect);
+            console.log("Event listeners removed successfully");
           } catch (error) {
             console.warn("Failed to remove some event listeners on unmount:", error);
           }
         }
       };
     } else {
-      // If no Ethereum provider, ensure state reflects disconnection
-      handleDisconnect();
+      console.log("No Ethereum provider found");
+      if (isActive) {
+        clearWeb3State();
+      }
     }
-  }, [handleAccountsChanged, handleChainChanged, handleDisconnect, selectedNetwork, onDisconnect, onSwitchNetwork]); // Dependencies for the effect
+  }, [selectedNetwork]); // Simplified dependencies - only re-run when network changes
 
 
   // Enhanced disconnect function with proper cleanup
