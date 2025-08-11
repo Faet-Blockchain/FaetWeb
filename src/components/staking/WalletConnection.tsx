@@ -500,7 +500,7 @@ const WalletConnection = ({
                       ) : !securityChecks.isValidChain ? (
                         "Switch Network"
                       ) : (
-                        "Add Character NFTs"
+                        "Add Character NFTs to MetaMask"
                       )}
                     </button>
 
@@ -651,9 +651,13 @@ const WalletConnection = ({
                       ) : !securityChecks.isValidChain ? (
                         "Switch Network"
                       ) : (
-                        "Add Founder's Pass"
+                        "Add Founder's Pass to MetaMask"
                       )}
                     </button>
+                    
+                    <p className="text-gray-400 text-xs text-center mt-2">
+                      May take up to 30 seconds to add all NFTs. Check MetaMask for prompts.
+                    </p>
                   </div>
                 </div>
               </div>
