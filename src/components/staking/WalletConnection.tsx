@@ -238,7 +238,7 @@ const WalletConnection = ({
     }
   }, [internalCurrentChainId, selectedNetwork]);
 
-  const handleDisconnect = useCallback((...args: unknown[]) => {
+  const handleDisconnect = useCallback(() => {
     console.log("Disconnect event received");
     clearWeb3State();
     onDisconnect(); // Call the prop to inform parent
@@ -310,7 +310,7 @@ const WalletConnection = ({
         clearWeb3State();
       }
     }
-  }, [selectedNetwork]); // Simplified dependencies - only re-run when network changes
+  }, [selectedNetwork, clearWeb3State, handleAccountsChanged, handleChainChanged, handleDisconnect]); // Include all dependencies
 
 
   // Enhanced disconnect function with proper cleanup
