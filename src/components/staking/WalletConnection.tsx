@@ -375,17 +375,16 @@ const WalletConnection = ({
                             return;
                           }
 
-                          await metaMask.request({
-                            method: "wallet_watchAsset",
-                            params: {
-                              type: "ERC721",
-                              options: {
-                                address: contractAddresses.CHARACTER_NFT,
-                                symbol: "FAET-CHAR",
-                                image: "https://www.faet.io/images/faeticonblk.png",
-                              },
-                            },
-                          });
+                          // For ERC721 collections, we need to provide a tokenId or use a different approach
+                          // Since MetaMask now requires tokenId for ERC721, we'll inform the user
+                          alert(
+                            `To add Character NFTs to your wallet:\n\n` +
+                            `1. Go to MetaMask\n` +
+                            `2. Click "Import tokens" → "NFTs"\n` +
+                            `3. Enter contract address: ${contractAddresses.CHARACTER_NFT}\n` +
+                            `4. Enter a tokenId of an NFT you own\n\n` +
+                            `MetaMask will automatically detect other NFTs from the same collection.`
+                          );
 
                         } catch (err: unknown) {
                           const error = err as { code?: number };
@@ -411,7 +410,7 @@ const WalletConnection = ({
                         ? "Connect Wallet First"
                         : !securityChecks.isValidChain
                           ? "Switch Network"
-                          : "Add Character NFTs"}
+                          : "How to Add Character NFTs"}
                     </button>
 
                     <button
@@ -438,17 +437,16 @@ const WalletConnection = ({
                             return;
                           }
 
-                          await metaMask.request({
-                            method: "wallet_watchAsset",
-                            params: {
-                              type: "ERC721",
-                              options: {
-                                address: contractAddresses.FOUNDERS_PASS,
-                                symbol: "FAET-PASS",
-                                image: "https://www.faet.io/images/faeticonblk.png",
-                              },
-                            },
-                          });
+                          // For ERC721 collections, we need to provide a tokenId or use a different approach
+                          // Since MetaMask now requires tokenId for ERC721, we'll inform the user
+                          alert(
+                            `To add Founder's Pass NFTs to your wallet:\n\n` +
+                            `1. Go to MetaMask\n` +
+                            `2. Click "Import tokens" → "NFTs"\n` +
+                            `3. Enter contract address: ${contractAddresses.FOUNDERS_PASS}\n` +
+                            `4. Enter a tokenId of an NFT you own\n\n` +
+                            `MetaMask will automatically detect other NFTs from the same collection.`
+                          );
 
                         } catch (err: unknown) {
                           const error = err as { code?: number };
@@ -474,7 +472,7 @@ const WalletConnection = ({
                         ? "Connect Wallet First"
                         : !securityChecks.isValidChain
                           ? "Switch Network"
-                          : "Add Founder's Pass NFTs"}
+                          : "How to Add Founder's Pass"}
                     </button>
                   </div>
                 </div>
