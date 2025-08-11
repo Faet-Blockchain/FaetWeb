@@ -130,11 +130,8 @@ const RewardsSection = ({
   const getUserVsOthersData = () => {
     if (topStakers.length === 0) return [];
 
-    const userStaker = topStakers.find(staker => 
-      staker.address.toLowerCase() === "user" // This should be replaced with actual user address comparison
-    );
-
-    const userWeight = userStaker ? parseFloat(userStaker.weight || "0") : parseFloat(stakedBalance || "0");
+    // Use the user's staked balance directly since we don't have access to user address here
+    const userWeight = parseFloat(stakedBalance || "0");
     const totalWeight = parseFloat(totalStakeWeight || "0");
     const othersWeight = Math.max(0, totalWeight - userWeight);
 
@@ -151,7 +148,7 @@ const RewardsSection = ({
 
     if (othersWeight > 0) {
       data.push({
-        name: `All Others (${topStakers.length - (userWeight > 0 ? 1 : 0)} accounts)`,
+        name: `All Others (${topStakers.length} accounts)`,
         value: othersWeight,
         fill: "hsl(240, 70%, 50%)",
         percentage: (othersWeight / (totalWeight || 1)) * 100,
