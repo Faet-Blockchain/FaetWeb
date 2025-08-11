@@ -1,4 +1,3 @@
-
 "use client";
 import React from "react";
 
@@ -19,25 +18,26 @@ type UserBalanceProps = {
 };
 
 const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", userStakes = [] }: UserBalanceProps) => {
-  // Calculate user's weighted percentage share
+  // Calculate user's weighted percentage share (matches StakingForm calculation)
   const calculateWeightedPercentage = (): number => {
-    const totalWeight = parseFloat(totalStakeWeight) || 0;
     const userWeight = parseFloat(stakedBalance) || 0;
-    
+    const totalWeight = parseFloat(totalStakeWeight) || 0;
+
     if (totalWeight === 0 || userWeight === 0) return 0;
-    
-    // User's percentage of the total network weight
-    // (user weight is already included in total weight from contract)
-    return (userWeight / totalWeight) * 100;
+
+    // Use the same calculation as StakingForm - user's percentage of total network weight
+    const percentage = (userWeight / totalWeight) * 100;
+
+    return percentage;
   };
 
   // Calculate average multiplier from all stakes (including locked and unlocked)
   const calculateAverageMultiplier = (): number => {
     if (userStakes.length === 0) return 1.0;
-    
+
     const totalWeight = userStakes.reduce((sum, stake) => sum + parseFloat(stake.weightedAmount), 0);
     const totalAmount = userStakes.reduce((sum, stake) => sum + parseFloat(stake.amount), 0);
-    
+
     if (totalAmount === 0) return 1.0;
     return totalWeight / totalAmount;
   };
