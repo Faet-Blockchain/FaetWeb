@@ -112,7 +112,8 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
           <p className="text-3xl font-bold mb-2">
             {parseFloat(tokenBalance).toFixed(2)} FAET
           </p>
-          <p className="text-gray-400 text-sm">Your wallet balance</p>
+          <p className="text-gray-400 text-sm mb-3">Your wallet balance</p>
+          <AddTokenButton />
         </div>
 
         <div className="bg-gray-800 p-6 rounded-lg">
@@ -138,11 +139,6 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
             )}
           </div>
         </div>
-      </div>
-      
-      {/* Add FAET Token to MetaMask Button */}
-      <div className="mt-4">
-        <AddTokenButton />
       </div>
     </div>
   );
