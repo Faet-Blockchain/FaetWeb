@@ -38,10 +38,10 @@ const FAET_STAKING_ABI = [
 
 // Function to calculate the correct event topic hash
 const calculateEventTopic = (signature: string): string => {
-  if (typeof window !== 'undefined' && (window as any).ethereum) {
+  if (typeof window !== 'undefined' && (window as typeof window & { ethereum?: unknown }).ethereum) {
     try {
-      const { ethers } = require('ethers');
-      return ethers.id(signature);
+      const ethersModule = await import('ethers');
+      return ethersModule.ethers.id(signature);
     } catch (error) {
       console.warn('Could not calculate event topic:', error);
     }
@@ -524,7 +524,7 @@ export default function StakingPage() {
       setTopStakers([]);
       setStakingRanges([]);
     }
-  }, []);
+  }, [selectedNetwork]);
 
   const loadUserData = useCallback(async (
     token: ethers.Contract,
