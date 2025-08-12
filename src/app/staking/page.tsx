@@ -812,14 +812,10 @@ export default function StakingPage() {
 
       const allowance = await tokenContract.allowance(account, FAET_STAKING_ADDRESS);
       if (allowance < amount) {
-        console.log("Approving tokens...");
         const approveTx = await tokenContract.approve(FAET_STAKING_ADDRESS, amount);
         await approveTx.wait();
-        console.log("Approval confirmed");
       }
 
-      console.log("Staking tokens...");
-      // Contract now takes days directly as the second parameter
       const stakeTx = await stakingContract.stake(amount, selectedDays);
       setTxHash(stakeTx.hash);
       await stakeTx.wait();
@@ -832,11 +828,11 @@ export default function StakingPage() {
     } catch (error: unknown) {
       // Handle different types of errors gracefully
       if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
-        console.log('ℹ️ User cancelled staking transaction');
+        // User cancelled transaction - no action needed
       } else if ((error as { code?: number })?.code === -32002) {
-        console.log('⚠️ Staking request already pending in MetaMask');
+        // Request already pending in MetaMask
       } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards") {
-        console.error("❌ Staking failed: Contract has insufficient rewards");
+        console.error("Staking failed: Contract has insufficient rewards");
       } else {
         console.error("Staking failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
       }
@@ -869,9 +865,9 @@ export default function StakingPage() {
     } catch (error: unknown) {
       // Handle different types of errors gracefully
       if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
-        console.log('ℹ️ User cancelled withdrawal transaction');
+        // User cancelled transaction
       } else if ((error as { code?: number })?.code === -32002) {
-        console.log('⚠️ Withdrawal request already pending in MetaMask');
+        // Request already pending in MetaMask
       } else {
         console.error("Withdrawal failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
       }
@@ -904,17 +900,14 @@ export default function StakingPage() {
     } catch (error: unknown) {
       // Handle different types of errors gracefully
       if ((error as { code?: number | string })?.code === 4001 || (error as { code?: number | string })?.code === "ACTION_REJECTED") {
-        console.log('ℹ️ User cancelled claim rewards transaction');
-        // Don't show alert for user cancellation - it's expected behavior
+        // User cancelled transaction - no action needed
       } else if ((error as { code?: number })?.code === -32002) {
-        console.log('⚠️ Claim request already pending in MetaMask');
+        // Request already pending in MetaMask
       } else if ((error as { reason?: string })?.reason === "Insufficient funded rewards" ||
                  (error as { message?: string })?.message?.includes("Insufficient funded rewards")) {
-        console.error("❌ Claim Failed: Insufficient funded rewards");
         alert("❌ Claim Failed: The reward pool is currently empty. Please wait for the pool to be refunded by the administrators.");
       } else if ((error as { reason?: string })?.reason === "No rewards" ||
                  (error as { message?: string })?.message?.includes("No rewards")) {
-        console.error("❌ Claim Failed: No rewards available");
         alert("❌ Claim Failed: You have no rewards to claim at this time.");
       } else {
         console.error("Claim failed:", (error as { reason?: string })?.reason || (error as { message?: string })?.message || "Unknown error");
