@@ -40,8 +40,8 @@ const FAET_STAKING_ABI = [
 const calculateEventTopic = (signature: string): string => {
   if (typeof window !== 'undefined' && (window as typeof window & { ethereum?: unknown }).ethereum) {
     try {
-      const ethersModule = await import('ethers');
-      return ethersModule.ethers.id(signature);
+      // Use ethers directly since it's already imported at the top
+      return ethers.id(signature);
     } catch (error) {
       console.warn('Could not calculate event topic:', error);
     }
