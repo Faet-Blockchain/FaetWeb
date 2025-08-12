@@ -199,8 +199,15 @@ export default function StakingPage() {
 
       while (hasMoreData) {
         try {
-          // Use newer API format with better parameters
-          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&page=${page}&offset=${pageSize}&sort=desc`;
+          // Blockscout API requires fromBlock and toBlock parameters
+          // Use a wide range to get all events - from block 0 to latest
+          const fromBlock = 0;
+          const toBlock = 'latest';
+          
+          // Build URL with required parameters
+          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&fromBlock=${fromBlock}&toBlock=${toBlock}&page=${page}&offset=${pageSize}&sort=desc`;
+          
+          console.log(`Fetching events from: ${url}`);
           
           const response = await fetch(url);
           if (!response.ok) {
