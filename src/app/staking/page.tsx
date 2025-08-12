@@ -40,6 +40,10 @@ const FAET_STAKING_ABI = [
 // Based on ABI: event Staked(address indexed user, uint256 amount, uint256 duration, uint256 stakeIndex)
 const STAKED_EVENT_TOPIC = "0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a";
 
+// Debug: Log the event signature for verification
+console.log(`🔍 Event signature being used: "Staked(address,uint256,uint256,uint256)"`);
+console.log(`🔍 Expected topic hash: ${STAKED_EVENT_TOPIC}`);
+
 export default function StakingPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -188,7 +192,51 @@ export default function StakingPage() {
       // Get staking contract address
       const stakingAddress = networkConfig.contracts.staking;
       
-      console.log(`Fetching staker data from Blockscout API for contract: ${stakingAddress}`);
+      console.log(`🔍 Fetching staker data from Blockscout API for contract: ${stakingAddress}`);
+      
+      // First, verify the contract exists and has code
+      try {
+        const contractCheckUrl = `${baseUrl}?module=contract&action=getabi&address=${stakingAddress}`;
+        console.log(`🔍 Checking if contract exists: ${contractCheckUrl}`);
+        
+        const contractResponse = await fetch(contractCheckUrl);
+        const contractData = await contractResponse.json();
+        console.log(`📋 Contract check response:`, {
+          status: contractData.status,
+          message: contractData.message,
+          hasABI: contractData.result && contractData.result !== 'Contract source code not verified'
+        });
+        
+        if (contractData.status !== "1") {
+          console.warn(`⚠️ Contract may not exist or be verified at address: ${stakingAddress}`);
+        }
+      } catch (contractError) {
+        console.warn(`⚠️ Failed to check contract existence:`, contractError);
+      }
+
+      // First, try to fetch ANY logs from this contract to see if it has any activity
+      try {
+        const anyLogsUrl = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&fromBlock=0&toBlock=latest&page=1&offset=100`;
+        console.log(`🔍 Checking for any logs from contract: ${anyLogsUrl}`);
+        
+        const anyLogsResponse = await fetch(anyLogsUrl);
+        const anyLogsData = await anyLogsResponse.json();
+        console.log(`📋 Any logs check:`, {
+          status: anyLogsData.status,
+          message: anyLogsData.message,
+          hasResults: anyLogsData.result && Array.isArray(anyLogsData.result),
+          resultCount: Array.isArray(anyLogsData.result) ? anyLogsData.result.length : 0
+        });
+        
+        if (anyLogsData.result && Array.isArray(anyLogsData.result) && anyLogsData.result.length > 0) {
+          console.log(`🔍 Sample log topics from contract:`, anyLogsData.result.slice(0, 3).map(log => ({
+            topics: log.topics,
+            data: log.data
+          })));
+        }
+      } catch (anyLogsError) {
+        console.warn(`⚠️ Failed to check for any logs:`, anyLogsError);
+      }
 
       // Fetch all Staked events from Blockscout API
       const uniqueStakers = new Set<string>();
@@ -207,15 +255,33 @@ export default function StakingPage() {
           // Build URL with required parameters
           const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&fromBlock=${fromBlock}&toBlock=${toBlock}&page=${page}&offset=${pageSize}&sort=desc`;
           
-          console.log(`Fetching events from: ${url}`);
+          console.log(`🔍 Fetching events from: ${url}`);
+          console.log(`📊 Request details:`, {
+            baseUrl,
+            stakingAddress,
+            eventTopic: STAKED_EVENT_TOPIC,
+            page,
+            pageSize
+          });
           
           const response = await fetch(url);
+          console.log(`📡 Response status: ${response.status} ${response.statusText}`);
+          
           if (!response.ok) {
             console.warn(`HTTP error ${response.status} on page ${page}`);
+            const errorText = await response.text();
+            console.warn(`Error response body:`, errorText);
             break;
           }
 
           const data = await response.json();
+          console.log(`📋 API Response:`, {
+            status: data.status,
+            message: data.message,
+            resultType: Array.isArray(data.result) ? 'array' : typeof data.result,
+            resultLength: Array.isArray(data.result) ? data.result.length : 'N/A',
+            fullResponse: data
+          });
 
           if (data.status === "1" && data.result && Array.isArray(data.result)) {
             const eventsCount = data.result.length;
@@ -243,9 +309,17 @@ export default function StakingPage() {
             }
           } else {
             if (data.message && data.message.includes("No records found")) {
-              console.log(`No more events found (page ${page})`);
+              console.log(`📭 No more events found (page ${page})`);
+            } else if (data.message && data.message.includes("No logs found")) {
+              console.log(`🔍 No logs found for this contract and topic combination`);
+              console.log(`🧐 Debug info:`, {
+                contractExists: 'Unknown - will check separately',
+                topicHash: STAKED_EVENT_TOPIC,
+                calculatedFrom: 'keccak256("Staked(address,uint256,uint256,uint256)")'
+              });
             } else {
-              console.log(`API error on page ${page}:`, data.message || 'Unknown error');
+              console.log(`❌ API error on page ${page}:`, data.message || 'Unknown error');
+              console.log(`🔍 Full error response:`, data);
             }
             hasMoreData = false;
           }
