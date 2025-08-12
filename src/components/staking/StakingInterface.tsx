@@ -36,7 +36,6 @@ type StakingInterfaceProps = {
   totalRewardsFunded: string;
   totalStakeWeight: string;
   topStakers: Array<{ address: string; weight: string; rawAmount?: string }>;
-  stakingRanges: Array<{ range: string; count: number; totalWeight: string }>;
   onBackToOverview: () => void;
 };
 
@@ -121,7 +120,6 @@ const StakingInterface = ({
   totalRewardsFunded,
   totalStakeWeight = "0",
   topStakers,
-  stakingRanges,
   onBackToOverview,
 }: StakingInterfaceProps) => {
   const networkConfig = getNetworkConfig(selectedNetwork);
