@@ -1,6 +1,66 @@
 "use client";
 import React from "react";
 
+// Add FAET token to MetaMask component
+const AddTokenButton = () => {
+  const getMetaMaskProvider = () => {
+    const eth = window.ethereum;
+    if (!eth) return null;
+    return Array.isArray(eth.providers)
+      ? eth.providers.find((p) => p.isMetaMask)
+      : eth.isMetaMask
+        ? eth
+        : null;
+  };
+
+  const handleAddToken = async () => {
+    const metaMask = getMetaMaskProvider();
+    if (!metaMask) {
+      console.error("MetaMask not detected");
+      return;
+    }
+
+    try {
+      await metaMask.request({
+        method: "wallet_watchAsset",
+        params: {
+          type: "ERC20",
+          options: {
+            address: "0xdF92bA28D17329a7284A5eC230967768D4cb7A89",
+            symbol: "FAET",
+            decimals: 18,
+            image: "https://www.faet.io/images/faeticonblk.png",
+          },
+        },
+      });
+
+    } catch (err: unknown) {
+      const error = err as { code?: number };
+      if (error?.code === 4001) {
+        console.log("User rejected the add token request.");
+      } else {
+        console.error("Add token failed", err);
+      }
+    }
+  };
+
+  return (
+    <button
+      onClick={handleAddToken}
+      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 w-full justify-center"
+    >
+      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <path
+          fillRule="evenodd"
+          d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Add FAET to Wallet
+    </button>
+  );
+};
+
 type UserBalanceProps = {
   tokenBalance: string;
   stakedBalance: string;
@@ -77,6 +137,11 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
           )}
         </div>
       </div>
+    </div>
+
+    {/* Add FAET Token to MetaMask Button */}
+    <div className="mt-4">
+      <AddTokenButton />
     </div>
   );
 };

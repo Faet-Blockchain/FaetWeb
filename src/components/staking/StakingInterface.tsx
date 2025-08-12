@@ -102,6 +102,7 @@ const AddTokenButton = () => {
 };
 
 const StakingInterface = ({
+  account,
   wrongNetwork,
   selectedNetwork,
   tokenBalance,
@@ -120,6 +121,7 @@ const StakingInterface = ({
   totalRewardsFunded,
   totalStakeWeight = "0",
   topStakers,
+  stakingRanges,
   onBackToOverview,
 }: StakingInterfaceProps) => {
   const networkConfig = getNetworkConfig(selectedNetwork);
@@ -139,7 +141,6 @@ const StakingInterface = ({
         >
           ← Back to Overview
         </button>
-        <AddTokenButton />
       </div>
 
       <div className="mb-6">
@@ -185,6 +186,8 @@ const StakingInterface = ({
         userStakesCount={userStakes.length}
         totalStakeWeight={totalStakeWeight}
         userStakes={userStakes}
+        account={account}
+        AddTokenButton={AddTokenButton}
       />
 
       <StakingForm
