@@ -100,7 +100,6 @@ export default function StakingPage() {
   const [totalRewardsFunded, setTotalRewardsFunded] = useState<string>("0");
   const [totalStakeWeight, setTotalStakeWeight] = useState<string>("0");
   const [topStakers, setTopStakers] = useState<Array<{address: string, weight: string}>>([]);
-  const [stakingRanges, setStakingRanges] = useState<Array<{range: string, count: number, totalWeight: string}>>([]);
 
   // Get current network configuration
   const currentNetworkConfig = getNetworkConfig(selectedNetwork);
@@ -118,7 +117,6 @@ export default function StakingPage() {
     setTotalRewardsFunded("0");
     setTotalStakeWeight("0");
     setTopStakers([]);
-    setStakingRanges([]);
     setShowTokenStaking(false);
   }, []);
 
@@ -203,7 +201,6 @@ export default function StakingPage() {
     try {
       // Set initial loading state
       setTopStakers([]);
-      setStakingRanges([]);
 
       // Get network configuration for API URL
       const networkConfig = getNetworkConfig(selectedNetwork);
@@ -488,41 +485,13 @@ export default function StakingPage() {
       setTopStakers(stakersWithWeights);
 
 
-      // Create staking ranges
-      const ranges = [
-        { min: 0, max: 1000, range: "0 - 1K FAET" },
-        { min: 1000, max: 10000, range: "1K - 10K FAET" },
-        { min: 10000, max: 100000, range: "10K - 100K FAET" },
-        { min: 100000, max: 1000000, range: "100K - 1M FAET" },
-        { min: 1000000, max: Infinity, range: "1M+ FAET" }
-      ];
-
-      const stakingRangesData = ranges.map(rangeConfig => {
-        const stakersInRange = stakersWithWeights.filter(staker => {
-          const weight = parseFloat(staker.weight);
-          return weight >= rangeConfig.min && weight < rangeConfig.max;
-        });
-
-        const totalWeight = stakersInRange.reduce((sum, staker) => {
-          return sum + parseFloat(staker.weight);
-        }, 0);
-
-        return {
-          range: rangeConfig.range,
-          count: stakersInRange.length,
-          totalWeight: totalWeight.toString()
-        };
-      }).filter(range => range.count > 0); // Only include ranges with stakers
-
-      // Update state
-      setStakingRanges(stakingRangesData);
+      
 
     } catch {
       console.error("Failed to load staking data:");
 
       // Set empty data as fallback
       setTopStakers([]);
-      setStakingRanges([]);
     }
   }, [selectedNetwork]);
 
