@@ -47,9 +47,9 @@ const AddTokenButton = () => {
   return (
     <button
       onClick={handleAddToken}
-      className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 w-full justify-center"
+      className="bg-green-600 hover:bg-green-700 text-white font-medium py-1.5 px-3 rounded transition-colors duration-200 flex items-center gap-2 w-full justify-center text-sm"
     >
-      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
         <path
           fillRule="evenodd"
           d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
@@ -103,38 +103,40 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-6 mb-6">
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h3 className="text-xl font-bold mb-4 text-purple-400">
-          Available Balance
-        </h3>
-        <p className="text-3xl font-bold mb-2">
-          {parseFloat(tokenBalance).toFixed(2)} FAET
-        </p>
-        <p className="text-gray-400 text-sm">Your wallet balance</p>
-      </div>
-
-      <div className="bg-gray-800 p-6 rounded-lg">
-        <h3 className="text-xl font-bold mb-4 text-green-400">
-          Active Staking Weight
-        </h3>
-        <p className="text-3xl font-bold mb-2">
-          {parseFloat(stakedBalance).toFixed(2)} FAET
-        </p>
-        <div className="space-y-1">
-          <p className="text-gray-400 text-sm">
-            {userStakes.length} total stakes ({userStakes.filter(stake => !stake.isUnlocked).length} locked, {userStakes.filter(stake => stake.isUnlocked).length} unlocked)
+    <div className="mb-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-xl font-bold mb-4 text-purple-400">
+            Available Balance
+          </h3>
+          <p className="text-3xl font-bold mb-2">
+            {parseFloat(tokenBalance).toFixed(2)} FAET
           </p>
-          {userStakes.length > 0 && (
-            <>
-              <p className="text-blue-400 text-sm">
-                Avg Multiplier: {calculateAverageMultiplier().toFixed(2)}x
-              </p>
-              <p className="text-orange-400 text-sm">
-                Network Share: {calculateWeightedPercentage().toFixed(4)}%
-              </p>
-            </>
-          )}
+          <p className="text-gray-400 text-sm">Your wallet balance</p>
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <h3 className="text-xl font-bold mb-4 text-green-400">
+            Active Staking Weight
+          </h3>
+          <p className="text-3xl font-bold mb-2">
+            {parseFloat(stakedBalance).toFixed(2)} FAET
+          </p>
+          <div className="space-y-1">
+            <p className="text-gray-400 text-sm">
+              {userStakes.length} total stakes ({userStakes.filter(stake => !stake.isUnlocked).length} locked, {userStakes.filter(stake => stake.isUnlocked).length} unlocked)
+            </p>
+            {userStakes.length > 0 && (
+              <>
+                <p className="text-blue-400 text-sm">
+                  Avg Multiplier: {calculateAverageMultiplier().toFixed(2)}x
+                </p>
+                <p className="text-orange-400 text-sm">
+                  Network Share: {calculateWeightedPercentage().toFixed(4)}%
+                </p>
+              </>
+            )}
+          </div>
         </div>
       </div>
       
