@@ -1,3 +1,4 @@
+
 "use client";
 import React from "react";
 
@@ -66,6 +67,8 @@ type UserBalanceProps = {
   stakedBalance: string;
   userStakesCount: number;
   totalStakeWeight?: string;
+  account: string | null;
+  AddTokenButton: React.ComponentType;
   userStakes?: Array<{
     index: number;
     amount: string;
