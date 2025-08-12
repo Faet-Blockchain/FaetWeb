@@ -679,7 +679,6 @@ export default function StakingPage() {
       setTotalRewardsFunded("0");
       setTotalStakeWeight("0");
       setTopStakers([]);
-      setStakingRanges([]);
     }
   }, [checkNetwork, selectedNetwork, loadTopStakersData]);
 
