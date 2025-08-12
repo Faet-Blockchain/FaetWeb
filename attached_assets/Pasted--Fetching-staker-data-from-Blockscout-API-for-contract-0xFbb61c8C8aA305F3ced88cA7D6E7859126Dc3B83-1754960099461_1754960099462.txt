@@ -1,0 +1,31 @@
+🔍 Fetching staker data from Blockscout API for contract: 0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83
+page.tsx:200 🔍 Checking if contract exists: https://blockscout.lisk.com/api?module=contract&action=getabi&address=0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83
+WalletConnection.tsx:511 Network valid, going to staking
+WalletConnection.tsx:294 Cleaning up MetaMask event listeners
+WalletConnection.tsx:301 Event listeners removed successfully
+page.tsx:204 📋 Contract check response: {status: '1', message: 'OK', hasABI: true}
+page.tsx:220 🔍 Checking for any logs from contract: https://blockscout.lisk.com/api?module=logs&action=getLogs&address=0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83&fromBlock=0&toBlock=latest&page=1&offset=100
+page.tsx:224 📋 Any logs check: {status: '1', message: 'OK', hasResults: true, resultCount: 136}
+page.tsx:232 🔍 Sample log topics from contract: (3) [{…}, {…}, {…}]
+page.tsx:258 🔍 Fetching events from: https://blockscout.lisk.com/api?module=logs&action=getLogs&address=0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83&topic0=0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a&fromBlock=0&toBlock=latest&page=1&offset=10000&sort=desc
+page.tsx:259 📊 Request details: {baseUrl: 'https://blockscout.lisk.com/api', stakingAddress: '0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83', eventTopic: '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a', page: 1, pageSize: 10000}
+page.tsx:268 📡 Response status: 200 
+page.tsx:278 📋 API Response: {status: '0', message: 'No logs found', resultType: 'array', resultLength: 0, fullResponse: {…}}
+page.tsx:314 🔍 No logs found for this contract and topic combination
+page.tsx:315 🧐 Debug info: {contractExists: 'Unknown - will check separately', topicHash: '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a', calculatedFrom: 'keccak256("Staked(address,uint256,uint256,uint256)")'}
+page.tsx:337 Total unique stakers found: 0
+page.tsx:343 Processing stake data for 0 unique stakers...
+page.tsx:195 🔍 Fetching staker data from Blockscout API for contract: 0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83
+page.tsx:200 🔍 Checking if contract exists: https://blockscout.lisk.com/api?module=contract&action=getabi&address=0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83
+page.tsx:204 📋 Contract check response: {status: '1', message: 'OK', hasABI: true}
+page.tsx:220 🔍 Checking for any logs from contract: https://blockscout.lisk.com/api?module=logs&action=getLogs&address=0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83&fromBlock=0&toBlock=latest&page=1&offset=100
+page.tsx:224 📋 Any logs check: {status: '1', message: 'OK', hasResults: true, resultCount: 136}
+page.tsx:232 🔍 Sample log topics from contract: (3) [{…}, {…}, {…}]
+page.tsx:258 🔍 Fetching events from: https://blockscout.lisk.com/api?module=logs&action=getLogs&address=0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83&topic0=0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a&fromBlock=0&toBlock=latest&page=1&offset=10000&sort=desc
+page.tsx:259 📊 Request details: {baseUrl: 'https://blockscout.lisk.com/api', stakingAddress: '0xFbb61c8C8aA305F3ced88cA7D6E7859126Dc3B83', eventTopic: '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a', page: 1, pageSize: 10000}
+page.tsx:268 📡 Response status: 200 
+page.tsx:278 📋 API Response: {status: '0', message: 'No logs found', resultType: 'array', resultLength: 0, fullResponse: {…}}
+page.tsx:314 🔍 No logs found for this contract and topic combination
+page.tsx:315 🧐 Debug info: {contractExists: 'Unknown - will check separately', topicHash: '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a', calculatedFrom: 'keccak256("Staked(address,uint256,uint256,uint256)")'}
+page.tsx:337 Total unique stakers found: 0
+page.tsx:343 Processing stake data for 0 unique stakers...
