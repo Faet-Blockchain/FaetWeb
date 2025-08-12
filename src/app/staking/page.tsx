@@ -37,6 +37,7 @@ const FAET_STAKING_ABI = [
 ];
 
 // Staked event topic hash: keccak256("Staked(address,uint256,uint256,uint256)")
+// Based on ABI: event Staked(address indexed user, uint256 amount, uint256 duration, uint256 stakeIndex)
 const STAKED_EVENT_TOPIC = "0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a";
 
 export default function StakingPage() {
@@ -192,41 +193,62 @@ export default function StakingPage() {
       // Fetch all Staked events from Blockscout API
       const uniqueStakers = new Set<string>();
       let page = 1;
-      const pageSize = 1000; // Max records per page
+      const pageSize = 10000; // Increase page size for efficiency
       let hasMoreData = true;
+      let totalEvents = 0;
 
       while (hasMoreData) {
         try {
-          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&page=${page}&offset=${pageSize}`;
+          // Use newer API format with better parameters
+          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&page=${page}&offset=${pageSize}&sort=desc`;
           
           const response = await fetch(url);
+          if (!response.ok) {
+            console.warn(`HTTP error ${response.status} on page ${page}`);
+            break;
+          }
+
           const data = await response.json();
 
           if (data.status === "1" && data.result && Array.isArray(data.result)) {
-            console.log(`Fetched page ${page}: ${data.result.length} events`);
+            const eventsCount = data.result.length;
+            totalEvents += eventsCount;
+            console.log(`Page ${page}: ${eventsCount} events (total: ${totalEvents})`);
             
             for (const log of data.result) {
               if (log.topics && log.topics.length > 1) {
                 // Extract user address from indexed topic (topic[1] is the user address)
-                const userAddress = '0x' + log.topics[1].slice(-40);
+                // Remove '0x' prefix and pad to get the last 40 characters (20 bytes = address)
+                const userAddress = '0x' + log.topics[1].slice(-40).toLowerCase();
                 if (userAddress && userAddress !== '0x0000000000000000000000000000000000000000') {
                   uniqueStakers.add(userAddress);
                 }
               }
             }
 
-            // Check if we have more data
-            if (data.result.length < pageSize) {
+            // Check if we have more data - if less than pageSize, we're done
+            if (eventsCount < pageSize) {
               hasMoreData = false;
             } else {
               page++;
+              // Add small delay to avoid rate limiting
+              await new Promise(resolve => setTimeout(resolve, 100));
             }
           } else {
-            console.log(`No more data or error on page ${page}:`, data.message || 'Unknown error');
+            if (data.message && data.message.includes("No records found")) {
+              console.log(`No more events found (page ${page})`);
+            } else {
+              console.log(`API error on page ${page}:`, data.message || 'Unknown error');
+            }
             hasMoreData = false;
           }
         } catch (error) {
           console.warn(`Failed to fetch page ${page}:`, error);
+          // Try one more time before giving up
+          if (page === 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
           hasMoreData = false;
         }
       }
@@ -235,45 +257,72 @@ export default function StakingPage() {
 
       // Calculate current active weights and raw amounts for each staker
       const stakersWithWeights: Array<{ address: string; weight: string; rawAmount: string }> = [];
+      const stakersList = Array.from(uniqueStakers).filter(addr => addr && addr !== '');
+      
+      console.log(`Processing stake data for ${stakersList.length} unique stakers...`);
 
-      for (const staker of uniqueStakers) {
-        if (!staker || staker === '') continue;
+      // Process stakers in smaller batches to avoid overwhelming the RPC
+      const batchSize = 50;
+      for (let i = 0; i < stakersList.length; i += batchSize) {
+        const batch = stakersList.slice(i, i + batchSize);
+        console.log(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(stakersList.length/batchSize)}`);
 
-        try {
-          // Get weighted amount (for rewards calculation)
-          const activeWeight = await staking.weightedBalances(staker);
-          const weightInEther = ethers.formatEther(activeWeight);
-
-          // Get raw stake amount by summing all user stakes
-          let totalRawAmount = BigInt(0);
+        // Process batch in parallel but with limited concurrency
+        const batchPromises = batch.map(async (staker) => {
           try {
-            const stakeCount = await staking.getStakeCount(staker);
-            for (let i = 0; i < stakeCount; i++) {
-              try {
-                const stakeView = await staking.getStakeView(staker, i);
-                const amount = stakeView[0]; // amount is at index 0
-                totalRawAmount += BigInt(amount.toString());
-              } catch {
-                // Skip failed individual stake reads
+            // Get weighted amount (for rewards calculation) and stake count in parallel
+            const [activeWeight, stakeCount] = await Promise.all([
+              staking.weightedBalances(staker),
+              staking.getStakeCount(staker)
+            ]);
+
+            const weightInEther = ethers.formatEther(activeWeight);
+            
+            // Get raw stake amount using getAllStakeViews if available, fallback to individual calls
+            let totalRawAmount = BigInt(0);
+            try {
+              // Try the more efficient getAllStakeViews first (if contract supports it)
+              const allStakes = await staking.getAllStakeViews(staker);
+              for (const stake of allStakes) {
+                totalRawAmount += BigInt(stake.amount.toString());
+              }
+            } catch {
+              // Fallback to individual stake calls
+              const stakeCountNumber = Number(stakeCount);
+              for (let j = 0; j < stakeCountNumber; j++) {
+                try {
+                  const stakeView = await staking.getStakeView(staker, j);
+                  totalRawAmount += BigInt(stakeView[0].toString());
+                } catch {
+                  // Skip failed individual stake reads
+                }
               }
             }
-          } catch {
-            // If we can't get individual stakes, skip this staker
-            continue;
-          }
 
-          const rawAmountInEther = ethers.formatEther(totalRawAmount);
+            const rawAmountInEther = ethers.formatEther(totalRawAmount);
 
-          // Include stakers with either weighted amount or raw amount > 0
-          if (parseFloat(weightInEther) > 0 || parseFloat(rawAmountInEther) > 0) {
-            stakersWithWeights.push({
-              address: staker,
-              weight: weightInEther,
-              rawAmount: rawAmountInEther
-            });
+            // Include stakers with either weighted amount or raw amount > 0
+            if (parseFloat(weightInEther) > 0 || parseFloat(rawAmountInEther) > 0) {
+              return {
+                address: staker,
+                weight: weightInEther,
+                rawAmount: rawAmountInEther
+              };
+            }
+          } catch (error) {
+            console.warn(`Failed to process staker ${staker}:`, error);
           }
-        } catch {
-          // Silently skip failed stakers
+          return null;
+        });
+
+        // Wait for batch to complete
+        const batchResults = await Promise.all(batchPromises);
+        const validResults = batchResults.filter(result => result !== null);
+        stakersWithWeights.push(...validResults);
+
+        // Small delay between batches to avoid overwhelming the RPC
+        if (i + batchSize < stakersList.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
 
