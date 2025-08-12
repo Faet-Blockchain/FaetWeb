@@ -1244,7 +1244,6 @@ export default function StakingPage() {
               totalRewardsFunded={totalRewardsFunded}
               totalStakeWeight={totalStakeWeight}
               topStakers={topStakers}
-              stakingRanges={stakingRanges}
               onStakeAmountChange={setStakeAmount}
               onSelectedDaysChange={setSelectedDays}
               onStake={handleStake}
