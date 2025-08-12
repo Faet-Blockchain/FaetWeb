@@ -207,20 +207,20 @@ export default function StakingPage() {
 
       // Get network configuration for API URL
       const networkConfig = getNetworkConfig(selectedNetwork);
-      const baseUrl = selectedNetwork === 'mainnet' 
+      const baseUrl = selectedNetwork === 'mainnet'
         ? 'https://blockscout.lisk.com/api'
         : 'https://sepolia-blockscout.lisk.com/api';
-      
+
       // Get staking contract address
       const stakingAddress = networkConfig.contracts.staking;
-      
+
       console.log(`🔍 Fetching staker data from Blockscout API for contract: ${stakingAddress}`);
-      
+
       // First, verify the contract exists and has code
       try {
         const contractCheckUrl = `${baseUrl}?module=contract&action=getabi&address=${stakingAddress}`;
         console.log(`🔍 Checking if contract exists: ${contractCheckUrl}`);
-        
+
         const contractResponse = await fetch(contractCheckUrl);
         const contractData = await contractResponse.json();
         console.log(`📋 Contract check response:`, {
@@ -228,7 +228,7 @@ export default function StakingPage() {
           message: contractData.message,
           hasABI: contractData.result && contractData.result !== 'Contract source code not verified'
         });
-        
+
         if (contractData.status !== "1") {
           console.warn(`⚠️ Contract may not exist or be verified at address: ${stakingAddress}`);
         }
@@ -240,7 +240,7 @@ export default function StakingPage() {
       try {
         const anyLogsUrl = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&fromBlock=0&toBlock=latest&page=1&offset=100`;
         console.log(`🔍 Checking for any logs from contract: ${anyLogsUrl}`);
-        
+
         const anyLogsResponse = await fetch(anyLogsUrl);
         const anyLogsData = await anyLogsResponse.json();
         console.log(`📋 Any logs check:`, {
@@ -249,20 +249,20 @@ export default function StakingPage() {
           hasResults: anyLogsData.result && Array.isArray(anyLogsData.result),
           resultCount: Array.isArray(anyLogsData.result) ? anyLogsData.result.length : 0
         });
-        
+
         if (anyLogsData.result && Array.isArray(anyLogsData.result) && anyLogsData.result.length > 0) {
           console.log(`🔍 Sample log topics from contract:`, anyLogsData.result.slice(0, 10).map(log => ({
             topics: log.topics,
             data: log.data
           })));
-          
+
           // Check if any of the logs match our expected Staked event pattern
-          const stakedLogs = anyLogsData.result.filter(log => 
-            log.topics && log.topics.length >= 2 && 
+          const stakedLogs = anyLogsData.result.filter(log =>
+            log.topics && log.topics.length >= 2 &&
             log.topics[0] === STAKED_EVENT_TOPIC
           );
           console.log(`🔍 Found ${stakedLogs.length} logs matching our Staked topic`);
-          
+
           // Show all unique topic[0] values to understand what events are actually being emitted
           const uniqueTopics = [...new Set(anyLogsData.result.map(log => log.topics?.[0]).filter(Boolean))];
           console.log(`🔍 All unique event topics in contract:`, uniqueTopics);
@@ -273,7 +273,7 @@ export default function StakingPage() {
 
       // First, try to identify the correct Staked event signature by checking logs
       let correctStakedTopic = STAKED_EVENT_TOPIC;
-      
+
       // If we have sample logs, try to find the Staked event topic
       try {
         const sampleLogsResponse = await fetch(`${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&fromBlock=0&toBlock=latest&page=1&offset=20`);
@@ -281,16 +281,16 @@ export default function StakingPage() {
           const sampleLogsData = await sampleLogsResponse.json();
           if (sampleLogsData.result && Array.isArray(sampleLogsData.result)) {
             // Look for logs that might be Staked events (should have at least 2 topics: event signature + user address)
-            const possibleStakedLogs = sampleLogsData.result.filter(log => 
+            const possibleStakedLogs = sampleLogsData.result.filter(log =>
               log.topics && log.topics.length >= 2
             );
-            
+
             if (possibleStakedLogs.length > 0) {
               // Try each possible signature
               for (let i = 0; i < possibleStakedSignatures.length; i++) {
                 const testTopic = calculateEventTopic(possibleStakedSignatures[i]);
                 const matchingLogs = possibleStakedLogs.filter(log => log.topics[0] === testTopic);
-                
+
                 if (matchingLogs.length > 0) {
                   console.log(`✅ Found matching event signature: "${possibleStakedSignatures[i]}" with ${matchingLogs.length} logs`);
                   correctStakedTopic = testTopic;
@@ -303,7 +303,7 @@ export default function StakingPage() {
       } catch (error) {
         console.warn('Could not determine correct event signature:', error);
       }
-      
+
       console.log(`🎯 Using event topic: ${correctStakedTopic}`);
 
       // Fetch all Staked events from Blockscout API
@@ -319,10 +319,10 @@ export default function StakingPage() {
           // Use a wide range to get all events - from block 0 to latest
           const fromBlock = 0;
           const toBlock = 'latest';
-          
+
           // Build URL with required parameters
           const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${correctStakedTopic}&fromBlock=${fromBlock}&toBlock=${toBlock}&page=${page}&offset=${pageSize}&sort=desc`;
-          
+
           console.log(`🔍 Fetching events from: ${url}`);
           console.log(`📊 Request details:`, {
             baseUrl,
@@ -331,10 +331,10 @@ export default function StakingPage() {
             page,
             pageSize
           });
-          
+
           const response = await fetch(url);
-          console.log(`📡 Response status: ${response.status} ${response.statusText}`);
-          
+          console.log(`▋ Response status: ${response.status} ${response.statusText}`);
+
           if (!response.ok) {
             console.warn(`HTTP error ${response.status} on page ${page}`);
             const errorText = await response.text();
@@ -355,7 +355,7 @@ export default function StakingPage() {
             const eventsCount = data.result.length;
             totalEvents += eventsCount;
             console.log(`Page ${page}: ${eventsCount} events (total: ${totalEvents})`);
-            
+
             for (const log of data.result) {
               if (log.topics && log.topics.length > 1) {
                 // Extract user address from indexed topic (topic[1] is the user address)
@@ -407,7 +407,7 @@ export default function StakingPage() {
       // Calculate current active weights and raw amounts for each staker
       const stakersWithWeights: Array<{ address: string; weight: string; rawAmount: string }> = [];
       const stakersList = Array.from(uniqueStakers).filter(addr => addr && addr !== '');
-      
+
       console.log(`Processing stake data for ${stakersList.length} unique stakers...`);
 
       // Process stakers in smaller batches to avoid overwhelming the RPC
@@ -426,7 +426,7 @@ export default function StakingPage() {
             ]);
 
             const weightInEther = ethers.formatEther(activeWeight);
-            
+
             // Get raw stake amount using getAllStakeViews if available, fallback to individual calls
             let totalRawAmount = BigInt(0);
             try {
@@ -458,8 +458,8 @@ export default function StakingPage() {
                 rawAmount: rawAmountInEther
               };
             }
-          } catch (error) {
-            console.warn(`Failed to process staker ${staker}:`, error);
+          } catch {
+            // Skip failed staker processing
           }
           return null;
         });
@@ -855,6 +855,7 @@ export default function StakingPage() {
     }
 
     setIsLoading(true);
+    setTxHash("");
 
     try {
       const withdrawTx = await stakingContract.withdraw(stakeIndex);
