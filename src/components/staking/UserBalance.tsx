@@ -137,11 +137,11 @@ const UserBalance = ({ tokenBalance, stakedBalance, totalStakeWeight = "0", user
           )}
         </div>
       </div>
-    </div>
-
-    {/* Add FAET Token to MetaMask Button */}
-    <div className="mt-4">
-      <AddTokenButton />
+      
+      {/* Add FAET Token to MetaMask Button */}
+      <div className="mt-4">
+        <AddTokenButton />
+      </div>
     </div>
   );
 };
