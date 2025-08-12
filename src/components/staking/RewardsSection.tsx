@@ -68,18 +68,20 @@ const RewardsSection = ({
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
       value: parseFloat(staker.weight || "0"),
-      fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
+      fill: `hsl(${(index * 360) / (top10.length + (others.length > 0 ? 1 : 0))}, 70%, 50%)`,
       percentage: (parseFloat(staker.weight || "0") / (totalWeight || 1)) * 100,
     }));
 
-    // Always show Others category, even if there are no others (0 accounts)
-    console.log(`Weighted Others: ${others.length} accounts with total ${othersAmount} weight`);
-    data.push({
-      name: `Others (${others.length} accounts)`,
-      value: othersAmount,
-      fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
-      percentage: totalWeight > 0 ? (othersAmount / totalWeight) * 100 : 0,
-    });
+    // Only show Others category if there are actually other stakers
+    if (others.length > 0) {
+      console.log(`Weighted Others: ${others.length} accounts with total ${othersAmount} weight`);
+      data.push({
+        name: `Others (${others.length} accounts)`,
+        value: Math.max(othersAmount, 0.001), // Ensure non-zero value for chart visibility
+        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+        percentage: totalWeight > 0 ? (othersAmount / totalWeight) * 100 : 0,
+      });
+    }
 
     return data;
   };
@@ -110,18 +112,20 @@ const RewardsSection = ({
     const data = top10.map((staker, index) => ({
       name: `${staker.address.slice(0, 6)}...${staker.address.slice(-4)}`,
       value: parseFloat(staker.rawAmount || "0"),
-      fill: `hsl(${(index * 360) / (top10.length + (othersAmount > 0 ? 1 : 0))}, 70%, 50%)`,
+      fill: `hsl(${(index * 360) / (top10.length + (others.length > 0 ? 1 : 0))}, 70%, 50%)`,
       percentage: (parseFloat(staker.rawAmount || "0") / (totalRaw || 1)) * 100,
     }));
 
-    // Always show Others category, even if there are no others (0 accounts)
-    console.log(`Raw Others: ${others.length} accounts with total ${othersAmount} raw amount`);
-    data.push({
-      name: `Others (${others.length} accounts)`,
-      value: othersAmount,
-      fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
-      percentage: totalRaw > 0 ? (othersAmount / totalRaw) * 100 : 0,
-    });
+    // Only show Others category if there are actually other stakers
+    if (others.length > 0) {
+      console.log(`Raw Others: ${others.length} accounts with total ${othersAmount} raw amount`);
+      data.push({
+        name: `Others (${others.length} accounts)`,
+        value: Math.max(othersAmount, 0.001), // Ensure non-zero value for chart visibility
+        fill: `hsl(${(top10.length * 360) / (top10.length + 1)}, 70%, 50%)`,
+        percentage: totalRaw > 0 ? (othersAmount / totalRaw) * 100 : 0,
+      });
+    }
 
     return data;
   };

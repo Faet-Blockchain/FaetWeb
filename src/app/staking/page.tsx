@@ -477,15 +477,15 @@ export default function StakingPage() {
 
       // Sort by weight (highest first) for the main topStakers array
       stakersWithWeights.sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight));
-      const top10 = stakersWithWeights.slice(0, 10);
 
-      // Calculate total stake weight from all stakers (not just top 10)
+      // Calculate total stake weight from all stakers
       const totalNetworkWeight = stakersWithWeights.reduce((sum, staker) => {
         return sum + parseFloat(staker.weight);
       }, 0);
 
       setTotalStakeWeight(totalNetworkWeight.toString());
-      setTopStakers(top10);
+      // Pass ALL stakers data, not just top 10 - RewardsSection will handle the grouping
+      setTopStakers(stakersWithWeights);
 
 
       // Create staking ranges
