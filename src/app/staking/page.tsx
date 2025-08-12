@@ -36,6 +36,9 @@ const FAET_STAKING_ABI = [
   "event RewardPaid(address indexed user, uint256 reward)",
 ];
 
+// Staked event topic hash: keccak256("Staked(address,uint256,uint256,uint256)")
+const STAKED_EVENT_TOPIC = "0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a";
+
 export default function StakingPage() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -175,54 +178,61 @@ export default function StakingPage() {
       setTopStakers([]);
       setStakingRanges([]);
 
-      // Get a provider to fetch the latest block number
-      let provider;
-      if (typeof window.ethereum !== "undefined") {
-        provider = new ethers.BrowserProvider(window.ethereum);
-      } else {
-        console.error("Provider not available");
-        return;
-      }
+      // Get network configuration for API URL
+      const networkConfig = getNetworkConfig(selectedNetwork);
+      const baseUrl = selectedNetwork === 'mainnet' 
+        ? 'https://blockscout.lisk.com/api'
+        : 'https://sepolia-blockscout.lisk.com/api';
+      
+      // Get staking contract address
+      const stakingAddress = networkConfig.contracts.staking;
+      
+      console.log(`Fetching staker data from Blockscout API for contract: ${stakingAddress}`);
 
-      // Get all Stake events to find unique stakers with pagination
-      const fromBlock = 0; // Start from genesis - in production, you'd want to optimize this
+      // Fetch all Staked events from Blockscout API
       const uniqueStakers = new Set<string>();
-      const blockRange = 10000; // Process blocks in chunks
-      let currentFromBlock = fromBlock;
-      const latestBlock = await provider.getBlockNumber();
+      let page = 1;
+      const pageSize = 1000; // Max records per page
+      let hasMoreData = true;
 
-      while (currentFromBlock <= latestBlock) {
-        const toBlock = Math.min(currentFromBlock + blockRange - 1, latestBlock);
-
+      while (hasMoreData) {
         try {
-          const stakeEvents = await staking.queryFilter(
-            staking.filters.Staked(),
-            currentFromBlock,
-            toBlock
-          );
+          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&page=${page}&offset=${pageSize}`;
+          
+          const response = await fetch(url);
+          const data = await response.json();
 
-          for (const event of stakeEvents) {
-            // Type guard to check if event is EventLog (has args property)
-            if ('args' in event && event.args) {
-              const userAddress = event.args.user || '';
-              if (userAddress) {
-                uniqueStakers.add(userAddress);
+          if (data.status === "1" && data.result && Array.isArray(data.result)) {
+            console.log(`Fetched page ${page}: ${data.result.length} events`);
+            
+            for (const log of data.result) {
+              if (log.topics && log.topics.length > 1) {
+                // Extract user address from indexed topic (topic[1] is the user address)
+                const userAddress = '0x' + log.topics[1].slice(-40);
+                if (userAddress && userAddress !== '0x0000000000000000000000000000000000000000') {
+                  uniqueStakers.add(userAddress);
+                }
               }
             }
+
+            // Check if we have more data
+            if (data.result.length < pageSize) {
+              hasMoreData = false;
+            } else {
+              page++;
+            }
+          } else {
+            console.log(`No more data or error on page ${page}:`, data.message || 'Unknown error');
+            hasMoreData = false;
           }
-
-          console.log(`Processed blocks ${currentFromBlock} to ${toBlock}, found ${uniqueStakers.size} unique stakers so far`);
         } catch (error) {
-          console.warn(`Failed to fetch events for blocks ${currentFromBlock}-${toBlock}:`, error);
-          // Continue with next batch even if this one fails
+          console.warn(`Failed to fetch page ${page}:`, error);
+          hasMoreData = false;
         }
-
-        currentFromBlock = toBlock + 1;
       }
 
       console.log(`Total unique stakers found: ${uniqueStakers.size}`);
 
-      // Get unique stakers and their current active weights
       // Calculate current active weights and raw amounts for each staker
       const stakersWithWeights: Array<{ address: string; weight: string; rawAmount: string }> = [];
 
