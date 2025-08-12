@@ -665,7 +665,6 @@ export default function StakingPage() {
         await loadTopStakersData(staking);
       } catch {
         setTopStakers([]);
-        setStakingRanges([]);
       }
 
     } catch (error: unknown) {
