@@ -251,20 +251,20 @@ export default function StakingPage() {
         });
 
         if (anyLogsData.result && Array.isArray(anyLogsData.result) && anyLogsData.result.length > 0) {
-          console.log(`🔍 Sample log topics from contract:`, anyLogsData.result.slice(0, 10).map(log => ({
+          console.log(`🔍 Sample log topics from contract:`, anyLogsData.result.slice(0, 10).map((log: { topics?: string[]; data?: string }) => ({
             topics: log.topics,
             data: log.data
           })));
 
           // Check if any of the logs match our expected Staked event pattern
-          const stakedLogs = anyLogsData.result.filter(log =>
+          const stakedLogs = anyLogsData.result.filter((log: { topics?: string[] }) =>
             log.topics && log.topics.length >= 2 &&
             log.topics[0] === STAKED_EVENT_TOPIC
           );
           console.log(`🔍 Found ${stakedLogs.length} logs matching our Staked topic`);
 
           // Show all unique topic[0] values to understand what events are actually being emitted
-          const uniqueTopics = [...new Set(anyLogsData.result.map(log => log.topics?.[0]).filter(Boolean))];
+          const uniqueTopics = [...new Set(anyLogsData.result.map((log: { topics?: string[] }) => log.topics?.[0]).filter(Boolean))];
           console.log(`🔍 All unique event topics in contract:`, uniqueTopics);
         }
       } catch (anyLogsError) {
@@ -281,7 +281,7 @@ export default function StakingPage() {
           const sampleLogsData = await sampleLogsResponse.json();
           if (sampleLogsData.result && Array.isArray(sampleLogsData.result)) {
             // Look for logs that might be Staked events (should have at least 2 topics: event signature + user address)
-            const possibleStakedLogs = sampleLogsData.result.filter(log =>
+            const possibleStakedLogs = sampleLogsData.result.filter((log: { topics?: string[] }) =>
               log.topics && log.topics.length >= 2
             );
 
@@ -289,7 +289,7 @@ export default function StakingPage() {
               // Try each possible signature
               for (let i = 0; i < possibleStakedSignatures.length; i++) {
                 const testTopic = calculateEventTopic(possibleStakedSignatures[i]);
-                const matchingLogs = possibleStakedLogs.filter(log => log.topics[0] === testTopic);
+                const matchingLogs = possibleStakedLogs.filter((log: { topics: string[] }) => log.topics[0] === testTopic);
 
                 if (matchingLogs.length > 0) {
                   console.log(`✅ Found matching event signature: "${possibleStakedSignatures[i]}" with ${matchingLogs.length} logs`);
@@ -356,7 +356,7 @@ export default function StakingPage() {
             totalEvents += eventsCount;
             console.log(`Page ${page}: ${eventsCount} events (total: ${totalEvents})`);
 
-            for (const log of data.result) {
+            for (const log of data.result as Array<{ topics?: string[] }>) {
               if (log.topics && log.topics.length > 1) {
                 // Extract user address from indexed topic (topic[1] is the user address)
                 // Remove '0x' prefix and pad to get the last 40 characters (20 bytes = address)
