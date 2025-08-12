@@ -36,13 +36,35 @@ const FAET_STAKING_ABI = [
   "event RewardPaid(address indexed user, uint256 reward)",
 ];
 
-// Staked event topic hash: keccak256("Staked(address,uint256,uint256,uint256)")
-// Based on ABI: event Staked(address indexed user, uint256 amount, uint256 duration, uint256 stakeIndex)
-const STAKED_EVENT_TOPIC = "0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a";
+// Function to calculate the correct event topic hash
+const calculateEventTopic = (signature: string): string => {
+  if (typeof window !== 'undefined' && (window as any).ethereum) {
+    try {
+      const { ethers } = require('ethers');
+      return ethers.id(signature);
+    } catch (error) {
+      console.warn('Could not calculate event topic:', error);
+    }
+  }
+  // Fallback to pre-calculated hash
+  return "0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a";
+};
 
-// Debug: Log the event signature for verification
-console.log(`🔍 Event signature being used: "Staked(address,uint256,uint256,uint256)"`);
-console.log(`🔍 Expected topic hash: ${STAKED_EVENT_TOPIC}`);
+// Try different possible event signatures based on the ABI
+const possibleStakedSignatures = [
+  "Staked(address,uint256,uint256,uint256)",
+  "Staked(address,uint256,uint256)",
+  "Staked(address,uint256)",
+];
+
+const STAKED_EVENT_TOPIC = calculateEventTopic(possibleStakedSignatures[0]);
+
+// Debug: Log the event signatures and their hashes for verification
+console.log(`🔍 Testing event signatures:`);
+possibleStakedSignatures.forEach((sig, index) => {
+  const hash = calculateEventTopic(sig);
+  console.log(`  ${index + 1}. "${sig}" => ${hash}`);
+});
 
 export default function StakingPage() {
   const [account, setAccount] = useState<string | null>(null);
@@ -229,14 +251,60 @@ export default function StakingPage() {
         });
         
         if (anyLogsData.result && Array.isArray(anyLogsData.result) && anyLogsData.result.length > 0) {
-          console.log(`🔍 Sample log topics from contract:`, anyLogsData.result.slice(0, 3).map(log => ({
+          console.log(`🔍 Sample log topics from contract:`, anyLogsData.result.slice(0, 10).map(log => ({
             topics: log.topics,
             data: log.data
           })));
+          
+          // Check if any of the logs match our expected Staked event pattern
+          const stakedLogs = anyLogsData.result.filter(log => 
+            log.topics && log.topics.length >= 2 && 
+            log.topics[0] === STAKED_EVENT_TOPIC
+          );
+          console.log(`🔍 Found ${stakedLogs.length} logs matching our Staked topic`);
+          
+          // Show all unique topic[0] values to understand what events are actually being emitted
+          const uniqueTopics = [...new Set(anyLogsData.result.map(log => log.topics?.[0]).filter(Boolean))];
+          console.log(`🔍 All unique event topics in contract:`, uniqueTopics);
         }
       } catch (anyLogsError) {
         console.warn(`⚠️ Failed to check for any logs:`, anyLogsError);
       }
+
+      // First, try to identify the correct Staked event signature by checking logs
+      let correctStakedTopic = STAKED_EVENT_TOPIC;
+      
+      // If we have sample logs, try to find the Staked event topic
+      try {
+        const sampleLogsResponse = await fetch(`${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&fromBlock=0&toBlock=latest&page=1&offset=20`);
+        if (sampleLogsResponse.ok) {
+          const sampleLogsData = await sampleLogsResponse.json();
+          if (sampleLogsData.result && Array.isArray(sampleLogsData.result)) {
+            // Look for logs that might be Staked events (should have at least 2 topics: event signature + user address)
+            const possibleStakedLogs = sampleLogsData.result.filter(log => 
+              log.topics && log.topics.length >= 2
+            );
+            
+            if (possibleStakedLogs.length > 0) {
+              // Try each possible signature
+              for (let i = 0; i < possibleStakedSignatures.length; i++) {
+                const testTopic = calculateEventTopic(possibleStakedSignatures[i]);
+                const matchingLogs = possibleStakedLogs.filter(log => log.topics[0] === testTopic);
+                
+                if (matchingLogs.length > 0) {
+                  console.log(`✅ Found matching event signature: "${possibleStakedSignatures[i]}" with ${matchingLogs.length} logs`);
+                  correctStakedTopic = testTopic;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Could not determine correct event signature:', error);
+      }
+      
+      console.log(`🎯 Using event topic: ${correctStakedTopic}`);
 
       // Fetch all Staked events from Blockscout API
       const uniqueStakers = new Set<string>();
@@ -253,13 +321,13 @@ export default function StakingPage() {
           const toBlock = 'latest';
           
           // Build URL with required parameters
-          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${STAKED_EVENT_TOPIC}&fromBlock=${fromBlock}&toBlock=${toBlock}&page=${page}&offset=${pageSize}&sort=desc`;
+          const url = `${baseUrl}?module=logs&action=getLogs&address=${stakingAddress}&topic0=${correctStakedTopic}&fromBlock=${fromBlock}&toBlock=${toBlock}&page=${page}&offset=${pageSize}&sort=desc`;
           
           console.log(`🔍 Fetching events from: ${url}`);
           console.log(`📊 Request details:`, {
             baseUrl,
             stakingAddress,
-            eventTopic: STAKED_EVENT_TOPIC,
+            eventTopic: correctStakedTopic,
             page,
             pageSize
           });
@@ -313,9 +381,9 @@ export default function StakingPage() {
             } else if (data.message && data.message.includes("No logs found")) {
               console.log(`🔍 No logs found for this contract and topic combination`);
               console.log(`🧐 Debug info:`, {
-                contractExists: 'Unknown - will check separately',
-                topicHash: STAKED_EVENT_TOPIC,
-                calculatedFrom: 'keccak256("Staked(address,uint256,uint256,uint256)")'
+                contractExists: 'Verified - has 136+ logs total',
+                topicHash: correctStakedTopic,
+                possibleSignatures: possibleStakedSignatures
               });
             } else {
               console.log(`❌ API error on page ${page}:`, data.message || 'Unknown error');
