@@ -9,29 +9,30 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@metamask/providers": "^22.1.0",
-    "@tabler/icons-react": "^3.23.0",
+    "@emailjs/browser": "4.4.1",
+    "@metamask/providers": "22.1.1",
+    "@tabler/icons-react": "3.35.0",
     "clsx": "^2.1.1",
-    "emailjs-com": "^3.2.0",
-    "ethers": "^6.15.0",
-    "framer-motion": "^11.18.2",
-    "next": "^15.3.6",
+    "ethers": "6.16.0",
+    "framer-motion": "12.23.26",
+    "next": "16.0.10",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.16",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "recharts": "^3.1.0",
-    "tailwind-merge": "^2.5.5"
+    "nodemailer": "7.0.11",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "recharts": "3.5.1",
+    "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@tailwindcss/postcss": "4.1.17",
+    "@types/node": "^24.10.3",
     "@types/nodemailer": "^6.4.17",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.0.3",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "9.39.1",
+    "eslint-config-next": "16.0.8",
+    "postcss": "8.5.6",
+    "tailwindcss": "4.1.18",
+    "typescript": "5.9.3"
   }
 }
