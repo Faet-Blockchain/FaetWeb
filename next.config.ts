@@ -6,9 +6,6 @@ const nextConfig: NextConfig = {
     // This will make dev mode stricter but also slower
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
   images: {
     domains: ["sepolia-blockscout.lisk.com"],
     remotePatterns: [
