@@ -24,7 +24,7 @@ const CommunitySection: React.FC = () => {
     setIsSubmitting(true);
     try {
       const recaptchaToken = await window.grecaptcha.execute(
-        "6LfUn2IrAAAAAOe0xfIsiXgdnQ3FaApkJORBh68E",
+        "",
         { action: "submit_form" }
       );
       const response = await fetch("/api/send-email", {
